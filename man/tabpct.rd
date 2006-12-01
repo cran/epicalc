@@ -26,6 +26,7 @@ tabpct (row, col, ..., decimal = 1, graph = TRUE, las = 0)
 The width of the bar in the plot denotes the relative proportion of the row variable.
 
 Inside each bar, the relative proportion denotes the distribution of column variables within each row variable.}
+\value{Tables of row and column percentage}
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
 }

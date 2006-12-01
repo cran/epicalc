@@ -9,7 +9,7 @@
 
 # Work started in 2002-October
 
-# Lastupdated.Epicalc <- "22:05 2006-November-1"
+# Lastupdated.Epicalc <- "22:05 2006-November-28"
 
 ### Display add-in functions
 check.add.in <- function() {
@@ -83,7 +83,7 @@ cat("roc.from.table (table, graph = TRUE)", "\n")
 cat("           ROC curve from a diagnostic table","\n")
 cat("shapiro.qqnorm (x, ...)", "\n")
 cat("          draw a quantile-normal plot with Shapiro-Wilk test P value", "\n")
-cat("sort.by(...)", "\n")
+cat("sortBy(...)", "\n")
 cat("          sort hidden data frame (.data) and related vector(s) by argument order", "\n")
 cat("summ  (x = .data, by = NULL, graph = TRUE, box = FALSE)", "\n")
 cat("          summary Statistics of the dataset or a variable with graph", "\n")
@@ -161,25 +161,35 @@ title.string <- function(distribution.of=.distribution.of,by=.by,frequency=.freq
 
 library(foreign)
 ### Display variables and their description
-des <- function(x=.data, search.position=2) { 
-# search.positon mean position of the data in the search path 'search()'
+des <- function(x=.data) { 
+# search.positon means position of the data in the search path 'search()'
 if(!is.data.frame(x)) {cat("\n")
-	a<-cbind(as.character(substitute(x)),(class(x))[1],(attr(get(search()[search.position]), "var.labels")[attr(get(search()[search.position]), "names")==substitute(x)]))
-	if(dim(a)[2]==2){# |is.null(attr(get(search()[search.position]), "var.labels"))){
-		colnames(a) <- c("Variable     ","Class          ")
-	}
-	else{
-		colnames(a) <- c("Variable     ","Class          ", "Description")
-	}
-	rownames(a) <- ""
-	if(length(x)==nrow(get(search()[search.position]))){
-		cat("Parental data.frame is probably",search()[search.position],"\n")
-	cat(attr(get(search()[search.position]), "datalabel"), "\n")
-	cat("Variable order =", (1:ncol(get(search()[search.position])))[colnames(get(search()[search.position]))==substitute(x)], "\n","\n")
-	}
-	cat("No. of observations = "); cat(length(x), "\n", "\n")
-	print.noquote(a)
-	cat("\n")
+candidate.position <- NULL
+for(search.position in 1:length(search())){
+ if(exists(as.character(substitute(x)), where=search.position )){
+ if(any(names(get(search()[search.position]))==as.character(substitute(x))) | 
+  any(ls(all=TRUE, pos=1)==as.character(substitute(x))))
+  candidate.position <- c(candidate.position, search.position)   
+}
+}
+var.class <- NULL; var.size <- NULL; var.lab <- NULL
+for(i in candidate.position){
+  if(i==1) {var.class <- c(var.class, class(x))}else{var.class <-c(var.class, 
+    class(get(search()[i])[,which(as.character(substitute(x))==names(get(search()[i])))]))}
+  if(i==1) {var.size <- c(var.size, length(x))}else{var.size <- c(var.size,nrow(get(search()[i])))}
+  if(i==1 | is.null(attr(get(search()[i]), "var.labels")[attr(get(search()[i]), "names")==substitute(x)])) {
+    var.lab <- c(var.lab," ")}else{
+    var.lab <- c(var.lab,  
+    attr(get(search()[i]), "var.labels")[attr(get(search()[i]), "names")==substitute(x)])
+    }
+}
+a <- cbind(search()[candidate.position],var.class, var.size, var.lab)
+dim(a) 
+colnames(a) <- c("Var. source   ","Class     ","No. of records  ","Description")
+rownames(a) <- rep("",length(candidate.position))
+cat(paste(as.character(substitute(x)), "is a variable.", "\n","\n"))
+print.noquote(a)
+cat("\n")
 }
 else{
 if(is.null(attr(x, "var.labels")))  {
@@ -296,6 +306,15 @@ if(graph==TRUE){
 	las.value <- las
 	plot(as.table(tab),xlab=string2, ylab=string4, main=paste(title.string()$distribution.of,string4,title.string()$by,string2),
 	col=c("white",2:length(col)), las=las.value)}
+
+cpercent <- tab
+for(i in 1:ncol(tab)) {cpercent[,i] <- tab[,i]/colSums(tab)[i]*100}
+
+rpercent <- tab
+for(i in 1:nrow(tab)) {rpercent[i,] <- tab[i,]/rowSums(tab)[i]*100}
+
+
+returns <- list(table.row.percent=rpercent, table.column.percent=cpercent)
 } 
 ####
 cci <- function(caseexp, controlex, casenonex, controlnonex, cctable=NULL, decimal=2, graph=TRUE, design="cohort") {
@@ -1108,6 +1127,7 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 ###	Graph function here
 	if(!is.atomic(x)) {graph=FALSE}
 	if(graph==TRUE){
+	Sys.setlocale(category = "LC_ALL", locale = "C")
 		if(typeof(x)=="character"){stop(paste(as.character(substitute(x)),"is a character vector"))}
 		var1 <- as.character(substitute(x))
 		if(length(var1)>1){
@@ -1181,7 +1201,7 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 			character.length <- ifelse(max(nchar(levels(by2)))>8, max(nchar(levels(by2)))*(60-max(nchar(levels(by2))))/60, max(nchar(levels(by2)))*1.2)
 			left.offset <- max(c(0.76875+.2, .1+par()$cin[1]*character.length))
 			par(mai=c(0.95625, left.offset, 0.76875, 0.39375))
-			by3 <- max(as.numeric(by2))- as.numeric(by2) +1
+			by3 <- as.numeric(by2) #by3 <- max(as.numeric(by2))- as.numeric(by2) +1
 			y0 <- 1:length(x1)
 			y <- suppressWarnings(y0 + as.numeric(by2)-1)#Note that y0 and by2 may have different length
 			if(is.factor(x)){
@@ -1253,7 +1273,8 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 					axes=FALSE, at=.8*length(sort(x1)),boxwex=.2*length(sort(x1)) )
 			}
 		}
-	}
+	Sys.setlocale(category = "LC_ALL", locale = "")
+  }
 	if(is.data.frame(x)){
 		cat ("\n")
 		cat(attr(x, "datalabel"), "\n")
@@ -1288,7 +1309,7 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 							ifelse(is.na(mean(na.omit(x1))), NA,sd(na.omit(x1)))  , 
 						summary(x1)[1],summary(x1)[6]),3 )
 					}
-					colnames(a) <- c("Obs.  ", "mean  ", "median ", "s.d.  ", "min.  ", "max.  ")
+					colnames(a) <- c("Valid obs.", "mean  ", "median ", "s.d.  ", "min.  ", "max.  ")
 					rownames(a) <- " "	
 					cat(paste("For",as.character(substitute(by)),"=",levels(by1)[i]),"\n")
 					print.noquote(a, row.names=NULL)
@@ -1301,7 +1322,7 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 			}else{
 				a <- rep("",6); dim(a) <- c(1,6)
 				if(class(x)=="Date"){
-					a[1,] <- c(length(x),format(c(summary(x)[4],summary(x)[3],NA,summary(x)[1],summary(x)[6]),"%Y-%m-%d"))
+					a[1,] <- c(length(na.omit(x)),format(c(summary(x)[4],summary(x)[3],NA,summary(x)[1],summary(x)[6]),"%Y-%m-%d"))
 				}else
 
 				if(class(x)=="difftime"){
@@ -1313,7 +1334,7 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 						quantile(na.omit(x), .5), ifelse(is.na(mean(na.omit(x))), NA,round(sd(na.omit(x)),2))  , 
 					min(na.omit(x)), max(na.omit(x)) ),3 )
 				}
-				colnames(a) <- c("Obs.  ", "mean  ", "median ", "s.d.  ", "min.  ", "max.  ")
+				colnames(a) <- c("Valid obs.", "mean  ", "median ", "s.d.  ", "min.  ", "max.  ")
 				rownames(a) <- " "	
 				print.noquote(a, row.names=NULL)
 			}
@@ -1327,7 +1348,7 @@ else
 {
 a <- rep("", (dim(x)[2])*7)
 dim(a) <- c(dim(x)[2], 7)
-colnames(a) <- c("Var. name", "Obs.  ", "mean  ", "median ", "s.d.  ",  "min.  ", "max.  ")
+colnames(a) <- c("Var. name", "valid obs.", "mean  ", "median ", "s.d.  ",  "min.  ", "max.  ")
 a[,1] <- attr(x, "names")
 rownames(a) <- 1:nrow(a)
 for(i in 1:(dim(x)[2])) {
@@ -1385,13 +1406,18 @@ cat("\n")
 }
 
 #### ROC curve from Logistic Regression
-lroc <- function (logistic.model, table=FALSE) {
+lroc <- function (logistic.model, table=FALSE, add=FALSE, title=FALSE, line.col="red", auc.label=FALSE) {
+if(add){
+  title <- FALSE
+}
 table(logistic.model$fitted.values,logistic.model$y) -> firsttable
 cat("\n")
-if(table) {cat("Table of observed group frequency by predicted probability")}
 colnames(firsttable) <- c("Non-diseased","Diseased")
 rownames(firsttable) <- substr(rownames(firsttable), 1,6)
-if(table){print.noquote(firsttable)}
+if(table) {
+  cat("Table of observed group frequency by predicted probability")
+  print.noquote(firsttable)
+  }
 cat("\n")
 secondtable <- firsttable
 for(i in 1:length(secondtable[,1]))
@@ -1406,6 +1432,9 @@ colnames(secondtable) <- c("1-Specificity","Sensitivity")
 cat("\n")
 if(table){print(round(secondtable, digits=4))}
 cat("\n")
+## Model description
+model.des <- paste("logit (", deparse(logistic.model$formula),")",sep="")
+
 ## Area under the curve
 auc <- 0
 for(i in 1:(nrow(secondtable)-1)) {
@@ -1415,12 +1444,14 @@ for(i in 1:(nrow(secondtable)-1)) {
 cat("Number of observations =", length(logistic.model$y), "\n")
 cat("Area under the curve   =", round(auc,4), "\n")
 cat("\n")
+if(!add){
 plot(secondtable[,1],secondtable[,2], xlab="1-Specificity",
 		ylab="Sensitivity", xlim=(c(0,1)), 
-		ylim=(c(0,1)), asp=1, 
-		main =paste("logit (", deparse(logistic.model$formula),")",sep=""),
-		 )
-lines(secondtable[,1],secondtable[,2], col="red")
+		ylim=(c(0,1)), asp=1)
+if(title){
+  title(main =model.des)
+}
+lines(secondtable[,1],secondtable[,2], col=line.col)
 lines(x=c(0,1),y=c(0,1), lty=2, col="blue")
 abline(v=0, lty=2, col="blue")
 abline(v=.2, lty=2, col="blue")
@@ -1435,8 +1466,13 @@ abline(h=.6, lty=2, col="blue")
 abline(h=.8, lty=2, col="blue")
 abline(h=1, lty=2, col="blue")
 auclabel <- paste("Area under the curve =", round(auc, 3))
-text(1,.1, pos=2, auclabel)
-returns <- list(auc=auc, formula=formula)
+if(add){auc.label <- FALSE}
+if(auc.label){ text(1,.1, pos=2, auclabel)}
+}else{
+points(secondtable[,1],secondtable[,2])
+lines(secondtable[,1],secondtable[,2], col=line.col)
+}
+returns <- list(auc=auc, model.description=model.des, line.col=line.col)
 }
 ### ROC curve from a table
 roc.from.table <- function(table, graph=TRUE) {
@@ -1842,7 +1878,7 @@ p.value <- pchisq(chisq, df, lower.tail=FALSE)
 return(list(results="Goodness-of-fit test for Poisson assumption",chisq=chisq, df=df, p.value=p.value))
 }
 ### Sort data set and related vector
-sort.by <- function(...) {
+sortBy <- function(...) {
 .data <<- .data[order(...),]
 if (length(ls.nofunction())>0){
 y <- ls.nofunction()
@@ -1857,7 +1893,7 @@ detach(.data)
 attach(.data, warn.conflicts=FALSE)
 }
 ### One-way tabulation
-tab1 <- function (x0, decimal=1, sort.group=c(FALSE,"decreasing","increasing"), graph=TRUE, missing=TRUE, bar.values=TRUE) {
+tab1 <- function (x0, decimal=1, sort.group=c(FALSE,"decreasing","increasing"), graph=TRUE, missing=TRUE, bar.values=c("frequency","percent", "none")) {
 if(graph){
 		var1 <- as.character(substitute(x0))
 		if(length(var1)>1){
@@ -1882,6 +1918,11 @@ if(graph){
 	if(is.na(names(table.to.plot)[length(names(table.to.plot))]) |
 		names(table.to.plot)[length(names(table.to.plot))]=="NA's") 
 	names(table.to.plot)[length(names(table.to.plot))] <-"Missing"}
+	scale.label <- as.character(title.string()$frequency)
+	suppressWarnings(if(bar.values=="percent"){
+      table.to.plot <- round(table.to.plot/sum(table.to.plot)*100,decimal)
+      scale.label <- "%"
+      })
 	suppressWarnings(if(sort.group=="decreasing"){
 		table.to.plot <- table.to.plot[order(table.to.plot,names(table.to.plot), decreasing=TRUE)]
 		if(max(nchar(names(table.to.plot)))>8 & length(table.to.plot)>6){
@@ -1896,15 +1937,18 @@ if(graph){
 	})
 	if(max(nchar(names(table.to.plot)))>8 & length(table.to.plot)>6){
 		par(mai=c(0.95625, 0.1, 0.76875, 0.39375)+.1+c(0,par()$cin[1]*max(nchar(names(table.to.plot))*.75),0,0))
-		barplot(table.to.plot,main=string3, horiz=TRUE, las=1, xlim=c(0, max(table.to.plot)*1.2)) -> y.coordinates
-		if(bar.values==TRUE){text(table.to.plot, y.coordinates, as.character(table.to.plot), pos=4, offset=0.3)}
-		par(mai=c(0.95625, 0.76875, 0.76875, 0.39375))
+		barplot(table.to.plot,main=string3, horiz=TRUE, las=1, xlim=c(0, max(table.to.plot)*1.2), xlab = scale.label) -> y.coordinates
+		suppressWarnings(if(bar.values=="frequency" | bar.values=="percent" | length(bar.values)==3){
+    text(table.to.plot, y.coordinates, as.character(table.to.plot), pos=4, offset=0.3)
+    })
+    par(mai=c(0.95625, 0.76875, 0.76875, 0.39375))
 		}else{
-			barplot(table.to.plot, main=string3, ylab=as.character(title.string()$frequency), 
+			barplot(table.to.plot, main=string3, ylab=scale.label, 
 				ylim=c(0, max(table.to.plot)*1.1)) -> x.coordinates
-			if(bar.values==TRUE){text(x.coordinates, table.to.plot, as.character(table.to.plot), pos=3)}
-		}
-}
+		suppressWarnings(if(bar.values=="frequency" | bar.values=="percent" | length(bar.values)==3){
+      text(x.coordinates, table.to.plot, as.character(table.to.plot), pos=3)
+		})
+}}
 if(any(is.na(x0))){
 	if(is.factor(x0)){
 		output0 <- t(t(as.table(summary(x0))))
@@ -1914,17 +1958,17 @@ if(any(is.na(x0))){
 		output0 <- t(t(table(x0, exclude=NULL)))
 		output1 <- (t(t(table(x0))))
 	}	
-		percent0 <- round(output0[,1]/sum(output0)*100,decimal)
-		percent1 <- round(output1[,1]/sum(output1[,1],na.rm=TRUE)*100,decimal)
-		output <- cbind(output0, percent0, c(percent1,as.integer(0)))
+		percent0 <- output0[,1]/sum(output0)*100
+		percent1 <- output1[,1]/sum(output1[,1],na.rm=TRUE)*100
+		output <- cbind(output0, round(percent0,decimal), round(cumsum(percent0),decimal), c(round(percent1,decimal),as.integer(0)), round(cumsum(c(percent1, as.integer(0))),decimal))
 suppressWarnings(if(sort.group=="decreasing"){
 	output <- output[order(output[,1],decreasing=TRUE),]
 })
 suppressWarnings(if(sort.group=="increasing"){
 	output <- output[order(output[,1],decreasing=FALSE),]
 })
-		output <- rbind(output,c(sum(as.integer(output[,1])),100,100))
-		colnames(output) <- c("Frequency","  %(NA+)","  %(NA-)")
+		output <- rbind(output,c(sum(as.integer(output[,1])),100,100,100,100))
+		colnames(output) <- c("Frequency","  %(NA+)", "cum.%(NA+)","  %(NA-)","cum.%(NA-)")
 		rownames(output)[nrow(output)] <- "  Total"
 }
 else{
@@ -1935,10 +1979,10 @@ suppressWarnings(if(sort.group=="decreasing"){
 suppressWarnings(if(sort.group=="increasing"){
 	output <- output[order(table(x0),names(table(x0)), decreasing=FALSE),]
 })
-	percent <- round(output/sum(output)*100,decimal)
-	output <- cbind(output,percent)
-	output <- rbind(output,c(sum(output[,1]),100))
-	colnames(output) <- c("Frequency","Percent")
+	percent <- output/sum(output)*100
+	output <- cbind(output,round(percent,decimal),round(cumsum(percent),decimal))
+	output <- rbind(output,c(sum(output[,1]),100,100))
+	colnames(output) <- c("Frequency","Percent","Cum. percent")
 	rownames(output)[length(rownames(output))] <- "  Total"
 }
 cat("\n")
@@ -1953,6 +1997,7 @@ else{
 	print(output, justify="right")
 	cat("\n")
 }
+returns <- list(output.table=output)
 }
 ### recode values of a vector from a lookup array  
 
@@ -2015,6 +2060,7 @@ attach(.data, warn.conflicts=FALSE)
 }
 ### Dot plot
 dotplot <- function(x, bin=40, by=NULL, ...){
+Sys.setlocale(category = "LC_ALL", locale = "C")
 if (is.null(by)){
 	value <- subset(x, !is.na(x))
 }else{
@@ -2168,7 +2214,7 @@ if(is.factor(by0)){
 	}
 	par(mai=c(0.95625, 0.76875, 0.76875, 0.39375))
 	}
- 
+Sys.setlocale(category = "LC_ALL", locale = "") -> none 
 }
 ### Labeling variables
 label.var <-function(var, label, pack=TRUE){
@@ -2284,7 +2330,8 @@ if(length(y)>0){
 }
 
 ### Pyramid of age by sex
-pyramid <- function(age, sex, binwidth=5, age.sex.table=NULL, percent=c(FALSE,"each","total"), ...){
+pyramid <- function(age, sex, binwidth=5, age.sex.table=NULL, output.table=FALSE, 
+  percent=c("none","each","total"), ...){
 if(is.null(age.sex.table)){
 agegr <- cut(age, br = ( (min(age, na.rm=TRUE)%/%binwidth)
 :(max(age,na.rm=TRUE)%/%binwidth+1)*binwidth))
@@ -2294,7 +2341,6 @@ if(ncol(table(agegr,sex))!=2)stop("There must be two genders")
 }else{
 	age.sex.table.dimnames <- names(attr(age.sex.table,"dimnames"))
 }
-
 
 
 par(mfrow=c(1,2))
@@ -2318,6 +2364,27 @@ par(mai=right.par.mai)
 barplot(age.sex.table[,2], horiz=TRUE, yaxt="n",xlab=colnames(age.sex.table)[2], xlim=c(0,max(age.sex.table)), ...) 
 par(mfrow=c(1,1))
 par(mai=old.par.mai)
+
+if(output.table){
+  cat("\n","Tabulation of age by sex ")
+  if(length(percent)==3){
+    cat("(frequency).","\n")
+  }else{
+  if(percent=="each"){
+    age.sex.table <- format(age.sex.table, digits=3)
+    cat("(percentage of each sex).","\n")
+    }else{
+    if(percent=="total"){
+        age.sex.table <- format(age.sex.table, digits=3)
+        cat("(percentage of total).","\n")
+      }else{
+        cat("(frequency).","\n")
+      }
+    }
+    }
+  print.noquote(age.sex.table)
+  cat("\n")
+}
 }
 
 

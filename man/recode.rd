@@ -26,7 +26,7 @@ Changing the value label of a variable's levels can be done with 'levels(var)[le
 age       <- c( 37,  99,  24,  33,  31,  30,  26,  25) 
 systolic  <- c(120, 120, 110, 120, 130, 120, 888, 999) 
 diastolic <- c( 80,  80,  70,  80,  70, 999,  70,  60)
-sick      <- c(  1,   2,   2,   1,   2,   2,   2,   2)
+sick      <- c(  1,   2,   2,   1,   2,   2,   2,   NA)
 treated   <- c(  2,   1,   2,   2,   1,   2,   2,   1)
 yesno     <- c("Y", "N")
 sick      <- factor(sick, labels=yesno)
@@ -38,7 +38,7 @@ rm(list=ls())
 
 # The above lines generate a hypothetical data frame. 
 # In reality, one just exploits 'use("datafile")', if the "datafile" exists.
-
+.data
 summ()
 recode(age, old.value=99, new.value=NA)
 recode(vars=c(systolic, diastolic), 999, NA) # The value 888 is not recoded.
@@ -47,5 +47,7 @@ summ()
 table(sick, treated)
 recode(vars=c(sick, treated), old.value="Y", new.value="yes")
 table(sick, treated)
+recode(sick, is.na(sick), "N") # Missing value of sick changed into "no". 
+table(sick, treated) 
 }
 \keyword{database}

@@ -12,5 +12,11 @@ for the cause of acute food poisoning after a dinner party.
 \references{
 See: \url{http://www.cdc.gov/eis/casestudies/casestudyex.htm}.
 }
+\examples{
+zap()
+data(oswego)
+use(oswego)
+pyramid(age, sex)
+}
 \keyword{datasets}
     

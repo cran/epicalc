@@ -1,13 +1,13 @@
 \name{label.var}
 \alias{label.var}
 \alias{pack}
-\alias{sort.by}
+\alias{sortBy}
 \title{Label a variable, pack variables into a data frame and sort all data}
 \description{Label a variable; integrate outside variable(s) into .data; sort the whole dataset.}
 \usage{
 label.var(var, label, pack = TRUE)   
 pack(data.frame = .data) 
-sort.by(...)
+sortBy(...)
 }
 \arguments{
 	\item{var}{A variable inside .data or a free vector.}
@@ -53,7 +53,7 @@ pp3 <- pp^3
 pack()
 
 age <- c(37, 32, 24, 33, 31, 30, 26, 25)
-sort.by(age)
+sortBy(age)
 des()
 age
 }
