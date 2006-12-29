@@ -1,14 +1,20 @@
-\name{Family data}
-\docType{data}
+\name{familydata}
 \alias{familydata}
-\title{Anthropometric and financial data of a hypothetical family }
-\description{
-This dataset contains 11 records of family members. Variables include
-financial anthropometry and money carried by individuals.
-}
+\docType{data}
+\title{ A hypothetical family}
+\description{ Anthropometric and financial data of a hypothetical family}
 \usage{data(familydata)}
-\format{A data frame containing 11 observations and 6 variables with
-variable description.}
+\format{
+  A data frame with 11 observations on the following 6 variables.
+  \describe{
+    \item{\code{code}}{a character vector}
+    \item{\code{age}}{a numeric vector}
+    \item{\code{ht}}{a numeric vector}
+    \item{\code{wt}}{a numeric vector}
+    \item{\code{money}}{a numeric vector}
+    \item{\code{sex}}{a factor with levels \code{F} \code{M}}
+  }
+}
 \examples{
 data(familydata)
 use(familydata)
@@ -23,4 +29,3 @@ dots.of.money <- predict.lm(lm1, new.data.frame)
 lines(dots.of.age, exp(dots.of.money), col="blue")
 }
 \keyword{datasets}
-    

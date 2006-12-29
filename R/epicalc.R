@@ -11,110 +11,13 @@
 
 # Lastupdated.Epicalc <- "22:05 2006-November-28"
 
-### Display add-in functions
-check.add.in <- function() {
-cat("Add-in functions in Epicalc.R :", "\n")
-cat("----","\n")
-cat("cc (outcome, exposure, decimal = 2, cctable = NULL, graph = TRUE, design = \"cohort\")","\n", sep="")
-cat("          compute OR, 95%CI, Chi2, & graphs (if=TRUE) in different designs","\n",sep="")
-cat("cci (caseexp, controlex, casenonex, controlnonex, cctable = NULL, decimal = 2, graph = TRUE, design = \"cohort\")", "\n")
-cat("          same as cc but with 2x2 table input from keyboard","\n")
-cat("cs (outcome, exposure, cctable = NULL, decimal = 3)","\n", sep="")
-cat("          compute RR, Rdiff, 95%CI for a cohort and cross-sectional study","\n",sep="")
-cat("csi(caseexp, controlex, casenonex, controlnonex, cctable = NULL, decimal = 3) ", "\n")
-cat("          same as cs but with 2x2 table input from keyboard","\n")
-cat("des(x = .data, search.position = 2)", "\n")
-cat("          display variables in the loaded object and their description","\n")
-cat("detach.all.data()", "\n")
-cat("          detach all data frame from the search path","\n")
-cat("dotplot(x, bin = 40, by = NULL, ...)", "\n")
-cat("          dotplot a continuous variable (by group)","\n")
-cat("followup.plot(id, time, outcome, by=NULL, n.of.lines=NULL, legend=TRUE)", "\n")
-cat("          Draw lines of longitudinal value of a continuous variable (by group)","\n")
-cat("IDR.display(count.model, decimal = 3, alpha = 0.05)","\n") 
-cat("          compute incidence density ratios from a poisson regression", "\n")
-cat("kap (kaptable, wttable = NULL)", "\n")
-cat("          compute kappa statistic for two raters agreement from observed and weight tables", "\n")
-cat("label.var (var, label, pack = TRUE)", "\n")
-cat("          label a variable and pack into .data", "\n")
-cat("label.table (outcome, exposure, cctable = NULL, cctable.dimnames = NULL)","\n")
-cat("          labeling table mainly for cc and cs","\n")
-cat("logistic.display (logistic.model, alpha = 0.05, decimal = 3)", "\n")
-cat("          logistic regression with odds ratio","\n")
-cat("lookup(x, lookup.array)", "\n")
-cat("          returns numeric vector using a pre-defined lookup array, `tx'", "\n")
-cat("lroc(logistic.model)", "\n")
-cat("          ROC curve of a logistic regression model", "\n")
-cat("lrtest (model1, model2)", "\n")
-cat("          likelihood ratio test between 2 models","\n")
-cat("ls.nofunction()", "\n")
-cat("          list all objects in memory excluding functions", "\n")
-cat("make2x2(caseexp, controlex, casenonex, controlnonex)", "\n")
-cat("          prepare a 2 by 2 table from input of 4 cell values", "\n")
-cat("match.tab  (case, exposed, strata)", "\n")
-cat("          matched tabulation case control study", "\n")
-cat("mhor(..., mhtable = NULL, graph = TRUE, design = \"cohort\")","\n",sep="")
-cat("          Mantel-Haenszel OR, chi2 and homogeneity test & graph (if=TRUE)","\n", sep="")
-cat("mlogit.display (multinom.model, decimal = 2, alpha = 0.05)", "\n")
-cat("          Display multinomial regression results", "\n")
-cat("n.for.2p (p1, p2, alpha = 0.05, power = 0.8, ratio = 1) ","\n")	
-cat("          sample size for hypothesis testing of two proportions", "\n")
-cat("n.for.2means (mu1, mu2, sd1, sd2, ratio = 1, alpha = 0.05, power = 0.8)", "\n")
-cat("          sample size for hypothesis testing of two means", "\n")
-cat("n.for.lqas (p0, q = 0, N = 10000, alpha = 0.05, exact = FALSE) ","\n")
-cat("          sample size for lot quality assurance sampling", "\n")
-cat("n.for.survey (p, delta = 0.5 * min(c(p, 1 - p)), popsize = FALSE, deff = 1, alpha = 0.05)","\n")	
-cat("          sample size for survey", "\n")
-cat("ordinal.or.display  (ordinal.model, decimal = 3, alpha = 0.05)", "\n")
-cat("          compute ordinal odds ratio from an ordinal logistic regression", "\n")
-cat("pack (data.frame = .data)", "\n")
-cat("          pack current new variable(s) into the existing .data", "\n")
-cat("poisgof(model)","\n")
-cat("          goodness-of-fit test for Poisson assumption","\n")
-cat("power.for.2means (mu1, mu2, n1, n2, sd1, sd2, alpha = 0.05)", "\n")
-cat("          power in testing significant difference of two means","\n")
-cat("power.for.2p (p1, p2, n1, n2, alpha = 0.05)", "\n")
-cat("          power in testing significant difference of two proportions","\n")
-cat("pyramid (age, sex, binwidth = 5, age.sex.table = NULL, ..., percent = c(FALSE, \"each\", \"total\"))", "\n")
-cat("          drawing a pyramid barplot for age-sex distribution","\n")
-cat("recode (vars, old.value, new.value)", "\n")
-cat("          recode value of variables", "\n")
-cat("roc.from.table (table, graph = TRUE)", "\n")
-cat("           ROC curve from a diagnostic table","\n")
-cat("shapiro.qqnorm (x, ...)", "\n")
-cat("          draw a quantile-normal plot with Shapiro-Wilk test P value", "\n")
-cat("sortBy(...)", "\n")
-cat("          sort hidden data frame (.data) and related vector(s) by argument order", "\n")
-cat("summ  (x = .data, by = NULL, graph = TRUE, box = FALSE)", "\n")
-cat("          summary Statistics of the dataset or a variable with graph", "\n")
-cat("tabpct  (row, col, ..., graph = TRUE, las = 0)", "\n")
-cat("          cross-tabulation with row and col percents & graph","\n")
-cat("tab1(x0, decimal = 1, sort.group = c(FALSE, \"decreasing\",\"increasing\")","\n")
-cat("graph = TRUE, missing = TRUE, bar.values = TRUE)","\n")
-cat("          one-way tabulation of a vector","\n")
-cat("title.string (distribution.of, by, frequency, locale=.locale)","\n")
-cat("          set the string for automatic graph title","\n")
-cat("use (filename, clear = TRUE)", "\n")
-cat("          read in Stata or EpiInfo file and hide as `.data'","\n")
-cat("zap()", "\n")
-cat("          remove all non-function objects and detach all data frames","\n")
-cat("\n")
-cat("Last modification at", .Lastupdated, "\n") 
-cat("\n")
-cat("[Parameters in bracket with a `=' sign are default values.]","\n")
-cat("Use <Ctrl> + <up arrow> to scroll up.","\n")
-cat("\n")
-cat("If the library of Epicalc has been properly installed, it is better to type `help.start()'.", "\n")
-cat("Then click `packages' and then `epicalc'.","\n")
-}
-
 # Setting locale and automatic graph titles
 .locale <- FALSE # All automatic graphs will initially have English titles
 .distribution.of <- "Distribution of"
 .by <- "by"
 .frequency <- "Frequency"
 
-set.title <- function(locale){
+setTitle <- function(locale){
   Sys.setlocale("LC_ALL",locale)
   print(Sys.getlocale())
   .locale <<- TRUE 
@@ -122,7 +25,7 @@ set.title <- function(locale){
   # listed in the array of the title string.
 }
 
-title.string <- function(distribution.of=.distribution.of,by=.by,frequency=.frequency, locale=.locale, return.look.up.table=FALSE){
+titleString <- function(distribution.of=.distribution.of,by=.by,frequency=.frequency, locale=.locale, return.look.up.table=FALSE){
 	# title.array can be changed or added rows
     title.array <- rbind( c("Distribution of","by","Frequency"),
                       c("Pembahagian","mengikut","Kekerapan"),
@@ -212,7 +115,7 @@ options(warn=0)
 }
 }
 ### Detaching all data frame from the search path
-detach.all.data <- function(){
+detachAllData <- function(){
 pos.to.detach <- (1:length(search()))[substring(search(),first=1,last=8)!="package:" &
 	search()!=".GlobalEnv" & search()!="Autoloads" & search()!="CheckExEnv"]
 for(i in 1:length(pos.to.detach)){
@@ -304,7 +207,7 @@ if(graph==TRUE){
 	rownames(tab)[is.na(rownames(tab))] <- "missing"
 	colnames(tab)[is.na(colnames(tab))] <- "missing"
 	las.value <- las
-	plot(as.table(tab),xlab=string2, ylab=string4, main=paste(title.string()$distribution.of,string4,title.string()$by,string2),
+	plot(as.table(tab),xlab=string2, ylab=string4, main=paste(titleString()$distribution.of,string4,titleString()$by,string2),
 	col=c("white",2:length(col)), las=las.value)}
 
 cpercent <- tab
@@ -426,7 +329,7 @@ if(graph==TRUE & design=="cohort"){
 	}
 }
 }else{
-label.table(outcome, exposure, cctable=cctable, cctable.dimnames=cctable.dimnames) -> a
+labelTable(outcome, exposure, cctable=cctable, cctable.dimnames=cctable.dimnames) -> a
 cci (caseexp=a$caseexp, controlex= a$controlex, casenonex=a$casenonex, controlnonex=a$controlnonex, 
 	cctable=a$cctable, decimal=decimal, graph=graph, design=design)
 }
@@ -521,7 +424,7 @@ if(any(c(caseexp, controlex, casenonex, controlnonex)<5)) {
 	}
 }
 #### Create a `cctable' in global environment and label row and column with the variable descriptions
-label.table <- function(outcome, exposure, cctable=NULL , cctable.dimnames=NULL){
+labelTable <- function(outcome, exposure, cctable=NULL , cctable.dimnames=NULL){
 if(is.null(cctable)){
 	cctable <- table(outcome, exposure, deparse.level=1, dnn=list(substitute(row),substitute(col)))
 }
@@ -625,7 +528,7 @@ cat("\n")
 	}
 
 }else{
-label.table(outcome, exposure, cctable=cctable, cctable.dimnames=cctable.dimnames) -> a
+labelTable(outcome, exposure, cctable=cctable, cctable.dimnames=cctable.dimnames) -> a
 csi (caseexp=a$caseexp, controlex= a$controlex, casenonex=a$casenonex, controlnonex=a$controlnonex, 
 	cctable=a$cctable, decimal=decimal)
 }
@@ -1091,7 +994,7 @@ cat("\n")
 }
 }
 ### List objects excluding function
-ls.nofunction <- function() {
+lsNoFunction <- function() {
 	y <- ls(envir= .GlobalEnv)
 	vector1 <- character(0)
 if(length(y)==0){vector1 <- character(0)}else{
@@ -1144,7 +1047,7 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 		}else{
 			string2 <- as.character(substitute(x))
 		}
-		string3 <- paste(title.string()$distribution.of,string2)
+		string3 <- paste(titleString()$distribution.of,string2)
 		if(substring(search()[2],first=1,last=8)!="package:"){
 			string4 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==substitute(by)]
 			if(length(string4)==0){
@@ -1157,7 +1060,7 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 		}else{
 			string4 <- as.character(substitute(by))
 		}
-		string5 <- paste(string3,title.string()$by,string4)
+		string5 <- paste(string3,titleString()$by,string4)
 #		if(length(grep("Thai",Sys.getlocale("LC_ALL")))==1){string5<-paste(string3,"จำแนกตาม",string4)}
 #		if(length(grep("People's Republic of China",Sys.getlocale("LC_ALL")))==1){string5<-paste(string3,"ำ๋",string4)}
 #		if(length(grep("Malay",Sys.getlocale("LC_ALL")))==1){string5<-paste(string3,"mengikut",string4)}
@@ -1723,15 +1626,15 @@ pack <- function(data.frame=.data){
 data1 <- data.frame
 j <- NULL
 k <- attr(data1, "var.labels")
-for(i in 1:length(ls.nofunction())){
-	if(length(ls.nofunction())==0) stop("No related vector outside the default data frame")
-	if(!is.list(get(ls.nofunction()[i])) && (length(get(ls.nofunction()[i]))==nrow(data1)) 
-		&& ls.nofunction()[i]!=i){
-		if(any(names(data1)==ls.nofunction()[i])){
-			data1[,names(.data)==ls.nofunction()[i]] <- get(ls.nofunction()[i])
+for(i in 1:length(lsNoFunction())){
+	if(length(lsNoFunction())==0) stop("No related vector outside the default data frame")
+	if(!is.list(get(lsNoFunction()[i])) && (length(get(lsNoFunction()[i]))==nrow(data1)) 
+		&& lsNoFunction()[i]!=i){
+		if(any(names(data1)==lsNoFunction()[i])){
+			data1[,names(.data)==lsNoFunction()[i]] <- get(lsNoFunction()[i])
 		}else{
-			data1 <- as.data.frame(cbind(data1,get(ls.nofunction()[i])))
-			names(data1)[ncol(data1)] <- ls.nofunction()[i]
+			data1 <- as.data.frame(cbind(data1,get(lsNoFunction()[i])))
+			names(data1)[ncol(data1)] <- lsNoFunction()[i]
 			j <- c(j,i)
 			if(!is.null(k)){ k <- c(k,"")} 
 		}
@@ -1739,7 +1642,7 @@ for(i in 1:length(ls.nofunction())){
 		}
 	}
 	detach(.data)
-	rm(list=ls.nofunction()[j], pos=1)
+	rm(list=lsNoFunction()[j], pos=1)
 	.data <<- data1
 	attach(.data, warn.conflicts=FALSE)
 }
@@ -1811,7 +1714,7 @@ qqline(x, col="blue", lty=2)
 }
 
 ### Match tabulation
-match.tab <- function(case, exposed, strata) {
+matchTab <- function(case, exposed, strata) {
 cat("\n")
 exposed1 <- exposed
 if(is.factor(exposed1)){
@@ -1846,11 +1749,11 @@ cat ("Total number of match sets in the tabulation =", rowi1,"\n")
 attach(i, warn.conflicts=FALSE)
 all.unexposed <- all.subjects-all.exposed
 ncontrol.exposed1 <- factor(ncontrol.exposed, levels=as.character(0:max(ncontrol.exposed)))
-table(ncase.exposed, ncontrol.exposed1, ncontrols, dnn=c("No. of cases exposed","No. of controls exposed","No. of controls per case"))->match.table
+table(ncase.exposed, ncontrol.exposed1, ncontrols, dnn=c("No. of cases exposed","No. of controls exposed","No. of controls per case"))->matchTable
 cat("\n")
 for(i in 1:max(ncontrols)){
 	cat(paste("Number of controls =",i,"\n"))
-	print(match.table[,1:(i+1),i])
+	print(matchTable[,1:(i+1),i])
 	cat("\n")
 }
 ### computing M-H OR
@@ -1880,12 +1783,12 @@ return(list(results="Goodness-of-fit test for Poisson assumption",chisq=chisq, d
 ### Sort data set and related vector
 sortBy <- function(...) {
 .data <<- .data[order(...),]
-if (length(ls.nofunction())>0){
-y <- ls.nofunction()
-for(i in 1:length(ls.nofunction())){
-	if(length(get(ls.nofunction()[i]))==nrow(.data)){
-	nam <- ls.nofunction()[i]
-	assign (nam, (get(ls.nofunction()[i]))[order(...)], env = .GlobalEnv)
+if (length(lsNoFunction())>0){
+y <- lsNoFunction()
+for(i in 1:length(lsNoFunction())){
+	if(length(get(lsNoFunction()[i]))==nrow(.data)){
+	nam <- lsNoFunction()[i]
+	assign (nam, (get(lsNoFunction()[i]))[order(...)], env = .GlobalEnv)
 	}
 }
 }
@@ -1910,7 +1813,7 @@ if(graph){
 		}else{
 			string2 <- as.character(substitute(x0))
 		}
-	string3 <- paste(title.string()$distribution.of,string2)
+	string3 <- paste(titleString()$distribution.of,string2)
 	
 	table.to.plot <- table(x0)
 	if(missing==TRUE){table.to.plot <- table(x0,exclude=NULL)
@@ -1918,7 +1821,7 @@ if(graph){
 	if(is.na(names(table.to.plot)[length(names(table.to.plot))]) |
 		names(table.to.plot)[length(names(table.to.plot))]=="NA's") 
 	names(table.to.plot)[length(names(table.to.plot))] <-"Missing"}
-	scale.label <- as.character(title.string()$frequency)
+	scale.label <- as.character(titleString()$frequency)
 	suppressWarnings(if(bar.values=="percent"){
       table.to.plot <- round(table.to.plot/sum(table.to.plot)*100,decimal)
       scale.label <- "%"
@@ -2029,7 +1932,7 @@ lookup <- function (x, lookup.array)
 use <- function(filename, clear=TRUE) {
 library(foreign)
 if(clear){
-	detach.all.data()
+	detachAllData()
 }
 if(is.character(filename)){
 if(suppressWarnings(any(tolower(list.files())==tolower(filename), na.rm=TRUE))){
@@ -2102,7 +2005,7 @@ if(substring(search()[2],first=1,last=8)!="package:"){
 	string2 <- as.character(substitute(x))
 	byname <- as.character(substitute(by))
 }
-string3 <- paste(title.string()$distribution.of,string2)
+string3 <- paste(titleString()$distribution.of,string2)
 value.pretty <- pretty(value)
 if(any(class(x)=="Date")) {
 	range.date <- difftime(summary(x)[6], summary(x)[1])
@@ -2144,9 +2047,9 @@ if(is.null(by)){
 	glm(xgr~value[order(value)])->model1
 	xgr.pretty <- model1$coefficient[1] + model1$coefficient[2]*value.pretty
 	if(max(freq)<20){
-		plot(xgr,freq, xaxt="n", xlab=" ",main=string3,	ylab=title.string()$frequency,ylim=c(0,20), ...)
+		plot(xgr,freq, xaxt="n", xlab=" ",main=string3,	ylab=titleString()$frequency,ylim=c(0,20), ...)
 	}else{
-	plot(xgr,freq, xaxt="n", xlab=" ",main=string3,	ylab=title.string()$frequency, ...)
+	plot(xgr,freq, xaxt="n", xlab=" ",main=string3,	ylab=titleString()$frequency, ...)
 	}
 	if(any(class(x)=="POSIXct")){
 		axis(side=1, at=xgr.pretty, labels=as.character(time.pretty,format=format.time))	
@@ -2186,7 +2089,7 @@ if(is.factor(by0)){
 	}
 	glm(xgr~value)->model1
 	xgr.pretty <- model1$coefficient[1] + model1$coefficient[2]*value.pretty 
-	main.lab <- paste(string3,title.string()$by,byname)
+	main.lab <- paste(string3,titleString()$by,byname)
 	if(max(y)<20){
 	plot(xgr,y, xaxt="n", yaxt="n",
 		xlab=" ",main=main.lab, ylim=c(-1,20),
@@ -2469,8 +2372,3 @@ time <- time[order(id, time)]
 }
 
 
-### Remark to list the above functions if needed.
-cat("\n")
-cat("Add-in functions developed by Epidemiology Unit, PSU, Thailand", "\n")
-cat("[Type `check.add.in()' to see what epi calculator commands are added in.]", "\n")
-cat("\n")

@@ -1,18 +1,25 @@
 \name{Sleepiness}
-\docType{data}
 \alias{sleep3}
-\title{Sleepiness among participants in a workshop }
-\description{
-This dataset contains 15 records of participants in a workshop.
-Data include gender, date of birth, sleepiness in the lecture
-and in group work, weight and height.
-}
+\docType{data}
+\title{ Sleepiness in a workshop}
+\description{ Sleepiness among participants in a workshop}
 \usage{data(sleep3)}
-\format{A data frame containing 15 observations and 8 variables.}
+\format{
+  A data frame with 15 observations on the following 8 variables.
+  \describe{
+    \item{\code{id}}{a numeric vector}
+    \item{\code{gender}}{a factor with levels \code{male} \code{female}}
+    \item{\code{dbirth}}{a Date for birth date}
+    \item{\code{sleepy}}{a numeric vector for any experience of sleepiness in the class: 0=no, 1=yes}
+    \item{\code{lecture}}{a numeric vector for ever felt sleepy during a lecture: 0=no, 1=yes}
+    \item{\code{grwork}}{a numeric vector for ever felt sleepy during a group work: 0=no, 1=yes}
+    \item{\code{kg}}{a numeric vector}
+    \item{\code{cm}}{a numeric vector}
+  }
+}
 \examples{
 data(sleep3)
 use(sleep3)
 des()
 }
 \keyword{datasets}
-    

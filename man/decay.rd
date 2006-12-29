@@ -1,14 +1,18 @@
 \name{Tooth decay}
 \docType{data}
 \alias{decay}
-\title{Dataset on tooth decay and mutan Streptococcus}
+\title{Dataset on tooth decay and mutan streptococci}
 \description{
 Relationship between bacteria and presence of any decayed tooth.
-     decay = Any decayed tooth  
-     strep = CFU of mutan Streptococci in saliva.
 }
 \usage{data(decay)}
-\format{A data frame containing 436 observations and 2 variables.}
+\format{
+  A data frame with 436 observations on the following 2 variables.
+  \describe{
+    \item{\code{decay}}{a numeric vector}
+    \item{\code{strep}}{a numeric vector}
+  }
+}
 \source{Teanpaisan, R., Kintarak, S., Chuncharoen, C., Akkayanont, P. 1995
 Mutans Streptococci and dental -caries in schoolchildren 
 in Southern Thailand. 

@@ -1,11 +1,11 @@
 \name{Data for cleaning}
 \docType{data}
 \alias{exampledata}
-\title{Dataset for practice of cleaning, labelling and recoding}
+\title{Dataset for practicing cleaning, labelling and recoding}
 \description{
-The data were from clients of a family planning clinic.
+The data come from clients of a family planning clinic.
 
-id =ID code                
+id = ID code                
 
 age = age in years
 
@@ -18,9 +18,9 @@ ped   = patient's eduction  code: 1='no education', 2='primary school',
 income    monthly income in Thai baht 
 code: 1='Nil',  2='<1,000', 3='1,000-4,999',  4='5,000-9,999', 6='10,000+'
 
-am=age(yr) 1st marriage 
+am=age(yr) at 1st marriage 
 
-reason = reason for fam. plan. code: 1='Birth spacing', 2='Enough children'.
+reason = reason for family planning. code: 1='Birth spacing', 2='Enough children',
 3='Others'
 
 bps = systolic BP          
@@ -31,7 +31,7 @@ wt  = weight (kg)
 
 ht  = height (cm)          
 
-For all variable except id: 9, 99, 99.9, 888, 999 are missing values
+For all variables except id: 9, 99, 99.9, 888, 999 are missing values
 }
 \usage{data(exampledata)}
 \format{A data frame containing 251 observations and 11 variables.}

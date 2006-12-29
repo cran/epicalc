@@ -1,26 +1,27 @@
 \name{Age at marriage}
-\docType{data}
 \alias{marryage}
-\title{Dataset on age at marriage}
+\docType{data}
+\title{ Dataset on age at marriage}
 \description{
 This dataset contains data on age at first marriage of attendants
 at a workshop.
-
-id                         
-
-sex                        
-
-birthyr  year of birth     
-
-educ     level of education : up to bachelor, higher than bachelor 
-
-marital  marital status     : single vs married
-
-maryr    year of marriage  
-
-endyr    year of analysis  
 }
 \usage{data(marryage)}
-\format{A data frame containing 27 observations and 7 variables.}
+\format{
+  A data frame with 27 observations on the following 7 variables.
+  \describe{
+    \item{\code{id}}{a numeric vector}
+    \item{\code{sex}}{a factor with levels \code{male} \code{female}}
+    \item{\code{birthyr}}{a numeric vector}
+    \item{\code{educ}}{a factor with levels \code{bach-} \code{>bachelor}}
+    \item{\code{marital}}{a factor with levels \code{Single} \code{Married}}
+    \item{\code{maryr}}{a numeric vector}
+    \item{\code{endyr}}{a numeric vector}
+  }
+}
+\examples{
+data(marryage)
+use(marryage)
+des()
+}
 \keyword{datasets}
-    

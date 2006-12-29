@@ -2,27 +2,20 @@
 \docType{data}
 \alias{compaq}
 \title{Dataset on cancer survival}
-\description{
-This dataset contains 
-
-Variable       Description
-
-id             identification number
-
-hospital       hospital   
-
-status         status of subject 0=censored, 1=failed            
-
-stage          stage of the disease
-
-agegr          Age group (years): <40, 40-49, 50-59, 60+ 
-
-ses            socio-economic status: Rich, high-middle class, poor-middle class, poor.            
-
-year           Duration of followup in years           
-}
+\description{Dataset on cancer survival checking whether there was a difference between cancer patients in private and public hospitals.}
 \usage{data(compaq)}
-\format{A data frame containing 1064 observations and 7 variables.}
+\format{
+  A data frame with 1064 observations on the following 7 variables.
+  \describe{
+    \item{\code{id}}{a numeric vector}
+    \item{\code{hospital}}{a factor with levels \code{Public hospital} \code{Private hospital}}
+    \item{\code{status}}{a numeric vector}
+    \item{\code{stage}}{a factor with levels \code{Stage 1} \code{Stage 2} \code{Stage 3} \code{Stage 4}}
+    \item{\code{agegr}}{a factor with levels \code{<40} \code{40-49} \code{50-59} \code{60+}}
+    \item{\code{ses}}{a factor with levels \code{Rich} \code{High-middle} \code{Poor-middle} \code{Poor}}
+    \item{\code{year}}{a numeric vector}
+  }
+}
 \examples{
 data(compaq)
 use(compaq)

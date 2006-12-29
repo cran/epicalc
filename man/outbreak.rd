@@ -1,7 +1,7 @@
 \name{Outbreak investigation}
 \docType{data}
 \alias{outbreak}
-\title{Outbreak of food poisoning in a sportday, Thailand 1990-08-25.}
+\title{Outbreak of food poisoning in a sportsday, Thailand 1990.}
 \description{
 Variables were coded as 0 = no, 1 = yes and 9 = missing/unknown
 for three food items consumed by participants: 

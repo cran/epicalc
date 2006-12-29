@@ -28,6 +28,6 @@ des(induced)
 age <- "abc" # Just a silly example for a variable
 des(age)
 rm(age)
-detach.all.data()  
+detachAllData()  
 }
 \keyword{database}

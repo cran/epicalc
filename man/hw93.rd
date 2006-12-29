@@ -1,26 +1,28 @@
-\name{Hookworm in 1993}
-\docType{data}
+\name{Hookworm 1993}
 \alias{hw93}
-\title{A study on hookworm prevalence and intensity in 1993}
+\docType{data}
+\title{ Hookworm prevalence and intensity in 1993}
 \description{
-A dataset from a cross-sectional survey examining hookworm
-infection and shoes wearing
-
-id             Personal identication                 
-
-epg            eggs/g. of feces
-
-age            age in years                             
-
-shoes          Shoe wearing     (yes/no)
-
-intense        Intensity (EPG) group: 0, 1-1,999  and 2000+  
-
-agegr          Age group        
-
-
-}
+A dataset from a cross-sectional survey in 1993 examining hookworm
+infection}
 \usage{data(hw93)}
-\format{A data frame containing 637 observations and 6 variables.}
+\format{
+  A data frame with 637 observations on the following 6 variables.
+  \describe{
+    \item{\code{id}}{a numeric vector for personal identification number}
+    \item{\code{epg}}{a numeric vector for eggs per gram of faeces}
+    \item{\code{age}}{a numeric vector for age in years}
+    \item{\code{shoes}}{a factor for shoe wearing with levels \code{no} \code{yes}}
+    \item{\code{intense}}{a factor for intensity of infection in epg. with levels \code{0} \code{1-1,999} \code{2,000+}}
+    \item{\code{agegr}}{a factor for age group with levels \code{<15 yrs} \code{15-59 yrs} \code{60+ yrs}}
+  }
+}
+\examples{
+data(hw93)
+library(MASS)
+use(hw93)
+intense.ord <- ordered(intense)
+ord.hw <- polr(intense.ord ~ agegr + shoes)
+summary(ord.hw)
+}
 \keyword{datasets}
-    
