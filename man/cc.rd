@@ -54,12 +54,12 @@ Alternatively, a table saved from 'make2x2' can be supplied as the 'cctable' arg
 }
 \seealso{'fisher.test', 'chisq.test' and 'mhor'}
 \examples{
-data(oswego)
-.data <- oswego
+data(Oswego)
+.data <- Oswego
 attach(.data)
 
 # The above lines generate a hypothetical data frame. 
-# In reality, one just exploits 'use("oswego.rec"), if the file is available.
+# In reality, one just exploits 'use("Oswego.rec"), if the file is available.
 cc(ill, chocolate)
 cc(ill, chocolate, design="case-control")
 cs(ill, chocolate) # The outcome variable should come before the exposure.

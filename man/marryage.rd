@@ -1,12 +1,12 @@
 \name{Age at marriage}
-\alias{marryage}
+\alias{Marryage}
 \docType{data}
 \title{ Dataset on age at marriage}
 \description{
 This dataset contains data on age at first marriage of attendants
 at a workshop.
 }
-\usage{data(marryage)}
+\usage{data(Marryage)}
 \format{
   A data frame with 27 observations on the following 7 variables.
   \describe{
@@ -20,8 +20,8 @@ at a workshop.
   }
 }
 \examples{
-data(marryage)
-use(marryage)
+data(Marryage)
+use(Marryage)
 des()
 }
 \keyword{datasets}

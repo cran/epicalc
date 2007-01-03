@@ -1,4 +1,4 @@
-\name{Zap}
+\name{zap}
 \alias{zap}
 \title{Remove and detach all}
 \description{Detach and remove all objects and data frames}

@@ -1,4 +1,4 @@
-\name{Sampsize}
+\name{sampsize}
 \alias{n.for.survey}
 \alias{n.for.2means}
 \alias{n.for.2p}

@@ -17,6 +17,28 @@
 .by <- "by"
 .frequency <- "Frequency"
 
+codebook <- function(dataFrame = .data){
+cat("\n",attr(dataFrame, "datalabel"),"\n","\n")
+for(i in 1:ncol(dataFrame)) {
+  cat(paste(names(dataFrame)[i],"\t", ":", "\t", attr(dataFrame,"var.labels")[i]),"\n")
+  if(any(class(dataFrame[,i])=="character") | any(class(dataFrame[,i])=="AsIs") ){
+    cat("A character vector","\n")
+  }else{
+  if(any(class(dataFrame[,i])=="factor")){
+    table1 <-(t(t(table(dataFrame[,i]))))
+    table1 <- cbind(table1, format(table1/sum(table1)*100, digits=3))
+    colnames(table1) <- c("Frequency","Percent")
+    print.noquote(table1)
+    }else{
+    summ(dataFrame[,i], graph=FALSE)
+    }
+    }
+  cat("\n","==================","\n")
+}
+}
+
+
+
 setTitle <- function(locale){
   Sys.setlocale("LC_ALL",locale)
   print(Sys.getlocale())
@@ -983,7 +1005,7 @@ df2 <- attributes(logLik(model2))$df
 lrt <- 2*(as.numeric(logLik(model2) - logLik(model1)))
 diff.df <- df2-df1
 if(lrt <0){
-	lrt <- -lrt
+	lrt <- -lrt       
 	diff.df <- -diff.df
 }
 if(lrt*diff.df <0){stop("Likelihood gets worse with more variables. Test not executed")}
@@ -995,18 +1017,9 @@ cat("\n")
 }
 ### List objects excluding function
 lsNoFunction <- function() {
-	y <- ls(envir= .GlobalEnv)
-	vector1 <- character(0)
-if(length(y)==0){vector1 <- character(0)}else{
-	for (i in 1:length(y)){
-	if(substring(deparse(get(y[i]))[1],first=1,last=8)!="function") {
-		vector1 <- c(vector1,y[i])
-		}
-	}
+ setdiff(ls(envir= .GlobalEnv), as.character(lsf.str()[])
+ )
 }
-	return(vector1)
-}
-
 ### Ordinal odds ratio display
 ordinal.or.display <- function(ordinal.model, decimal=3, alpha=.05){
 model <- ordinal.model
@@ -1212,7 +1225,7 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 							ifelse(is.na(mean(na.omit(x1))), NA,sd(na.omit(x1)))  , 
 						summary(x1)[1],summary(x1)[6]),3 )
 					}
-					colnames(a) <- c("Valid obs.", "mean  ", "median ", "s.d.  ", "min.  ", "max.  ")
+					colnames(a) <- c("obs.", "mean  ", "median ", "s.d.  ", "min.  ", "max.  ")
 					rownames(a) <- " "	
 					cat(paste("For",as.character(substitute(by)),"=",levels(by1)[i]),"\n")
 					print.noquote(a, row.names=NULL)
@@ -1237,7 +1250,7 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 						quantile(na.omit(x), .5), ifelse(is.na(mean(na.omit(x))), NA,round(sd(na.omit(x)),2))  , 
 					min(na.omit(x)), max(na.omit(x)) ),3 )
 				}
-				colnames(a) <- c("Valid obs.", "mean  ", "median ", "s.d.  ", "min.  ", "max.  ")
+				colnames(a) <- c("obs.", "mean  ", "median ", "s.d.  ", "min.  ", "max.  ")
 				rownames(a) <- " "	
 				print.noquote(a, row.names=NULL)
 			}
@@ -1251,7 +1264,7 @@ else
 {
 a <- rep("", (dim(x)[2])*7)
 dim(a) <- c(dim(x)[2], 7)
-colnames(a) <- c("Var. name", "valid obs.", "mean  ", "median ", "s.d.  ",  "min.  ", "max.  ")
+colnames(a) <- c("Var. name", "obs.", "mean  ", "median ", "s.d.  ",  "min.  ", "max.  ")
 a[,1] <- attr(x, "names")
 rownames(a) <- 1:nrow(a)
 for(i in 1:(dim(x)[2])) {
@@ -1622,19 +1635,19 @@ n.for.2means <- function (mu1, mu2, sd1, sd2, ratio=1, alpha=.05,
 	cat("   n1 + n2 =",n1+n2+2,"\n","\n")
 }
 ### Pack all related variables into the existing .data
-pack <- function(data.frame=.data){
-data1 <- data.frame
+pack <- function(dataFrame=.data){
+data1 <- dataFrame
 j <- NULL
 k <- attr(data1, "var.labels")
-for(i in 1:length(lsNoFunction())){
-	if(length(lsNoFunction())==0) stop("No related vector outside the default data frame")
-	if(!is.list(get(lsNoFunction()[i])) && (length(get(lsNoFunction()[i]))==nrow(data1)) 
-		&& lsNoFunction()[i]!=i){
-		if(any(names(data1)==lsNoFunction()[i])){
-			data1[,names(.data)==lsNoFunction()[i]] <- get(lsNoFunction()[i])
+candidate.objects <- setdiff(lsNoFunction(), as.character(ls.str(mode="list")[]))
+for(i in 1:length(candidate.objects)){
+	if(length(candidate.objects)==0) stop("No related vector outside the default data frame")
+	if(length(get(candidate.objects[i]))==nrow(data1)){
+		if(any(names(data1)==candidate.objects[i])){
+			data1[,names(.data)==candidate.objects[i]] <- get(candidate.objects[i])
 		}else{
-			data1 <- as.data.frame(cbind(data1,get(lsNoFunction()[i])))
-			names(data1)[ncol(data1)] <- lsNoFunction()[i]
+			data1 <- as.data.frame(cbind(data1,get(candidate.objects[i])))
+			names(data1)[ncol(data1)] <- candidate.objects[i]
 			j <- c(j,i)
 			if(!is.null(k)){ k <- c(k,"")} 
 		}
@@ -1642,7 +1655,7 @@ for(i in 1:length(lsNoFunction())){
 		}
 	}
 	detach(.data)
-	rm(list=lsNoFunction()[j], pos=1)
+	rm(list=candidate.objects[j], pos=1)
 	.data <<- data1
 	attach(.data, warn.conflicts=FALSE)
 }
@@ -1783,12 +1796,12 @@ return(list(results="Goodness-of-fit test for Poisson assumption",chisq=chisq, d
 ### Sort data set and related vector
 sortBy <- function(...) {
 .data <<- .data[order(...),]
-if (length(lsNoFunction())>0){
-y <- lsNoFunction()
-for(i in 1:length(lsNoFunction())){
-	if(length(get(lsNoFunction()[i]))==nrow(.data)){
-	nam <- lsNoFunction()[i]
-	assign (nam, (get(lsNoFunction()[i]))[order(...)], env = .GlobalEnv)
+y <- setdiff(lsNoFunction(), as.character(ls.str(mode="list")[]))
+if (length(y)>0){
+for(i in 1:length(y)){
+	if(length(get(y[i]))==nrow(.data)){
+	nam <- y[i]
+	assign (nam, (get(y[i]))[order(...)], env = .GlobalEnv)
 	}
 }
 }
@@ -1796,7 +1809,7 @@ detach(.data)
 attach(.data, warn.conflicts=FALSE)
 }
 ### One-way tabulation
-tab1 <- function (x0, decimal=1, sort.group=c(FALSE,"decreasing","increasing"), graph=TRUE, missing=TRUE, bar.values=c("frequency","percent", "none")) {
+tab1 <- function (x0, decimal=1, sort.group=c(FALSE,"decreasing","increasing"), cum.percent=!any(is.na(x0)), graph=TRUE, missing=TRUE, bar.values=c("frequency","percent", "none")) {
 if(graph){
 		var1 <- as.character(substitute(x0))
 		if(length(var1)>1){
@@ -1818,7 +1831,7 @@ if(graph){
 	table.to.plot <- table(x0)
 	if(missing==TRUE){table.to.plot <- table(x0,exclude=NULL)
 	if(is.factor(x0)) {table.to.plot <- as.table(summary(x0))}
-	if(is.na(names(table.to.plot)[length(names(table.to.plot))]) |
+	if(is.na(names(table.to.plot)[length(names(table.to.plot))]) |  
 		names(table.to.plot)[length(names(table.to.plot))]=="NA's") 
 	names(table.to.plot)[length(names(table.to.plot))] <-"Missing"}
 	scale.label <- as.character(titleString()$frequency)
@@ -1863,15 +1876,24 @@ if(any(is.na(x0))){
 	}	
 		percent0 <- output0[,1]/sum(output0)*100
 		percent1 <- output1[,1]/sum(output1[,1],na.rm=TRUE)*100
+if(cum.percent){
 		output <- cbind(output0, round(percent0,decimal), round(cumsum(percent0),decimal), c(round(percent1,decimal),as.integer(0)), round(cumsum(c(percent1, as.integer(0))),decimal))
+		}else{
+    output <- cbind(output0, round(percent0,decimal), c(round(percent1,decimal),as.integer(0)))    
+    }
 suppressWarnings(if(sort.group=="decreasing"){
 	output <- output[order(output[,1],decreasing=TRUE),]
 })
 suppressWarnings(if(sort.group=="increasing"){
 	output <- output[order(output[,1],decreasing=FALSE),]
 })
+if(cum.percent){
 		output <- rbind(output,c(sum(as.integer(output[,1])),100,100,100,100))
 		colnames(output) <- c("Frequency","  %(NA+)", "cum.%(NA+)","  %(NA-)","cum.%(NA-)")
+  }else{
+		output <- rbind(output,c(sum(as.integer(output[,1])),100,100))
+		colnames(output) <- c("Frequency","  %(NA+)", "  %(NA-)")  
+  }
 		rownames(output)[nrow(output)] <- "  Total"
 }
 else{
@@ -1883,9 +1905,15 @@ suppressWarnings(if(sort.group=="increasing"){
 	output <- output[order(table(x0),names(table(x0)), decreasing=FALSE),]
 })
 	percent <- output/sum(output)*100
+if(cum.percent){
 	output <- cbind(output,round(percent,decimal),round(cumsum(percent),decimal))
 	output <- rbind(output,c(sum(output[,1]),100,100))
 	colnames(output) <- c("Frequency","Percent","Cum. percent")
+  }else{
+	output <- cbind(output,round(percent,decimal))
+	output <- rbind(output,c(sum(output[,1]),100))
+	colnames(output) <- c("Frequency","Percent")
+  }
 	rownames(output)[length(rownames(output))] <- "  Total"
 }
 cat("\n")
@@ -2220,32 +2248,25 @@ for(i in 1:length(pos.to.detach)){
 		search()!=".GlobalEnv" & search()!="Autoloads" & search()!="CheckExEnv"]
 	}
 }
-y <- ls(envir= .GlobalEnv)
-if(length(y)>0){
-	vector1 <- character(0)
-	for (i in 1:length(y)){
-		if(substring(deparse(get(y[i]))[1],first=1,last=8)!="function") {
-			vector1 <- c(vector1,y[i])
-		}
-	}
-	rm(list=vector1, pos=1)
-	}
-}
+vector1 <-  setdiff(ls(envir= .GlobalEnv), lsf.str()[])
+rm(list=vector1, pos=1)
+} 
 
 ### Pyramid of age by sex
-pyramid <- function(age, sex, binwidth=5, age.sex.table=NULL, output.table=FALSE, 
-  percent=c("none","each","total"), ...){
-if(is.null(age.sex.table)){
+pyramid <- function(age, sex, binwidth=5, inputTable=NULL, printTable=FALSE, 
+  percent=c("none","each","total"), decimal=3, ...){
+if(is.null(inputTable)){
 agegr <- cut(age, br = ( (min(age, na.rm=TRUE)%/%binwidth)
 :(max(age,na.rm=TRUE)%/%binwidth+1)*binwidth))
 	age.sex.table <- table(agegr, sex, deparse.level=1, dnn=list(substitute(age),substitute(sex)))
 if(ncol(table(agegr,sex))!=2)stop("There must be two genders")
 	age.sex.table.dimnames <- names(attr(age.sex.table,"dimnames"))
 }else{
-	age.sex.table.dimnames <- names(attr(age.sex.table,"dimnames"))
+if(is.matrix(inputTable) | is.table(inputTable)){
+  age.sex.table <- inputTable
+	age.sex.table.dimnames <- names(attr(inputTable,"dimnames"))
+  }
 }
-
-
 par(mfrow=c(1,2))
 old.par.mai <- c(0.95625, 0.76875, 0.76875, 0.39375)
 left.par.mai <- old.par.mai
@@ -2254,10 +2275,14 @@ column.names <-colnames(age.sex.table)
 suppressWarnings(if(percent=="each"){
   age.sex.table<-cbind(age.sex.table[,1]/colSums(age.sex.table)[1]*100,age.sex.table[,2]/colSums(age.sex.table)[2]*100)
   column.names -> colnames(age.sex.table)
+    age.sex.table1 <- round(age.sex.table, digits=decimal)
+    table.header <- "(percentage of each sex)."
 })
 suppressWarnings(if(percent=="total"){
   age.sex.table<-cbind(age.sex.table[,1]/sum(age.sex.table),age.sex.table[,2]/sum(age.sex.table))*100
   column.names -> colnames(age.sex.table)
+    age.sex.table1 <- round(age.sex.table, digits=decimal)
+    table.header <- "(percentage of each sex)."
 })
 par(mai=left.par.mai)
 barplot(-age.sex.table[,1], horiz=TRUE,yaxt="n",xlab=colnames(age.sex.table)[1], xlim=c(-max(age.sex.table),0),xaxt="n",...)-> label.points
@@ -2268,26 +2293,19 @@ barplot(age.sex.table[,2], horiz=TRUE, yaxt="n",xlab=colnames(age.sex.table)[2],
 par(mfrow=c(1,1))
 par(mai=old.par.mai)
 
-if(output.table){
+if(printTable & is.null(inputTable)){
   cat("\n","Tabulation of age by sex ")
-  if(length(percent)==3){
-    cat("(frequency).","\n")
-  }else{
-  if(percent=="each"){
-    age.sex.table <- format(age.sex.table, digits=3)
-    cat("(percentage of each sex).","\n")
-    }else{
-    if(percent=="total"){
-        age.sex.table <- format(age.sex.table, digits=3)
-        cat("(percentage of total).","\n")
-      }else{
-        cat("(frequency).","\n")
-      }
-    }
-    }
-  print.noquote(age.sex.table)
+  if (!exists("age.sex.table1")) {
+    table.header <- "(frequency)."  
+    age.sex.table1 <- age.sex.table
+  }
+  cat(table.header, "\n")
+  print.noquote(age.sex.table1)
   cat("\n")
-}
+} 
+if(is.null(inputTable)){
+  returns <- list(output.table=age.sex.table, ageGroup=agegr) 
+  }
 }
 
 

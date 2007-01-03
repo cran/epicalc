@@ -1,11 +1,11 @@
 \name{Air Pollution}
-\alias{so2}
+\alias{SO2}
 \docType{data}
-\title{ Air pollution and deaths}
+\title{Dataset on air pollution and deaths in UK}
 \description{
 Deaths in London from 1st-15th Dec 1952
 }
-\usage{data(so2)}
+\usage{data(SO2)}
 \format{
   A data frame with 15 observations on the following 4 variables.
   \describe{

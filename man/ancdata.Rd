@@ -1,5 +1,5 @@
 \name{Antenatal care data}
-\alias{ancdata}
+\alias{ANCdata}
 \docType{data}
 \title{ Dataset on effect of new antenatal care method on mortality}
 \description{
@@ -7,7 +7,7 @@ This dataset contains records of high risk pregnant women
 under a trial on new and old methods of antenatal care 
 in two clinics. Outcome was perinatal mortality.
 }
-\usage{data(ancdata)}
+\usage{data(ANCdata)}
 \format{
   A data frame with 755 observations on the following 3 variables.
   \describe{

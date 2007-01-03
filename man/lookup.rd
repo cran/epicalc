@@ -18,21 +18,22 @@ For changing groups of factor variable, please use 'levels(var) <- ' instead.
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
 }
-\seealso{'replace', 'change.value'}
+\seealso{'replace', 'recode'}
 \examples{
-a       <- c( 1, 2, 3, 4, 5,  NA)
-tx      <- rbind(c(1,2),c(2,1),c(3,NA),c(NA,999)) 
+a       <- c( 1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, NA)
+tx      <- rbind(c(1,2),c(2,1),c(3,4),c(4,NA),c(NA,3)) 
 
-# Swapping values of 1 and 2; replacing 3 with missing and missing with 999
+# Swapping values of 1 and 2; rotating 3, 4 and NA
 new.a  <- lookup(a, tx)
-a
-new.a
-cbind(a, new.a)
-table(a, new.a, exclude=NULL) # All diagonal cells which are non-zero are the recoded cells. 
+data.frame(a, new.a)
+tableA <- table(a, new.a, exclude=NULL) 
+# All non-diagonal cells which are non-zero are the recoded cells. 
+print(tableA, zero=".")
 
 ## Character look-up table
-tx1 <- cbind(c("1","2","3", NA), c("a","b",NA, "missing"))
-b.new <- lookup(a, tx1)
-table(a, b.new, exclude=NULL)
+b <- c(rep(letters[1:4],2), ".", NA)
+tx1 <- cbind(c(letters[1:5], ".", NA), c("Disease A","Disease B","Disease C", "Disease D","Diease E", NA, "Unknown"))
+DiseaseName <- lookup(b, tx1)
+data.frame(b, DiseaseName)
 }
 \keyword{database}

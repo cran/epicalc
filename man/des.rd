@@ -16,10 +16,10 @@ If 'x' is a variable, the environment and attached data frame containing 'x' wil
 }
 \seealso{'use', 'summ' and 'label.var'}
 \examples{
-data(oswego)
-use(oswego)
+data(Oswego)
+use(Oswego)
 des()
-des(oswego)
+des(Oswego)
 des(infert)
 attach(infert)
 search()

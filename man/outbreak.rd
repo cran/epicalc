@@ -1,44 +1,50 @@
 \name{Outbreak investigation}
 \docType{data}
-\alias{outbreak}
-\title{Outbreak of food poisoning in a sportsday, Thailand 1990.}
+\alias{Outbreak}
+\title{Dataset from an outbreak of food poisoning on a sportsday, Thailand 1990.}
 \description{
-Variables were coded as 0 = no, 1 = yes and 9 = missing/unknown
-for three food items consumed by participants: 
+A dataset from an outbreak investigation concerning food poisoning in a sportsday, Thailand 1990.
 
-      'beefcurry' (beef curry)
-
-      'saltegg' (salted eggs)  
-
-      'water'. 
-
-The variable 'eclair' records the number of pieces eaten by each participant.  
-Missing values were coded as follows: 
-
-      88 = "ate but do not remember how much", 
-
-      90 = totally missing information. 
-
-
-Some participants experienced gastrointestinal symptoms, such as: 
-'nausea', 'vomiting', 'abdpain' (abdominal pain) and 'diarrhea'. 
-
-All these outcomes were coded as 0 = no, 1 = yes.
-
-The age of each participant was recorded in years with 99 = missing.
- 
-The variables 'exptime' and 'onset' are the exposure and onset times, 
-which are in character format, or 'AsIs' in R terminology
+Dichotomous variables for exposures and symptoms were coded as the following:
+		\tabular{lll}{
+        	\tab 0 \tab = no\cr
+         	\tab 1 \tab = yes\cr
+         	\tab 99 \tab = missing or unknown\cr
+       }
 }
-\usage{data(outbreak)}
-\format{A data frame containing 1,094 observations and 13 variables.}
+\usage{data(Outbreak)}
+\format{
+  A data frame with 1094 observations on the following 13 variables.
+  \describe{
+    \item{\code{id}}{a numeric vector}
+    \item{\code{sex}}{a numeric vector}
+    \item{\code{age}}{a numeric vector: age in years}
+		\tabular{lll}{
+        	\tab 99 \tab = missing\cr
+       }
+    \item{\code{exptime}}{a AsIs or character: exposure time}
+    \item{\code{beefcurry}}{a numeric vector}
+    \item{\code{saltegg}}{a numeric vector}
+    \item{\code{eclair}}{a numeric vector: pieces of eclair eaten}
+		\tabular{lll}{
+        	\tab 88 \tab = ate but not remember how much\cr
+         	\tab 99 \tab = totally missing information\cr
+       }
+    \item{\code{water}}{a numeric vector}
+    \item{\code{onset}}{a AsIs or character: onset time}
+    \item{\code{nausea}}{a numeric vector}
+    \item{\code{vomiting}}{a numeric vector}
+    \item{\code{abdpain}}{a numeric vector: abdominal pain}
+    \item{\code{diarrhea}}{a numeric vector}
+  }
+}
 \references{Thaikruea, L., Pataraarechachai, J., Savanpunyalert, P., Naluponjiragul, U. 1995
 An unusual outbreak of food poisoning. \emph{Southeast Asian J Trop Med Public Health} 
 \bold{26(1)}:78-85.
 }
 \examples{
-data(outbreak)
-use(outbreak)
+data(Outbreak)
+use(Outbreak)
 
 # Distribution of reported pieces of eclair taken
 tab1(eclair) 

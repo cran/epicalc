@@ -1,9 +1,9 @@
 \name{Cancer survival}
 \docType{data}
-\alias{compaq}
+\alias{Compaq}
 \title{Dataset on cancer survival}
 \description{Dataset on cancer survival checking whether there was a difference between cancer patients in private and public hospitals.}
-\usage{data(compaq)}
+\usage{data(Compaq)}
 \format{
   A data frame with 1064 observations on the following 7 variables.
   \describe{
@@ -17,8 +17,8 @@
   }
 }
 \examples{
-data(compaq)
-use(compaq)
+data(Compaq)
+use(Compaq)
 des()
 }
 \keyword{datasets}

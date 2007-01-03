@@ -19,12 +19,12 @@ For single vectors, a sorted dot chart is also provided, if graph=TRUE (default)
 }
 \seealso{'summary', 'use', 'des'}
 \examples{
-data(oswego)
-.data <- oswego
+data(Oswego)
+.data <- Oswego
 attach(.data)
 
 # The above lines generate a hypothetical data frame. 
-# In reality, one just exploits 'use("oswego.rec")', if the file is available.
+# In reality, one just exploits 'use("Oswego.rec")', if the file is available.
 summ()
 summ(age)
 summ(age, box=TRUE)

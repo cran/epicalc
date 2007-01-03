@@ -1,9 +1,9 @@
-\name{familydata}
-\alias{familydata}
+\name{Familydata}
+\alias{Familydata}
 \docType{data}
-\title{ A hypothetical family}
+\title{ Dataset of a hypothetical family}
 \description{ Anthropometric and financial data of a hypothetical family}
-\usage{data(familydata)}
+\usage{data(Familydata)}
 \format{
   A data frame with 11 observations on the following 6 variables.
   \describe{
@@ -16,8 +16,8 @@
   }
 }
 \examples{
-data(familydata)
-use(familydata)
+data(Familydata)
+use(Familydata)
 des()
 summ()
 age2 <- age^2

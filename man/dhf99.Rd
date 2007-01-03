@@ -1,11 +1,11 @@
-\name{dhf99}
-\alias{dhf99}
+\name{DHF99}
+\alias{DHF99}
 \docType{data}
-\title{Predictors for mosquito larva infestation}
+\title{Dataset for exercise on predictors for mosquito larva infestation}
 \description{
   Dataset from a community survey on water containers infested by mosquito larvae.
 }
-\usage{data(dhf99)}
+\usage{data(DHF99)}
 \format{
   A data frame with 300 observations on the following 5 variables.
   \describe{

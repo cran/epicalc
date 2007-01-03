@@ -32,12 +32,12 @@ Inside each bar, the relative proportion denotes the distribution of column vari
 }
 \seealso{'tab1', 'table', 'mosaicplot'}
 \examples{
-data(oswego)
-.data <- oswego
+data(Oswego)
+.data <- Oswego
 attach(.data)
 
 # The above commands generate a data frame. 
-# In reality, one just exploits 'use("oswego.rec")', if the file is available.
+# In reality, one just exploits 'use("Oswego.rec")', if the file is available.
 agegr <- cut(age, breaks=c(0,20,40,60,80))
 label.var(agegr, "age group")
 tabpct(agegr, ill)

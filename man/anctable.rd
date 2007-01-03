@@ -1,13 +1,13 @@
 \name{ANC Table}
 \docType{data}
-\alias{anctable}
+\alias{ANCtable}
 \title{Dataset on effect of new ANC method on mortality (as a table)}
 \description{
 This dataset presents frequency of various combination 
 of methods of antenatal care in two clinics and the perinatal mortality.
 }
 \usage{
-data(anctable)
+data(ANCtable)
 }
 \format{
   A data frame with 8 observations on the following 4 variables.
@@ -19,8 +19,8 @@ data(anctable)
   }
 }
 \examples{
-data(anctable)
-use(anctable)
+data(ANCtable)
+use(ANCtable)
 des()
 glm1 <- glm(death==1 ~ factor(anc) ,weights=Freq, family=binomial)
 logistic.display(glm1)

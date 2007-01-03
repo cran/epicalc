@@ -1,11 +1,11 @@
 \name{Hookworm 1993}
-\alias{hw93}
+\alias{HW93}
 \docType{data}
-\title{ Hookworm prevalence and intensity in 1993}
+\title{Dataset from a study on hookworm prevalence and intensity in 1993}
 \description{
 A dataset from a cross-sectional survey in 1993 examining hookworm
 infection}
-\usage{data(hw93)}
+\usage{data(HW93)}
 \format{
   A data frame with 637 observations on the following 6 variables.
   \describe{
@@ -18,9 +18,9 @@ infection}
   }
 }
 \examples{
-data(hw93)
+data(HW93)
 library(MASS)
-use(hw93)
+use(HW93)
 intense.ord <- ordered(intense)
 ord.hw <- polr(intense.ord ~ agegr + shoes)
 summary(ord.hw)

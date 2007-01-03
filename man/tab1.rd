@@ -4,12 +4,14 @@
 \description{One-way tabulation with automatic bar chart}
 \usage{
 tab1 (x0, decimal = 1, sort.group = c(FALSE, "decreasing", 
-"increasing"), graph = TRUE, missing = TRUE, bar.values = c("frequency", "percent", "none")) 
+"increasing"), cum.percent = !any(is.na(x0)), graph = TRUE, 
+missing = TRUE, bar.values = c("frequency", "percent", "none")) 
 }
 \arguments{
 	\item{x0}{a variable}
 	\item{decimal}{number of decimals for the percentage in the table}
 	\item{sort.group}{pattern for sorting of categories in the table as in the chart. Default is no sorting.}
+	\item{cum.percent}{presence of cumulative percentage on the output table. Default is TRUE for a variable without any missing value.}
 	\item{graph}{automatic graphing}
 	\item{missing}{include the missing values category or <NA> in the graphic display}
 	\item{bar.values}{include the value of frequeny, percentage or none at the end of each bar}
@@ -30,9 +32,12 @@ tab1(state.division, bar.values ="percent")
 tab1(state.division, sort.group ="decreasing")
 tab1(state.division, sort.group ="increasing")
 
-data(oswego)
-use(oswego)
-tab1(chocolate)
+data(Oswego)
+use(Oswego)
+tab1(ill) # Note the presence of cumulative percentage on the table.
+tab1(ill, cum.percent=FALSE)
+tab1(chocolate) # Cumulative percentage is automatically off.
+tab1(chocolate, cum.percent=TRUE) # Slightly too many columns!
 tab1(chocolate, missing=FALSE, bar.values="percent")
 
 }

@@ -1,11 +1,11 @@
 \name{Tooth decay}
 \docType{data}
-\alias{decay}
+\alias{Decay}
 \title{Dataset on tooth decay and mutan streptococci}
 \description{
 Relationship between bacteria and presence of any decayed tooth.
 }
-\usage{data(decay)}
+\usage{data(Decay)}
 \format{
   A data frame with 436 observations on the following 2 variables.
   \describe{
@@ -18,8 +18,8 @@ Mutans Streptococci and dental -caries in schoolchildren
 in Southern Thailand. 
 \emph{Community Dentistry and Oral Epidemiology}  \bold{23}: 317-318.}
 \examples{
-data(decay)
-use(decay)
+data(Decay)
+use(Decay)
 des()
 }
 \keyword{datasets}

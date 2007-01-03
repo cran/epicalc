@@ -1,16 +1,16 @@
 \name{Matched case-control study}
 \docType{data}
-\alias{vc1to1}
-\alias{vc1to6}
+\alias{VC1to1}
+\alias{VC1to6}
 \title{Datasets on a matched case-control study of esophageal cancer}
 \description{
 Two different datasets for a matched case-control studies with 1 case : 1 controls
 and 1 case : varying number of controls (from 1 to 6).
 
 }
-\usage{data(vc1to1)
+\usage{data(VC1to1)
 
-data(vc1to6)}
+data(VC1to6)}
 \format{
   A data frame with 119 observations on the following 5 variables.
   \describe{
@@ -28,8 +28,8 @@ A case-control study of esophageal cancer  in Southern Thailand.
 'infert' in the standard R datasets.
 }
 \examples{
-data(vc1to6)
-use(vc1to6)
+data(VC1to6)
+use(VC1to6)
 des()
 matchTab(case, alcohol, matset)
 }

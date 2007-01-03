@@ -6,14 +6,14 @@
 \description{Label a variable; integrate outside variable(s) into .data; sort the whole dataset.}
 \usage{
 label.var(var, label, pack = TRUE)   
-pack(data.frame = .data) 
+pack(dataFrame = .data) 
 sortBy(...)
 }
 \arguments{
 	\item{var}{A variable inside .data or a free vector.}
 	\item{label}{Short description of the variable}
 	\item{pack}{Remove the original free variable?}
-	\item{data.frame}{Destination data frame where all variables of the same length are packed into}
+	\item{dataFrame}{Destination data frame where all variables of the same length are packed into}
 	\item{...}{index variable(s) used for sorting}
 }
 \details{A data frame adopted from Stata or SPSS often has a 'variable label', which is recognized (but ignored) by R. 

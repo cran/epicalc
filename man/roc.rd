@@ -29,17 +29,23 @@ In both cases, the area under the curve is computed.
 \seealso{'glm'}
 \examples{
 # Single ROC curve from logistic regression
-model1 <- glm(case ~ spontaneous, family=binomial, data = infert)
-lroc(model1, title=TRUE, auc.label=TRUE)
+model1 <- glm(case ~ induced + factor(spontaneous), data=infert, family=binomial)
+# Note that 'induced' and 'spontaneous' are both originally continuous variables
+logistic.display(model1)
+# Having two spontaneous abortions is quite close to being infertile!
+# This is actually not a causal relationship
 
-# Comparing two model
-model2 <- glm(case ~ induced * spontaneous, family=binomial, data = infert)
-lroc1 <- lroc(model1)
+lroc1 <- lroc(model1, table=TRUE)
 lroc1 # Note the returned list
+model2 <- glm(case ~ factor(spontaneous), data=infert, family=binomial)
+logistic.display(model2)
 lroc2 <- lroc(model2, add=TRUE, line.col="black")
-legend("bottomright",legend=c(lroc1$model.description,lroc2$model.description), 
-	lty=1, col=c("red","black"),bg="white")
+legend("bottomright",legend=c(lroc1$model.description, lroc2$model.description),
+        lty=1, col=c("red","brown"),bg="white")
 title(main="Comparison of two logistic regression models")
+lrtest(model1, model2) 
+# Number of induced abortions is associated with increased risk for infertility
+
 
 # ROC from a diagnostic table
 table1 <- as.table(cbind(c(1,27,56,15,1),c(0,0,10,69,21)))
