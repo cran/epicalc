@@ -12,7 +12,7 @@ treatment = intervention programme: 1=yes, 2=no
 malpres = malpresentation of fetus: 1=yes, 0=no
 
 }
-\usage{data(Hakmi)}
+\usage{data(Hakimi)}
 \format{A data frame containing 456 observations and 4 variables.}
 \examples{
 data(Hakimi)

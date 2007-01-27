@@ -1319,14 +1319,6 @@ for(i in 1:(dim(x)[2])) {
 	else
 	if  (is.factor(x[i][2,])){
 	a[i,2] <- as.character(length(na.omit(x[[i]])))
-#  defactored <- as.integer(as.data.frame(attr(x, "label.table")[attr(attr(x,"label.table"), "names")==attr(x, "val.labels")[i]])[,1])
-#	a[i,3:7] <- round(c(mean(na.omit(defactored)), 
-#			median(na.omit(defactored)), 
-#			sd(na.omit(defactored)), 
-#			min(na.omit(defactored)), 
-#			max(na.omit(defactored))),3)
-
-
 	a[i,3:7] <- round(c(mean(na.omit(unclass(x[i][,]))), 
 			median(na.omit(unclass(x[i][,]))), 
 			sd(na.omit(unclass(x[i][,]))), 
