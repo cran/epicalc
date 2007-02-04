@@ -18,7 +18,7 @@ Internationalization can be disabled by typing '.locale <- FALSE' or the locale 
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
 }
-\seealso{'Sys.setlocale', 'Sys.getlocale' and 'title.string'}
+\seealso{'Sys.setlocale', 'Sys.getlocale' and 'titleString'}
 \examples{
 .data <- iris
 attach(.data)

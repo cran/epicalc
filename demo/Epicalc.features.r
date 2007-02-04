@@ -8,6 +8,10 @@ codebook()
 des()
 summ()
 
+# Describe subset of variables
+des("c*") # Show all variables starting with 'c'
+des("?????") # Show all variables with 5 characters in the name
+
 ### Quick graphic exploration
 summ(age)
 summ(age, by=sex)
@@ -16,14 +20,16 @@ dotplot(age, by=sex)
 
 ### Creating as well as exploring age group
 pyramid(age, sex, binwidth=10) -> output
-agegr <- output$ageGroup
+agegr <- output$ageGroup # The above and this line created 'agegr' from the pyramid
 summ(agegr)
 
 ### Integrate a vector into the default data frame (.data)
-label.var(agegr, "Age group")
+# The following line both labels and integrates 'agegr' into '.data'
+label.var(agegr, "Age group") 
 des()
 tab1(agegr)
 tabpct(agegr, chocolate) # Note the label of age group
+des("age*") # Both 'age' and 'agegr' will be described
 
 ### Recoding variable
 tab1(chocolate)

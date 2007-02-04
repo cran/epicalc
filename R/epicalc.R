@@ -93,57 +93,173 @@ titleString <- function(distribution.of=.distribution.of,by=.by,frequency=.frequ
 
 library(foreign)
 ### Display variables and their description
-des <- function(x=.data) { 
-# search.positon means position of the data in the search path 'search()'
-if(!is.data.frame(x)) {cat("\n")
-candidate.position <- NULL
-for(search.position in 1:length(search())){
- if(exists(as.character(substitute(x)), where=search.position )){
- if(any(names(get(search()[search.position]))==as.character(substitute(x))) | 
-  any(ls(all=TRUE, pos=1)==as.character(substitute(x))))
-  candidate.position <- c(candidate.position, search.position)   
-}
-}
-var.class <- NULL; var.size <- NULL; var.lab <- NULL
-for(i in candidate.position){
-  if(i==1) {var.class <- c(var.class, class(x))}else{var.class <-c(var.class, 
-    class(get(search()[i])[,which(as.character(substitute(x))==names(get(search()[i])))]))}
-  if(i==1) {var.size <- c(var.size, length(x))}else{var.size <- c(var.size,nrow(get(search()[i])))}
-  if(i==1 | is.null(attr(get(search()[i]), "var.labels")[attr(get(search()[i]), "names")==substitute(x)])) {
-    var.lab <- c(var.lab," ")}else{
-    var.lab <- c(var.lab,  
-    attr(get(search()[i]), "var.labels")[attr(get(search()[i]), "names")==substitute(x)])
+des <- function (x = .data, select, exclude) 
+{
+    if (!missing(select) | !missing(exclude)) 
+        {
+## Define vars.selected and var.excluded for non-wildcard
+        nl <- as.list(1:ncol(.data))
+        names(nl) <- names(.data)
+        if(!missing(select)) vars.selected <- eval(substitute(select), nl, parent.frame())
+        if(!missing(exclude)) vars.excluded <- eval(substitute(exclude), nl, parent.frame())
+## Define var.selected and vars.excluded for wirdcard
+        if((length(grep(pattern="[*]",as.character(substitute(select))))==1) | 
+              (length(grep(pattern="[?]",as.character(substitute(select))))==1)){
+        vars.selected <- grep(pattern=glob2rx(as.character(substitute(select))), names(.data))
+              if(length(vars.selected)==0) {stop(paste(select, 
+                                       "not matchable with any variable name."))}}
+
+        if((length(grep(pattern="[*]",as.character(substitute(exclude))))==1) | 
+              (length(grep(pattern="[?]",as.character(substitute(exclude))))==1)){
+        vars.excluded <- grep(pattern=glob2rx(as.character(substitute(exclude))), names(.data))
+              if(length(vars.excluded)==0) {stop(paste(exclude, 
+                                       "not matchable with any variable name."))}}
+## Create vars from vars.selected and vars.excluded
+        vars <- 1:ncol(.data)
+        if(exists("vars.selected")) vars <- vars[vars.selected]
+        if(exists("vars.excluded"))vars <- vars[-vars.excluded]
+
+            class.a <- NULL
+            for (i in vars) {
+                class.a <- c(class.a, class(.data[, i]))
+            }
+            if (is.null(attr(.data, "var.labels"))) {
+                a <- cbind(colnames(.data[vars]), class.a, rep("", 
+                  length(vars)))
+            }
+            else {
+                a <- cbind(colnames(.data[vars]), class.a, attr(.data, 
+                  "var.labels")[vars])
+            }
+            colnames(a) <- c("Variable     ", "Class          ", 
+                "Description")
+            rownames(a) <- vars
+            cat("\n")
+            cat(attr(.data, "datalabel"), "\n")
+            cat("No. of observations =")
+            cat(nrow(.data), "\n")
+            print.noquote(a)
+            cat("\n")
+            options(warn = 0)
+    }else{
+
+
+    if (!is.data.frame(x)) {
+        if (is.character(x) & (length(grep(pattern = "[*]", x)) == 
+            1) | (length(grep(pattern = "[?]", x) == 1))) {
+            vars <- grep(pattern = glob2rx(x), names(.data))
+              if(length(vars)==0) {stop(paste(x, 
+                                       "not matchable with any variable name."))}
+            class.a <- NULL
+            for (i in vars) {
+                class.a <- c(class.a, class(.data[, i]))
+            }
+            if (is.null(attr(.data, "var.labels"))) {
+                a <- cbind(colnames(.data[vars]), class.a, rep("", 
+                  length(vars)))
+            }
+            else {
+                a <- cbind(colnames(.data[vars]), class.a, attr(.data, 
+                  "var.labels")[vars])
+            }
+            colnames(a) <- c("Variable     ", "Class          ", 
+                "Description")
+            rownames(a) <- vars
+            cat("\n")
+            cat(attr(.data, "datalabel"), "\n")
+            cat("No. of observations =")
+            cat(nrow(.data), "\n")
+            print.noquote(a)
+            cat("\n")
+            options(warn = 0)
+        }
+        else {
+            cat("\n")
+            candidate.position <- NULL
+            for (search.position in 1:length(search())) {
+                if (exists(as.character(substitute(x)), where = search.position)) {
+                  if (any(names(get(search()[search.position])) == 
+                    as.character(substitute(x))) | any(ls(all = TRUE, 
+                    pos = 1) == as.character(substitute(x)))) 
+                    candidate.position <- c(candidate.position, 
+                      search.position)
+                }
+            }
+            var.order <- as.character(NULL)
+            var.class <- NULL
+            var.size <- NULL
+            var.lab <- NULL
+            for (i in candidate.position) {
+                if (i == 1) {
+                  var.order <- c(var.order, "")
+                }
+                else {
+                  var.order <- c(var.order,  
+                    which(as.character(substitute(x)) == names(get(search()[i]))))
+                }
+                if (i == 1) {
+                  var.class <- c(var.class, class(x))
+                }
+                else {
+                  var.class <- c(var.class, class(get(search()[i])[, 
+                    which(as.character(substitute(x)) == names(get(search()[i])))]))
+                }
+                if (i == 1) {
+                  var.size <- c(var.size, length(x))
+                }
+                else {
+                  var.size <- c(var.size, nrow(get(search()[i])))
+                }
+                if (i == 1 | is.null(attr(get(search()[i]), "var.labels")[attr(get(search()[i]), 
+                  "names") == substitute(x)])) {
+                  var.lab <- c(var.lab, " ")
+                }
+                else {
+                  var.lab <- c(var.lab, attr(get(search()[i]), 
+                    "var.labels")[attr(get(search()[i]), "names") == 
+                    substitute(x)])
+                }
+            }
+            a <- cbind(search()[candidate.position], var.order, var.class, 
+                var.size, var.lab)
+            dim(a)
+            colnames(a) <- c("Var. source ", "Var. order","Class  ", 
+                "# records", "Description")
+            rownames(a) <- rep("", length(candidate.position))
+            cat(paste("'",as.character(substitute(x)),"'", " is a variable founded in the following source(s)", 
+                "\n", "\n", sep=""))
+            print.noquote(a)
+            cat("\n")
+        }
+    }
+    else {
+        if (is.null(attr(x, "var.labels"))) {
+            b <- " "
+        }
+        else {
+            b <- attr(x, "var.labels")
+            if (length(b) < length(colnames(x))) {
+                options(warn = -1)
+            }
+        }
+        class.a <- NULL
+        for (i in 1:ncol(x)) {
+            class.a <- c(class.a, class(x[, i])[1])
+        }
+        a <- cbind(colnames(x), class.a, b)
+        colnames(a) <- c("Variable     ", "Class          ", 
+            "Description")
+        rownames(a) <- 1:nrow(a)
+        cat("\n")
+        cat(attr(x, "datalabel"), "\n")
+        cat("No. of observations =")
+        cat(nrow(x), "\n")
+        print.noquote(a)
+        cat("\n")
+        options(warn = 0)
     }
 }
-a <- cbind(search()[candidate.position],var.class, var.size, var.lab)
-dim(a) 
-colnames(a) <- c("Var. source   ","Class     ","No. of records  ","Description")
-rownames(a) <- rep("",length(candidate.position))
-cat(paste(as.character(substitute(x)), "is a variable.", "\n","\n"))
-print.noquote(a)
-cat("\n")
-}
-else{
-if(is.null(attr(x, "var.labels")))  {
-	b <- " " 
-	} else {
-	b <- attr(x, "var.labels")
-	if(length(b) < length(colnames(x))) {options(warn=-1)}
-}
-class.a <- NULL
-for(i in 1:ncol(x)){class.a <- c(class.a, class(x[,i])[1])}
-a <- cbind(colnames(x),class.a, b)
-colnames(a) <- c("Variable     ", "Class          ", "Description")
-rownames(a) <-1:nrow(a)
-cat ("\n")
-cat(attr(x, "datalabel"), "\n")
-cat("No. of observations ="); cat(nrow(x), "\n")
-print.noquote(a)
-cat ("\n")
-options(warn=0)
-}
-}
-### Detaching all data frame from the search path
+}### Detaching all data frame from the search path
 detachAllData <- function(){
 pos.to.detach <- (1:length(search()))[substring(search(),first=1,last=8)!="package:" &
 	search()!=".GlobalEnv" & search()!="Autoloads" & search()!="CheckExEnv"]
@@ -2409,5 +2525,71 @@ time <- time[order(id, time)]
   }
 }
 }
+
+## Subsetting .data
+keepData <- function (x=.data, sample = NULL, exclude = NULL,subset, select, drop = FALSE, ...) 
+{
+datalabel <- attr(.data, "datalabel")
+val.labels <- attr(.data, "val.labels")
+var.labels <- attr(.data, "var.labels")
+label.table <- attr(.data, "label.table")
+if(!is.null(sample)){
+if(!is.numeric(sample) | sample <=0 | length(sample) > 1 | trunc(sample)!=sample ){
+  stop("Size of sample must be a positive integer")
+  }
+x <- x[sample(nrow(x), sample),]
+.data <<- x
+paste(datalabel, "(subset)") ->> attr(.data, "datalabel")
+val.labels ->> attr(.data, "val.labels")
+var.labels ->> attr(.data, "var.labels")
+label.table ->> attr(.data, "label.table")
+}
+else{
+    if (missing(subset)) 
+        r <- TRUE
+    else {
+        e <- substitute(subset)
+        r <- eval(e, x, parent.frame())
+        if (!is.logical(r)) 
+            stop("'subset' must evaluate to logical")
+        r <- r & !is.na(r)
+    }
+    if (missing(select)){ 
+        vars <- TRUE
+        if(suppressWarnings(!is.null(exclude))){
+          nl <- as.list(1:ncol(x))
+          names(nl) <- names(x)
+          if((length(grep(pattern="[*]",as.character(substitute(exclude))))==1) | 
+                (length(grep(pattern="[?]",as.character(substitute(exclude))))==1)){
+              vars <- -grep(pattern=glob2rx(as.character(substitute(exclude))), names(x))
+              if(length(vars)==0) {stop(paste(as.character(substitute(exclude)), 
+                                       "not matchable with any variable name."))}
+                          }else{
+              vars <- -eval(substitute(exclude), nl, parent.frame())
+                      }
+        }  
+    }else {
+        nl <- as.list(1:ncol(x))
+        names(nl) <- names(x)
+        if((length(grep(pattern="[*]",as.character(substitute(select))))==1) | 
+              (length(grep(pattern="[?]",as.character(substitute(select))))==1)){
+          vars <- grep(pattern=glob2rx(as.character(substitute(select))), names(x))
+              if(length(vars)==0) {stop(paste(select, 
+                                       "not matchable with any variable name."))}
+                        }else{
+          vars <- eval(substitute(select), nl, parent.frame())
+                      }
+    }
+    .data <<- x[r, vars, drop = drop]
+paste(datalabel, "(subset)") ->> attr(.data, "datalabel")
+val.labels[vars] ->> attr(.data, "val.labels")
+var.labels[vars] ->> attr(.data, "var.labels")
+label.table[is.element(names(label.table), val.labels[vars])][1:length(vars)] ->> attr(.data, "label.table")
+}
+detach(.data)
+attach(.data)
+}
+
+
 
 
