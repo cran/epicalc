@@ -9,7 +9,7 @@ Dichotomous variables for exposures and symptoms were coded as the following:
 		\tabular{lll}{
         	\tab 0 \tab = no\cr
          	\tab 1 \tab = yes\cr
-         	\tab 99 \tab = missing or unknown\cr
+         	\tab 9 \tab = missing or unknown\cr
        }
 }
 \usage{data(Outbreak)}
@@ -18,19 +18,23 @@ Dichotomous variables for exposures and symptoms were coded as the following:
   \describe{
     \item{\code{id}}{a numeric vector}
     \item{\code{sex}}{a numeric vector}
+		\tabular{lll}{
+        	\tab 0 \tab = female\cr
+         	\tab 1 \tab = male\cr
+       }
     \item{\code{age}}{a numeric vector: age in years}
 		\tabular{lll}{
         	\tab 99 \tab = missing\cr
        }
     \item{\code{exptime}}{a AsIs or character: exposure time}
-    \item{\code{beefcurry}}{a numeric vector}
-    \item{\code{saltegg}}{a numeric vector}
+    \item{\code{beefcurry}}{a numeric vector: whether the subject had eaten beefcurry}
+    \item{\code{saltegg}}{a numeric vector: whether the subject had eaten saltegg}
     \item{\code{eclair}}{a numeric vector: pieces of eclair eaten}
 		\tabular{lll}{
-        	\tab 88 \tab = ate but not remember how much\cr
-         	\tab 99 \tab = totally missing information\cr
+        	\tab 80 \tab = ate but not remember how much\cr
+         	\tab 90 \tab = totally missing information\cr
        }
-    \item{\code{water}}{a numeric vector}
+    \item{\code{water}}{a numeric vector: whether the subject had drunken water}
     \item{\code{onset}}{a AsIs or character: onset time}
     \item{\code{nausea}}{a numeric vector}
     \item{\code{vomiting}}{a numeric vector}

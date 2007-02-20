@@ -12,7 +12,7 @@ setTitle(locale)
 
 If '.locale' is TRUE, then the automatic graphs produced by Epicalc commands, such as 'summ(var)' or 'tab1(var)' or 'tabpct(var1,var2)', will lookup a language conversion table for the graph title and the title will be changed accordingly.
 
-Internationalization can be disabled by typing '.locale <- FALSE' or the locale reset to English by issuing the command 'setTitle("English")'.
+Internationalization of the title can be disabled by typing '.locale <- FALSE'. This has no effect of locale as a whole unless it is reset to English by issuing the command 'setTitle("English")'.
 
 }
 \author{Virasakdi Chongsuvivatwong

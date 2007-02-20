@@ -6,7 +6,7 @@
 codebook(dataFrame=.data)
 }
 \arguments{
-	\item{dataFrame}{A data frame from printing the codebook}
+	\item{dataFrame}{A data frame for printing the codebook}
 }
 \details{The default value of dataFrame (ie if no argument is supplied) is '.data'.
 

@@ -15,7 +15,7 @@ For all variables except id: 9, 99, 99.9, 888, 999 are missing values
     \item{\code{RELIG}}{a numeric vector: Religion}
 		\tabular{lll}{
         	\tab 1 \tab = Buddhist\cr
-         	\tab 2 \tab = Islam\cr
+         	\tab 2 \tab = Muslim\cr
        }
     \item{\code{PED}}{a numeric vector: Patient's education level}
 		\tabular{lll}{

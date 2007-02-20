@@ -31,7 +31,7 @@ Finally, the whole dataset, and the variables outside, can be sorted by an index
 }
 \seealso{'use','des'}
 \examples{
-sbp <- c(120, 120, 110, 120, 130, 120,  NA,  NA) 
+sbp <- c(120, 100, 110, 120, 140, 120,  NA,  NA) 
 dbp <- c( 80,  80,  70,  80,  70,  NA,  70,  60)
 .data <- data.frame(sbp, dbp)
 attach(.data, warn.conflicts=FALSE)
@@ -53,8 +53,12 @@ pp3 <- pp^3
 pack()
 
 age <- c(37, 32, 24, 33, 31, 30, 26, 25)
+age2 <- age^2
 sortBy(age)
+pack()
 des()
-age
+.data
+sortBy(age, decreasing=TRUE)
+.data
 }
 \keyword{database}
