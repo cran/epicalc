@@ -288,7 +288,7 @@ for(i in 1:length(pos.to.detach)){
 }
 }
 ### Getting percentage from the tabulation
-tabpct <- function(row, col, ..., decimal=1, graph=TRUE, las=0) {
+tabpct <- function(row, col, ..., decimal=1, percent=c("both","col","row"), graph=TRUE, las=0) {
 tab <- table(row, col,..., deparse.level=1, dnn=list(substitute(row),substitute(col)))
 # column percent
 cpercent <-tab
@@ -347,22 +347,25 @@ colnames(rpercent)[ncol(rpercent)] <- "Total"
 		}
 names(attr(tab,"dimnames")) <-c(string2, string4)
 cat( "\n")
+suppressWarnings(if(percent=="both"){
 cat("Original table", "\n")
 tabtotal <- addmargins(tab)
 colnames(tabtotal)[ncol(tabtotal)] <- "Total"
 rownames(tabtotal)[nrow(tabtotal)] <- "Total"
 print(tabtotal, print.gap=2)
-cat( "\n")
+cat( "\n")})
 
+suppressWarnings(if(percent=="both" | percent=="row"){
 cat("Row percent", "\n")
 names(attr(rpercent,"dimnames")) <- c(string2, string4)
 print.table(rpercent, right=TRUE, print.gap=2)
-cat( "\n")
+cat( "\n")})
 
+suppressWarnings(if(percent=="both" | percent=="col"){
 cat("Column percent", "\n")
 names(attr(cpercent,"dimnames")) <- c(string2, string4)
 print.table(cpercent, right=TRUE, print.gap=2)
-cat( "\n")
+cat( "\n")})
 
 if(graph==TRUE){
 	rownames(tab)[is.na(rownames(tab))] <- "missing"
@@ -1030,7 +1033,7 @@ plot(time, var, pch=" ", ylim=c(min(na.omit(var))-0.1*y.span,
 	ylab=as.character(substitute(var)) )
 axis(side=1,at=unique(time))
 # Special lines
-mean.var <- aggregate(var, by=list(subject=id), FUN=mean)
+mean.var <- aggregate.data.frame(var, by=list(subject=id), FUN=mean)
 mean.var <- na.omit(mean.var)
 mean.var <- mean.var[order(mean.var$x,mean.var$subject),]
 if(nrow(mean.var)>100){
@@ -1226,7 +1229,10 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 #		if(length(grep("Korean",Sys.getlocale("LC_ALL")))==1){string5<-paste(string3,"Ëæ Åà¶£²÷",string4)}
 
 		## Defining pretty x ticking for date and time
-		if(any(class(x)=="Date")) {
+		if(any(class(x)=="date")){
+      x <- as.Date(paste(date.mdy(x)$year,"-", date.mdy(x)$month,"-", date.mdy(x)$day, sep=""))
+    }
+    if(any(class(x)=="Date")) {
 			range.date <- difftime(summary(x)[6], summary(x)[1])
 			numdate <- as.numeric(range.date)
 			if(numdate <1){stop(paste("Only one day ie.",format(x,"%Y-%m-%d"),"not suitable for plotting"))}
@@ -1276,7 +1282,7 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 					xlab=" ",ylab=" ", yaxt="n", xaxt="n")
 				axis(1, at=time.pretty, labels=as.character(time.pretty,format=format.time))
 			}else
-			if(class(x)=="Date"){
+			if(any(class(x)=="Date")){
 				if(numdate < 700){
 					plot(x1,y, pch=18, col=by3, main=string5, ylim=c(-1,max(y)),
 						xlab=" ",ylab=" ", yaxt="n", xaxt="n")
@@ -1288,7 +1294,7 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 			}else{
 				plot(x1,y, pch=18, col=by3, main=string5, ylim=c(-1,max(y)),
 					xlab=" ", ylab=" ", yaxt="n")
-				if(class(x)=="difftime"){unit <-attr(x,"unit")} else {unit<-" "}
+				if(any(class(x)=="difftime")){unit <-attr(x,"unit")} else {unit<-" "}
 				title(xlab=unit)
 			}
 			if(length(x1)<20){abline(h=y, lty=3)}
@@ -1313,7 +1319,7 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 					xlab=" ",ylab="Subject sorted by X-axis values", xaxt="n")
 				axis(1, at=time.pretty, labels=as.character(time.pretty,format=format.time))
 			}else
-			if(class(x)=="Date"){
+			if(any(class(x)=="Date")){
 				if(numdate < 700){
 					plot(x1,y, pch=18, col="blue", main=string3,
 						xlab=" ",ylab="Subject sorted by X-axis values", yaxt="n", xaxt="n")
@@ -1325,7 +1331,7 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 			}else{
 				plot(x1,y, pch=18, col="blue", main=string3,
 					xlab=" ", ylab="Subject sorted by X-axis values", yaxt="n")
-				if(class(x)=="difftime"){unit <-attr(x,"unit")} else {unit<-" "}
+				if(any(class(x)=="difftime")){unit <-attr(x,"unit")} else {unit<-" "}
 				title(xlab=unit)
 			}
 			
@@ -1358,10 +1364,13 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 					cat("\n")
 				}else{
 					a <- rep("",6); dim(a) <- c(1,6)
-					if(class(x1)=="Date"){
+		if(any(class(x1)=="date")){
+      x1 <- as.Date(paste(date.mdy(x1)$year,"-", date.mdy(x1)$month,"-", date.mdy(x1)$day, sep=""))
+    }
+					if(any(class(x1)=="Date")){
 						a[1,] <- c(length(x1),format(c(summary(x1)[4],summary(x1)[3],NA,summary(x1)[1],summary(x1)[6]),"%Y-%m-%d"))
 					}else
-					if(class(x)=="logical"){
+					if(any(class(x)=="logical")){
 					a[1,] <- round(c(length(na.omit(x1)),mean(na.omit(x1)),
 						quantile(na.omit(x1), .5), ifelse(is.na(mean(na.omit(x1))), NA,round(sd(na.omit(x1)),2))  , 
 					min(na.omit(x1)), max(na.omit(x1)) ),3 )
@@ -1383,11 +1392,14 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 				print.noquote(format((summary(x))[c(1,3,4,6)],"%Y-%m-%d %H:%M"))
 			}else{
 				a <- rep("",6); dim(a) <- c(1,6)
-				if(class(x)=="Date"){
+		if(any(class(x)=="date")){
+      x <- as.Date(paste(date.mdy(x)$year,"-", date.mdy(x)$month,"-", date.mdy(x)$day, sep=""))
+    }
+				if(any(class(x)=="Date")){
 					a[1,] <- c(length(na.omit(x)),format(c(summary(x)[4],summary(x)[3],NA,summary(x)[1],summary(x)[6]),"%Y-%m-%d"))
 				}else
 
-				if(class(x)=="difftime"){
+				if(any(class(x)=="difftime")){
 					a[1,] <- c(length(na.omit(x)), summary(x)[4],summary(x)[3],
 						ifelse(is.na(mean(na.omit(x1))), NA,round(sd(na.omit(x1)),2)),
 						summary(x)[1],summary(x)[6])
@@ -1418,6 +1430,9 @@ for(i in 1:(dim(x)[2])) {
 	{a[i,3:7] <- ""}
 	else
 ####
+		if(any(class(x[[i]])=="date")){
+      x[[i]] <- as.Date(paste(date.mdy(x[[i]])$year,"-", date.mdy(x[[i]])$month,"-", date.mdy(x[[i]])$day, sep=""))
+    }
 	if (any(class(x[[i]])=="Date")){
 	a[i,c(3,4,6,7)] <- format(c(summary(x[[i]])[4],summary(x[[i]])[3],
 			summary(x[[i]])[1],summary(x[[i]])[6]), "%Y-%m-%d")
@@ -1889,17 +1904,17 @@ if(is.factor(exposed1)){
 	cat(paste("Exposure status:", as.character(substitute(exposed)), "=", levels(exposed)[2],"\n"))
 }
 control <- 1-case
-aggregate(control, list(strata=strata), sum) -> a
+aggregate.data.frame(control, list(strata=strata), sum) -> a
 colnames(a)[2] <- "ncontrols"
 case.exposed <- case*exposed1
-aggregate(case.exposed, list(strata=strata), sum) -> b
+aggregate.data.frame(case.exposed, list(strata=strata), sum) -> b
 colnames(b)[2] <- "ncase.exposed"
 control.exposed <- control*exposed1
-aggregate(control.exposed, list(strata=strata), sum) -> c
+aggregate.data.frame(control.exposed, list(strata=strata), sum) -> c
 colnames(c)[2] <- "ncontrol.exposed"
-aggregate(case, list(strata=strata), length) -> d
+aggregate.data.frame(case, list(strata=strata), length) -> d
 colnames(d)[2] <- "all.subjects"
-aggregate(exposed1, list(strata=strata), sum) -> e
+aggregate.data.frame(exposed1, list(strata=strata), sum) -> e
 colnames(e)[2] <- "all.exposed"
 merge(a,b,by.x="strata", by.y="strata") -> f
 merge(f,c,by.x="strata", by.y="strata") -> g
@@ -2148,6 +2163,10 @@ dotplot <- function(x, bin=40, by=NULL, ...){
 #if(length(grep("Thai",Sys.getlocale("LC_ALL")))==1){
 #    Sys.setlocale(category = "LC_ALL", locale = "C")
 #}
+character.x <- as.character(substitute(x))
+		if(any(class(x)=="date")){
+      x <- as.Date(paste(date.mdy(x)$year,"-", date.mdy(x)$month,"-", date.mdy(x)$day, sep=""))
+    }
 if (is.null(by)){
 	value <- subset(x, !is.na(x))
 }else{
@@ -2167,15 +2186,15 @@ if(any(class(x)=="POSIXt")){
 }
 xgr <- cut(value, breaks=bin, labels=FALSE)
 xgr <- as.numeric(xgr)
-		var1 <- as.character(substitute(x))
-		if(length(var1)>1){
-			string2 <- var1[length(var1)]	
-		}else
+     string2 <- ifelse ((character.x[1]=="$" | character.x[1]==":"),paste(character.x[2],character.x[1],character.x[3],sep=""), character.x)
+	byname <- as.character(substitute(by))
+
 if(substring(search()[2],first=1,last=8)!="package:"){
-	string2 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==substitute(x)]
-	byname <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==substitute(by)]
+	string2 <-  attr(.data, "var.labels")[attr(.data,"names")==string2]
+	byname <-  attr(.data, "var.labels")[attr(.data, "names")==substitute(by)]
+	
 	if(length(string2)==0){
-		string2 <- as.character(substitute(x))
+		string2 <- ifelse ((character.x[1]=="$" | character.x[1]==":"),paste(character.x[2],character.x[1],character.x[3],sep=""), character.x)
 	}
 	if(length(byname)==0){
 		byname <- as.character(substitute(by))
@@ -2183,11 +2202,8 @@ if(substring(search()[2],first=1,last=8)!="package:"){
 	if(byname==""){byname <- as.character(substitute(by))}
 	}
 	if(string2==""){
-		string2 <- as.character(substitute(x))
+		string2 <- ifelse ((character.x[1]=="$" | character.x[1]==":"),paste(character.x[2],character.x[1],character.x[3],sep=""), character.x)
 	}
-}else{
-	string2 <- as.character(substitute(x))
-	byname <- as.character(substitute(by))
 }
 string3 <- paste(titleString()$distribution.of,string2)
 value.pretty <- pretty(value)
@@ -2246,7 +2262,7 @@ if(is.null(by)){
 	if(any(class(x)=="Date")){
 		axis(side=1,at=xgr.pretty, labels=as.character(format(value.pretty+as.Date("1970-01-01"), format.time)))
 	}
-	if(class(x)=="numeric" || class(x)=="integer"){
+	if(any(class(x)=="numeric") || any(class(x)=="integer")){
 		axis(side=1,at=xgr.pretty, labels=value.pretty)
 	}
 }else{ 
@@ -2297,7 +2313,7 @@ if(is.factor(by0)){
 	if(any(class(x)=="Date")){
 		axis(side=1,at=xgr.pretty, labels=as.character(format(value.pretty+as.Date("1970-01-01"), format.time)))
 	}
-	if(class(x)=="numeric" || class(x)=="integer"){
+	if(any(class(x)=="numeric") || any(class(x)=="integer")){
 		axis(side=1,at=xgr.pretty, labels=value.pretty)
 	}
 	par(mai=c(0.95625, 0.76875, 0.76875, 0.39375))
@@ -2622,6 +2638,53 @@ keepData <- function (x = .data, sample = NULL, exclude = NULL, subset, select,
     attach(.data)
 }
 
-
-
-
+## Aggregate a numeric variable
+aggregate.numeric <- function (x, by, FUN = c("length", "mean", "median", "sd", "min", 
+    "max"), na.rm = TRUE, ...) 
+{
+if(length(FUN)==1 & class(FUN)=="function") {
+FUN <- as.character(substitute(FUN)) 
+}else{
+if(any(is.na(x))){
+    if (any(FUN == "var") | any(FUN == "sd")) {
+        na.rm <- TRUE
+        cat("\n", "Note: 'na.rm' is forced to TRUE to allow computation of 'var' and/or 'sd'.", 
+            "\n")
+    }
+    if (any(FUN == "length")) {
+        cat("\n", "      'length' is computed with missing records included.", 
+            "\n")
+    }
+    cat("\n")
+    }
+    }
+    if (FUN[1] != "length") {
+        y <- aggregate.data.frame(x, by, FUN = FUN[1], na.rm = na.rm)
+        names(y)[length(names(y))] <- paste(FUN[1], as.character(substitute(x)), 
+            sep = ".")
+    }
+    else {
+        y <- aggregate.data.frame(x, by, FUN = length)
+        names(y)[length(names(y))] <- FUN[1]
+    }
+    if (length(FUN) > 1) {
+        for (i in 2:length(FUN)) {
+            if (FUN[i] != "length") {
+                y1 <- aggregate.data.frame(x, by, FUN = FUN[i], 
+                  na.rm = na.rm)
+                names(y1)[length(names(y1))] <- paste(FUN[i], 
+                  as.character(substitute(x)), sep = ".")
+                y <- data.frame(y, y1[, length(names(y1))])
+                names(y)[length(names(y))] <- paste(FUN[i], as.character(substitute(x)), 
+                  sep = ".")
+            }
+            else {
+                y1 <- aggregate.data.frame(x, by, FUN = length)
+                names(y1)[length(names(y1))] <- FUN[i]
+                y <- data.frame(y, y1[, length(names(y1))])
+                names(y)[length(names(y))] <- FUN[i]
+            }
+        }
+    }
+    y
+}

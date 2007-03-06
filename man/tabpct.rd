@@ -3,12 +3,14 @@
 \title{Two-way tabulation}
 \description{Two-way tabulation with automatic mosaic plot}
 \usage{
-tabpct (row, col, ..., decimal = 1, graph = TRUE, las = 0)  
+tabpct (row, col, ..., decimal = 1, percent = c("both", "col", "row"), 
+graph = TRUE, las = 0)  
 }
 \arguments{
 	\item{row, col}{variables}
 	\item{...}{additional arguments for 'table'}
 	\item{decimal}{number of decimals for the percentage in the table}
+	\item{percent}{orientation of the percentage in the table}
 	\item{graph}{automatic graphing}
 	\item{las}{orientation of group labelling, 
 
@@ -25,7 +27,9 @@ tabpct (row, col, ..., decimal = 1, graph = TRUE, las = 0)
 
 The width of the bar in the plot denotes the relative proportion of the row variable.
 
-Inside each bar, the relative proportion denotes the distribution of column variables within each row variable.}
+Inside each bar, the relative proportion denotes the distribution of column variables within each row variable.
+
+Note that 'row' and 'col' arguments of this function are for the table, not the mosaic plot and the default value for the 'percent' orientation is "both".}
 \value{Tables of row and column percentage}
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
