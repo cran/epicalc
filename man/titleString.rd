@@ -3,8 +3,9 @@
 \title{Replace commonly used words in Epicalc graph title}
 \description{Setting vocabularies for Epicalc graph title}
 \usage{
-titleString (distribution.of = .distribution.of, by = .by, frequency = .frequency, 
-    locale = .locale, return.look.up.table=FALSE)
+titleString (distribution.of = .distribution.of, by = .by, 
+	frequency = .frequency, locale = .locale, 
+	return.look.up.table=FALSE)
 }
 \arguments{
 	\item{distribution.of}{A string denoting "Distribution of"}

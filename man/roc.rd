@@ -4,7 +4,8 @@
 \title{ROC curve}
 \description{Receiver Operating Characteristic curve of a logistic regression model and a diagnostic table}
 \usage{
-lroc(logistic.model, table=FALSE, add=FALSE, title=FALSE, line.col="red", auc.label=FALSE)
+lroc(logistic.model, table=FALSE, add=FALSE, title=FALSE, 
+	line.col="red", auc.label=FALSE)
 roc.from.table(table, graph = TRUE) 
 }
 \arguments{

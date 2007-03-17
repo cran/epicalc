@@ -36,7 +36,8 @@ dbp <- c( 80,  80,  70,  80,  70,  NA,  70,  60)
 .data <- data.frame(sbp, dbp)
 attach(.data, warn.conflicts=FALSE)
 
-# The above lines generate a hypothetical data frame. In reality, one just exploits 'use("datafile")', if the "datafile" exists.
+# The above lines generate a hypothetical data frame. In reality,
+# one just exploits 'use("datafile")', if the "datafile" exists.
 des()
 label.var(sbp, "systolic BP")
 label.var(dbp, "diastolic BP")

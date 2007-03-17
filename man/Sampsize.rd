@@ -49,26 +49,29 @@ processes in health care.
 }
 \seealso{'power.for.2means', 'power.for.2p'}
 \examples{
-# In a standard survey to determine the coverage of immunization using a cluster sampling technique
-# on the population of approximately 500000, the estimated prevalence is 70 percent, 
-# design effect is assumed to be 2.
+# In a standard survey to determine the coverage of immunization using 
+# a cluster sampling technique on the population of approximately 500000,
+# the estimated prevalence is 70 percent, design effect is assumed to be 2.
 
 n.for.survey( p = .8, delta = .1, popsize = 500000, deff =2) # 123
 
 # In a case control study testing the efficacy of measles vaccine. 
-# The coverage in the non-diseased population is estimated at 80 percent. That in the diseased is 60 percent.
+# The coverage in the non-diseased population is estimated at 80 percent. 
+# That in the diseased is 60 percent.
 
 n.for.2p(p1=.8, p2=.6) # n1=n2=91
 
-# A randomized controlled trial testing cure rate of a disease of 90 percent by new drugs 
-# and 80 percent by the old one.
+# A randomized controlled trial testing cure rate of a disease of
+# 90 percent by new drugs  and 80 percent by the old one.
 
 n.for.2p(p1=.9, p2=.8) # 219 subjects in each arm.
 
-# A quality assurance to check whether the coding of ICD-10 is faulty by no more than 2 percent.
-# The minimum sample is required. Thus any faulty coding in the sample is not acceptable.
+# A quality assurance to check whether the coding of ICD-10 is faulty 
+# by no more than 2 percent.The minimum sample is required. 
+# Thus any faulty coding in the sample is not acceptable.
 
-n.for.lqas(p0 = .02, q=0, exact=TRUE) # 148 non-faulty checks is required to support the assurance process.
+n.for.lqas(p0 = .02, q=0, exact=TRUE) # 148 non-faulty checks is required 
+# to support the assurance process.
  
 }
 \keyword{math}

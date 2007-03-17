@@ -11,12 +11,17 @@
 \title{Odds ratio calculation and graphing}
 \description{Odds ratio calculation and graphing}
 \usage{
-cc(outcome, exposure, decimal = 2, cctable = NULL, graph = TRUE, design = "cohort") 
-cci(caseexp, controlex, casenonex, controlnonex, cctable = NULL, decimal = 2, graph = TRUE, design = "cohort") 
+cc(outcome, exposure, decimal = 2, cctable = NULL, graph = TRUE, 
+	design = "cohort") 
+cci(caseexp, controlex, casenonex, controlnonex, cctable = NULL, 
+	decimal = 2, graph = TRUE, design = "cohort") 
 cs(outcome, exposure, cctable = NULL, decimal = 2)
-csi(caseexp, controlex, casenonex, controlnonex, cctable = NULL, decimal = 2) 
-graph.casecontrol(caseexp, controlex, casenonex, controlnonex, decimal=2) 
-graph.prospective(caseexp, controlex, casenonex, controlnonex, decimal=2) 
+csi(caseexp, controlex, casenonex, controlnonex, cctable = NULL, 
+	decimal = 2) 
+graph.casecontrol(caseexp, controlex, casenonex, controlnonex,
+	 decimal=2) 
+graph.prospective(caseexp, controlex, casenonex, controlnonex,
+	 decimal=2) 
 labelTable(outcome, exposure, cctable = NULL, cctable.dimnames = NULL) 
 mhor(..., mhtable = NULL, decimal=2, graph = TRUE, design = "cohort") 
 make2x2(caseexp, controlex, casenonex, controlnonex)

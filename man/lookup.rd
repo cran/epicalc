@@ -32,7 +32,8 @@ print(tableA, zero=".")
 
 ## Character look-up table
 b <- c(rep(letters[1:4],2), ".", NA)
-tx1 <- cbind(c(letters[1:5], ".", NA), c("Disease A","Disease B","Disease C", "Disease D","Diease E", NA, "Unknown"))
+tx1 <- cbind(c(letters[1:5], ".", NA), c("Disease A","Disease B","Disease C", 
+	"Disease D","Diease E", NA, "Unknown"))
 DiseaseName <- lookup(b, tx1)
 data.frame(b, DiseaseName)
 }

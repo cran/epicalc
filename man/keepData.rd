@@ -3,11 +3,12 @@
 \title{Keep a subset of variables or records}
 \description{Keeping only subset of variables or records in the default data frame '.data'}
 \usage{
-keepData (x = .data, sample=NULL, exclude=NULL, subset, select, drop = FALSE, ...)  
+keepData (x = .data, sample=NULL, exclude=NULL, subset, select, 
+		 drop = FALSE, ...)  
 }
 \arguments{
 	\item{x}{.data or the default data frame}
-	\item{sample}{integer indicating size of random sample of records to be extracted}
+	\item{sample}{integer indicating size of random sample or value < 1 indicating fraction of records to be extracted}
 	\item{exclude}{expression, indicating columns to remove from '.data'.}
 	\item{subset}{logical expression indicating elements or rows to keep: missing values are taken as false.}
 	\item{select}{expression, indicating columns to select from a data frame.} 
@@ -32,6 +33,9 @@ use(ANCdata)
 des()
 keepData(sample=500)
 des() # Note reduction of sample size to 500
+use(ANCdata)
+keepData(sample=.1) # Only 10% kept
+des()
 
 ## Specific record numbers
 data(Compaq)
@@ -62,7 +66,8 @@ des()
 use(Familydata)
 keepData(exclude = age:ht) 
 des() 
-keepData(select = -c(1,3)) # Further removal of the first and the third variables 
+keepData(select = -c(1,3)) # Further removal of the first and 
+			               # the third variables 
 des()
 codebook()
 ## Targeting only a certain variables
@@ -71,7 +76,8 @@ use(Oswego)
 des()
 keepData(select = c(age, sex, ill, cakes:fruitsalad))
 des() 
-keepData(select = c(1,2,5:7)) # Retain all variables except the third the the fourth
+keepData(select = c(1,2,5:7)) # Retain all variables except the third 
+	                          #the the fourth
 des()
 # Note the number of brackets '(subset)'
 

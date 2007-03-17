@@ -3,7 +3,8 @@
 \title{Compute summary statistics of a numeric variable}
 \description{Split the numeric variable into subsets, computes summary statistics for each, and return the results in a data frame.}
 \usage{
-\method{aggregate}{numeric}(x, by, FUN=c("length","mean","median","sd","min","max"), na.rm=TRUE, ...)
+\method{aggregate}{numeric}(x, by, FUN=c("length","mean","median","sd","min","max"), 
+	na.rm=TRUE, ...)
 }
 \arguments{
        \item{x}{a numeric variable}
@@ -35,18 +36,23 @@ data(Compaq)
 use(Compaq)
 
 ## 'x' for default aggregate can be a data frame
-aggregate(data.frame(id,year), by=list(HOSPITAL=hospital, STAGE=stage), FUN="mean")
+aggregate(data.frame(id,year), by=list(HOSPITAL=hospital, STAGE=stage),
+	FUN="mean")
 # The two additional columns are means of 'id' and 'year'
 
 ## 'x' in for 'aggregate.numeric' is a numeric vector
-aggregate(year, by = list(HOSPITAL = hospital, STAGE = stage), FUN = mean)
+aggregate(year, by = list(HOSPITAL = hospital, STAGE = stage), 
+	FUN = mean)
 # The above line is the same as the below standard command in R
 
-aggregate.data.frame(year, by = list(HOSPITAL = hospital, STAGE = stage), FUN = mean)
-# Note the difference in the name of the last column of the returned data frame.
+aggregate.data.frame(year, by = list(HOSPITAL = hospital, 
+	STAGE = stage), FUN = mean)
+# Note the difference in the name of the last column of the returned 
+# data frame.
 
 # aggregate in Epicalc can handle multiple functions
-aggregate(year, by = list(HOSPITAL = hospital, STAGE = stage), FUN = c("mean", "sd", "length"))
+aggregate(year, by = list(HOSPITAL = hospital, STAGE = stage), 
+	FUN = c("mean", "sd", "length"))
 
 ## Handling of missing values
 .data$year[8] <- NA
@@ -54,14 +60,16 @@ detach(.data); attach(.data)
 
 aggregate(year, by = list(STAGE = stage), FUN = "length")
 
-## 'mean's of subsets in the standard 'aggregrate.data.frame' have 'na.rm' set to FALSE.
+## 'mean's of subsets in the standard 'aggregrate.data.frame' 
+## have 'na.rm' set to FALSE.
 aggregate.data.frame(year, by = list(STAGE = stage), FUN = "mean")
 
 ## The default value of 'na.rm' is TRUE in aggregate.numeric of Epicalc.
 aggregate(year, by = list(STAGE = stage), FUN = c("mean","median"))
 
 ## It can be set to FALSE though.
-aggregate(year, by = list(STAGE = stage), FUN = c("mean","median"), na.rm=FALSE)
+aggregate(year, by = list(STAGE = stage), FUN = c("mean","median"), 
+	na.rm=FALSE)
 
 # Omitted the FUN argument can save a lot of time.
 aggregate(year, by = list(HOSPITAL = hospital, STAGE = stage))

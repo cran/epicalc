@@ -31,7 +31,8 @@ des() # This is one of the most useful Epicalc functions!
 #### Detection of variables of the same name in different data frames.
 # Note that 'age' is a variable in '.data' due to the function 'use'.
 des(Oswego) # Same results. Note that 'age' is also in 'Oswego'.
-des(infert) # The third 'age' is in another data frame, from the datasets package in R, 'infert'.
+des(infert) # The third 'age' is in another data frame,
+	        # from the datasets package in R, 'infert'.
 attach(infert)
 search() # Show all data frames that are in the search path
 des(sex) # 'sex' is found only in '.data'

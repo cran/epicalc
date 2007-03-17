@@ -40,7 +40,8 @@ house.plr
 ordinal.or.display(house.plr)
 
 # Polytomous or multinomial logistic regression
-house.multinom <- multinom(Sat ~ Infl + Type + Cont, weights = Freq, data = housing)
+house.multinom <- multinom(Sat ~ Infl + Type + Cont, weights = Freq, 
+	data = housing)
 summary(house.multinom)
 mlogit.display(house.multinom, alpha=.01) # with 99 percent confidence limits.
 }

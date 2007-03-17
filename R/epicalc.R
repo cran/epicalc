@@ -2572,9 +2572,14 @@ keepData <- function (x = .data, sample = NULL, exclude = NULL, subset, select,
     label.table <- attr(.data, "label.table")
     if (!is.null(sample)) {
         if (!is.numeric(sample) | sample <= 0 | length(sample) > 
-            1 | trunc(sample) != sample) {
+            1 | (trunc(sample) != sample) & sample > 1) {
             stop("Size of sample must be a positive integer")
         }
+        if(sample < 1) {
+            sample0 <- sample; 
+            sample <- trunc(sample*nrow(.data))
+            cat("Keep only ", round(sample0*100,2),"% or ", sample, " of the total ", nrow(.data), " records","\n", sep="")
+            }
         x <- x[sample(nrow(x), sample), ]
         .data <<- x
         attr(.data, "datalabel") <<- paste(datalabel, "(subset)")
