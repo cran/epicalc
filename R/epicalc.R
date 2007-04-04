@@ -1187,6 +1187,7 @@ print.noquote(oor.95ci)
 ### Summarize continous variable in the loaded data set
 summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 ###	Graph function here
+  if(all(is.na(x))){ stop("All elements of ", substitute(x), " have a missing value")}
 	if(!is.atomic(x)) {graph=FALSE}
 	if(graph==TRUE){
 #if(length(grep("Thai",Sys.getlocale("LC_ALL")))==1){
@@ -1426,13 +1427,14 @@ colnames(a) <- c("Var. name", "obs.", "mean  ", "median ", "s.d.  ",  "min.  ", 
 a[,1] <- attr(x, "names")
 rownames(a) <- 1:nrow(a)
 for(i in 1:(dim(x)[2])) {
-	if ((typeof(x[i][1,])=="character")|| is.na(mean(na.omit(as.numeric(x[[i]]))))   )  
-	{a[i,3:7] <- ""}
+	if ((typeof(x[i][1,])=="character")|| is.na(mean(na.omit(as.numeric(x[[i]]))))   )  {
+  a[i,3:7] <- ""
+  }
 	else
 ####
 		if(any(class(x[[i]])=="date")){
       x[[i]] <- as.Date(paste(date.mdy(x[[i]])$year,"-", date.mdy(x[[i]])$month,"-", date.mdy(x[[i]])$day, sep=""))
-    }
+    }                               
 	if (any(class(x[[i]])=="Date")){
 	a[i,c(3,4,6,7)] <- format(c(summary(x[[i]])[4],summary(x[[i]])[3],
 			summary(x[[i]])[1],summary(x[[i]])[6]), "%Y-%m-%d")
@@ -1451,12 +1453,11 @@ for(i in 1:(dim(x)[2])) {
 }
 	else
 
-	if (is.integer(x[[i]])||is.numeric(x[[i]])|is.logical(x[[i]])){
+	if(suppressWarnings (is.integer(x[[i]])||is.numeric(x[[i]])|(is.logical(x[[i]]) & !is.na(mean(na.omit(as.numeric(x[[i]]))))))){
 	a[i,3:7] <- round(c(mean(na.omit(x[[i]])),
 			quantile(na.omit(x[[i]]), .5), sd(na.omit(x[[i]])), 
 			min(na.omit(x[[i]])), max(na.omit(x[[i]]))),2)
 	a[i,2] <- as.character(length(na.omit(as.numeric(x[[i]]))))
-
 }
 	else
 	if (is.null(class(x[[i]]))) {
@@ -1483,7 +1484,6 @@ for(i in 1:(dim(x)[2])) {
 			max(na.omit(unclass(x[i][,])))),3)
 }
 }
-	
 cat("\n")
 print.noquote (a[,], digits=3)
 cat("\n")
@@ -2159,10 +2159,30 @@ if(is.data.frame(filename)){
 attach(.data, warn.conflicts=FALSE)
 }
 ### Dot plot
-dotplot <- function(x, bin=40, by=NULL, ...){
-#if(length(grep("Thai",Sys.getlocale("LC_ALL")))==1){
-#    Sys.setlocale(category = "LC_ALL", locale = "C")
-#}
+dotplot <- function(x, bin="auto", by=NULL, xmin=NULL, xmax=NULL, time.format=NULL, time.step=NULL, ...){
+if (bin=="auto"){
+if(!is.null(attr(max(x, na.rm=TRUE)-min(x, na.rm=TRUE), "units")) & !any(class(x)=="difftime")){
+  unit1 <- "weeks"
+  bin <- as.numeric(difftime(max(x, na.rm=TRUE), min(x,na.rm=TRUE), unit=unit1))+1
+while(bin!=trunc(bin)){
+  if(unit1=="weeks"){ unit1 <- "days"
+}else
+  if(unit1=="days"){ unit1 <- "hours"
+}else
+  if(unit1=="hours"){ unit1 <- "mins"
+}else
+  if(unit1=="mins") unit1 <- "secs"
+  bin <- as.numeric(difftime(max(x, na.rm=TRUE), min(x,na.rm=TRUE), unit=unit1))+1
+  }
+  }else{
+if(is.integer(x)){
+  bin <- as.integer(max(x, na.rm=TRUE)- min(x, na.rm=TRUE) +1)
+}else{
+if(any(class(x)=="Date")){
+  bin <- as.numeric(difftime(max(x, na.rm=TRUE), min(x,na.rm=TRUE), unit=unit1))+1
+ }else{
+ bin <- 40
+}}}}
 character.x <- as.character(substitute(x))
 		if(any(class(x)=="date")){
       x <- as.Date(paste(date.mdy(x)$year,"-", date.mdy(x)$month,"-", date.mdy(x)$day, sep=""))
@@ -2171,7 +2191,7 @@ if (is.null(by)){
 	value <- subset(x, !is.na(x))
 }else{
 	data1 <- data.frame(by)
-	data1$x <- x
+	data1$x <- x                       
 	data2 <- subset(data1,!is.na(x) & !is.na(by))
 	value <- data2$x
 	by0 <- data2$by
@@ -2184,7 +2204,18 @@ if (any(class(x)=="difftime")){
 if(any(class(x)=="POSIXt")){
 	value <- as.numeric(value) 
 }
-xgr <- cut(value, breaks=bin, labels=FALSE)
+if(any(class(x)=="Date")){
+	value <- as.numeric(value) 
+}
+
+xgr <- cut(value, breaks=bin, labels=FALSE, include.lowest=TRUE)
+if(!is.null(xmax) & !is.null(xmin)){
+original.lim <- c(min(value), max(value))
+xgr.lim <- c(min(xgr), max(xgr))
+lm00 <- lm(xgr.lim ~ original.lim)
+newdata <- data.frame(original.lim=as.numeric(c(xmin, xmax)))
+xgr1 <- predict.lm(lm00, newdata )
+}
 xgr <- as.numeric(xgr)
      string2 <- ifelse ((character.x[1]=="$" | character.x[1]==":"),paste(character.x[2],character.x[1],character.x[3],sep=""), character.x)
 	byname <- as.character(substitute(by))
@@ -2207,19 +2238,35 @@ if(substring(search()[2],first=1,last=8)!="package:"){
 }
 string3 <- paste(titleString()$distribution.of,string2)
 value.pretty <- pretty(value)
+if(exists("xgr1")){ 
+value.pretty <- pretty(c(xmin,xmax))
+}
 if(any(class(x)=="Date")) {
-	range.date <- difftime(summary(x)[6], summary(x)[1])
-	numdate <- as.numeric(range.date)
+  range.date <- difftime(summary(x)[6], summary(x)[1])
+	if(exists("xgr1")) {range.date <- difftime(xmax, xmin)}
+  min.date <- summary(x)[1]
+	if(exists("xgr1")) {min.date <- xmin}
+	max.date <- summary(x)[6]
+	if(exists("xgr1")) {max.date <- xmax}
+	numdate <- (range.date)
     if(numdate <1){stop(paste("Only one day ie.",format(x,"%Y-%m-%d"),"not suitable for plotting"))}
-	if(numdate <10){date.pretty <- seq(from=summary(x)[1],to=summary(x)[6],by="day"); format.time <- "%a%d%b"}
-	if(numdate >=10 & numdate <30){date.pretty <- seq(from=summary(x)[1],to=summary(x)[6],by="2 day"); format.time <- "%d%b"}
-	if(numdate >=30 & numdate <60){date.pretty <- seq(from=summary(x)[1],to=summary(x)[6],by="week"); format.time <- "%a %d"}
-	if(numdate >=60 & numdate <700){date.pretty <- seq(from=summary(x)[1],to=summary(x)[6],by="month"); format.time <- "%b%y"}
-	if(numdate >=700){date.pretty <- seq(from=summary(x)[1],to=summary(x)[6],by="year"); format.time <- "%b%y"}
-	value.pretty <- as.numeric(date.pretty)
+	if(numdate <10){date.pretty <- seq(from=min.date,to=max.date,by="day"); format.time <- "%a%d%b"}
+	if(numdate >=10 & numdate <30){date.pretty <- seq(from=min.date,to=max.date,by="2 day"); format.time <- "%d%b"}
+	if(numdate >=30 & numdate <60){date.pretty <- seq(from=min.date,to=max.date,by="week"); format.time <- "%a %d"}
+	if(numdate >=60 & numdate <700){date.pretty <- seq(from=min.date,to=max.date,by="month"); format.time <- "%d%b'%y"}
+	if(numdate >=700){date.pretty <- seq(from=min.date,to=max.date,by="year")
+  format.time <- "%d%b'%y"}
+  if(!is.null(time.format)){format.time <- time.format}
+  if(!is.null(time.step)){date.pretty <- seq(from=min.date,to=max.date,by=time.step)}
+  value.pretty <- as.numeric(date.pretty)
 }
 if(any(class(x)=="POSIXt")){
 	range.time <- difftime(summary(x)[6],summary(x)[1])
+	if(exists("xgr1")) {range.time <- difftime(xmax, xmin)}
+  min.time <- summary(x)[1]
+	if(exists("xgr1")) {min.time <- xmin}
+	max.time <- summary(x)[6]
+	if(exists("xgr1")) {max.time <- xmax}
 	numeric.time <- as.numeric(range.time)
 	units <- attr(range.time, "units")
 	if(units=="secs")  {step <- "sec"; format.time <- "%M:%S";  scale.unit <- "min:sec"}
@@ -2233,10 +2280,19 @@ if(any(class(x)=="POSIXt")){
 		}
 	}
 	if(units=="weeks") {step <- "week";format.time <- "%b%y";   scale.unit <- " "}
-	time.pretty <- seq(from=summary(x)[1],to=summary(x)[6],by=step)
+  if(!is.null(time.format)){format.time <- time.format}
+  if(!is.null(time.step)){step <- time.step}
+	time.pretty <- seq(from=min.time,to=max.time,by=step)
 	value.pretty <- as.numeric(time.pretty)
 }
-
+	xlim <- c(min(xgr),max(xgr))
+	value.lim <- c(min(value), max(value))
+	if(exists("xgr1")) {
+  xlim <- c(min(xgr1),max(xgr1))
+  value.lim <- as.numeric(c(xmin, xmax))
+}
+	glm(xlim~value.lim)->model1
+	xgr.pretty <- model1$coefficient[1] + model1$coefficient[2]*value.pretty
 if(is.null(by)){
 	
 	xgr <- sort(xgr)
@@ -2244,26 +2300,12 @@ if(is.null(by)){
 	for(i in 1:max(xgr)){
 		freq[xgr==i] <- 1:sum(xgr==i) 
 	}
-	glm(xgr~value[order(value)])->model1
-	xgr.pretty <- model1$coefficient[1] + model1$coefficient[2]*value.pretty
 	if(max(freq)<20){
-		plot(xgr,freq, xaxt="n", xlab=" ",main=string3,	ylab=titleString()$frequency,ylim=c(0,20), ...)
+		plot(xgr,freq, xaxt="n", xlab=" ",main=string3,	ylab=titleString()$frequency,
+      ylim=c(0,20), xlim = xlim, ...)
 	}else{
-	plot(xgr,freq, xaxt="n", xlab=" ",main=string3,	ylab=titleString()$frequency, ...)
-	}
-	if(any(class(x)=="POSIXct")){
-		axis(side=1, at=xgr.pretty, labels=as.character(time.pretty,format=format.time))	
-		title(xlab=scale.unit)
-	}
-	if(any(class(x)=="difftime")){
-		axis(side=1,at=xgr.pretty, labels=value.pretty)
-		title(xlab=unit.value)
-	}
-	if(any(class(x)=="Date")){
-		axis(side=1,at=xgr.pretty, labels=as.character(format(value.pretty+as.Date("1970-01-01"), format.time)))
-	}
-	if(any(class(x)=="numeric") || any(class(x)=="integer")){
-		axis(side=1,at=xgr.pretty, labels=value.pretty)
+  plot(xgr,freq, xaxt="n", xlab=" ",main=string3,	ylab=titleString()$frequency, 
+       xlim = xlim, ...)
 	}
 }else{ 
 	order1 <- order(by0,value)
@@ -2287,21 +2329,21 @@ if(is.factor(by0)){
 		}
 		add.i <- max(y, na.rm=TRUE) +2
 	}
-	glm(xgr~value)->model1
-	xgr.pretty <- model1$coefficient[1] + model1$coefficient[2]*value.pretty 
 	main.lab <- paste(string3,titleString()$by,byname)
 	if(nchar(main.lab)>45){main.lab <- paste(string3,"\n",titleString()$by,byname)}
   if(max(y)<20){
 	plot(xgr,y, xaxt="n", yaxt="n",
 		xlab=" ",main=main.lab, ylim=c(-1,20),
-		ylab=" ", col=as.numeric(by1), pch=18, ...)
+		ylab=" ", col=as.numeric(by1), pch=18, xlim=xlim, ...)
 	}else{
 	plot(xgr,y, xaxt="n", yaxt="n",
 		xlab=" ",main=main.lab, ylim=c(-1,max(y)),
-		ylab=" ", col=as.numeric(by1), pch=18, ...)
+		ylab=" ", col=as.numeric(by1), pch=18, xlim=xlim, ...)
 	}
 	abline(h=yline, col="blue")
 	axis(2,at=yline, labels=levels(by1), padj=0, las=1)
+	par(mai=c(0.95625, 0.76875, 0.76875, 0.39375))
+	}
 	if(any(class(x)=="POSIXct")){
 		axis(side=1, at=xgr.pretty, labels=as.character(time.pretty,format=format.time))	
 		title(xlab=scale.unit)
@@ -2316,9 +2358,6 @@ if(is.factor(by0)){
 	if(any(class(x)=="numeric") || any(class(x)=="integer")){
 		axis(side=1,at=xgr.pretty, labels=value.pretty)
 	}
-	par(mai=c(0.95625, 0.76875, 0.76875, 0.39375))
-	}
-#if(Sys.getlocale()=="C") Sys.setlocale(category = "LC_ALL", locale = "") -> none 
 }
 ### Labeling variables
 label.var <-function(var, label, pack=TRUE){
