@@ -9,7 +9,6 @@
 
 # Work started in 2002-October
 
-# Lastupdated.Epicalc <- "22:05 2006-November-28"
 
 # Setting locale and automatic graph titles
 .locale <- FALSE # All automatic graphs will initially have English titles
@@ -1496,6 +1495,7 @@ if(add){
   title <- FALSE
 }
 table(logistic.model$fitted.values,logistic.model$y) -> firsttable
+firsttable <- firsttable[order(as.numeric(rownames(firsttable))),]
 cat("\n")
 colnames(firsttable) <- c("Non-diseased","Diseased")
 rownames(firsttable) <- substr(rownames(firsttable), 1,6)
@@ -2126,31 +2126,32 @@ lookup <- function (x, lookup.array)
 	}
 }
 ### Use various file formats
-use <- function(filename, clear=TRUE) {
+use <- function(filename, clear=TRUE, tolower=TRUE) {
 library(foreign)
 if(clear){
 	detachAllData()
 }
 if(is.character(filename)){
-if(suppressWarnings(any(tolower(list.files())==tolower(filename), na.rm=TRUE))){
+#if(suppressWarnings(any(tolower(list.files())==tolower(filename), na.rm=TRUE))){
   ext <- tolower(substring(filename,first=nchar(filename)-3, last=nchar(filename)) )
   if( ext == ".dta") {
   	.data <<- read.dta(filename)}
   if( ext == ".dbf") {
  	  .data <<- read.dbf(filename)
-	  names(.data) <<- tolower(names(.data))}
+if(tolower)	  names(.data) <<- tolower(names(.data))}
   if( ext == ".rec") {
 	  .data <<- read.epiinfo(filename)
-	  names(.data) <<- tolower(names(.data))}
+if(tolower)	  names(.data) <<- tolower(names(.data))}
   if( ext == ".sav") {
 	 .data <<- read.spss(filename)
 	 var.labels <- attr(.data, "variable.labels")
-	 names(.data) <<- tolower(names(.data))
+if(tolower)	 names(.data) <<- tolower(names(.data))
 	 .data <<- as.data.frame(.data)
 	 attr(.data, "var.labels") <<- var.labels}
+#   if( ext == ".csv") {
   if( substring(filename,first=nchar(filename)-3, last=nchar(filename))==".csv") {
-	 .data <<- read.table(filename, header=TRUE, sep=",")}
-  }else{stop("File not found")}
+	 .data <<- read.csv(filename, header=TRUE, sep=",")}
+#  }else{stop("File not found")}
 }else{
 if(is.data.frame(filename)){
   .data <<- filename
@@ -2681,15 +2682,105 @@ keepData <- function (x = .data, sample = NULL, exclude = NULL, subset, select,
     detach(.data)
     attach(.data)
 }
-
+## Adjusted mean, proportion and rate
+adjust <- function(adjust = NULL, by, model, offset=FALSE, 
+   type = c("response", "link"), se.fit=TRUE, alpha=.05, ci=FALSE, 
+   ...){
+if(length(type)==2) type <- "response"
+if(missing(by)) stop ("'by' variable(s) missing!")
+if(!any(class(model)=="glm") & !any(class(model)=="lm")) stop("Model must be in class 'lm' or 'glm'")
+nl <- as.list(1:ncol(model$model))
+names(nl) <- names(model$model)
+by.vars <- as.numeric(eval(substitute(by), envir=nl, enclos=parent.frame()))
+adjust.vars <- eval(substitute(adjust), nl, parent.frame())
+mod <- model.matrix(model)
+if(length(grep("offset", names(model$model)))> 0 ){
+mod <- data.frame(model.matrix(model),model$model[,ncol(model$model)])
+names(mod) <- c(colnames(model.matrix(model)),"offset1")
+}
+newdata0 <- aggregate.data.frame(mod, by=as.list(model$model)[by.vars], FUN="mean")
+if(length(grep("offset", names(model$model)))> 0 ){
+if(!offset) {
+newdata0$offset1 <- 0
+}else{
+persontime <- exp(model$model[,ncol(model$model)])
+newdata0$offset1 <- log(aggregate.numeric(persontime,by=as.list(model$model)[by.vars],FUN="mean")$mean.persontime)
+}
+}
+means <- apply(mod,2,mean)
+if(!is.null(adjust)){
+selected.names <- names(model$model)[adjust.vars]
+for(i in 1:length(selected.names)){
+j0 <- grep(selected.names[i], names(newdata0))
+j1 <- grep(selected.names[i], names(means))
+for(k in 1:length(j0)){
+newdata0[,j0[k]] <- means[j1[k]]
+}
+}
+}
+data.for.new.glm <- data.frame(model$model[,1], model.matrix(model)[,-1])
+names(data.for.new.glm)[-1] <- colnames(model.matrix(model))[-1]
+names(data.for.new.glm)[1] <- "y"
+offset1 <- model$offset
+newglm <- glm(y ~.,  data=data.for.new.glm, family=as.character(model$family)[1])
+if(length(grep("offset", names(model$model)))> 0 ){
+newglm <- glm(y ~., offset= offset1,  family=as.character(model$family)[1],data=data.for.new.glm )
+}
+newdata1 <- newdata0[,(ncol(newdata0)-(ncol(data.for.new.glm)-2)):ncol(newdata0)]
+if(length(grep("offset", names(model$model)))> 0 ){
+newdata1 <- newdata0[,(ncol(newdata0)-(ncol(data.for.new.glm)-1)):ncol(newdata0)  ]
+}
+result.gold <- as.data.frame(predict.glm(newglm,newdata=newdata1, type="link", 
+    se.fit)[c(1,2)])
+result0 <- predict.glm(newglm,newdata=newdata0, type, se.fit)[c(1,2)]
+result <- data.frame(newdata0[,1:length(by.vars)], as.data.frame(result0))
+names(result)[1:length(by.vars)] <- names(model$model)[by.vars]
+if(!se.fit) names(result)[length(names(result))] <- "fit"
+if(as.character(model$family[1])=="binomial" & type=="response") {
+result$se.fit <- NULL
+names(result)[ncol(result)] <- "probability"
+if(ci){
+result$ul <- result.gold[,1] - qnorm(1-alpha/2)* result.gold[,2]
+result$ul <- exp(result$ul)/(1+exp(result$ul))
+result$ll <- result.gold[,1] + qnorm(1-alpha/2)* result.gold[,2]
+result$ll <- exp(result$ll)/(1+exp(result$ll))
+names(result)[c(ncol(result)-1, ncol(result))] <- c(paste("lower",100-100*alpha,"ci",sep=""),paste("upper",100-100*alpha,"ci",sep=""))
+}
+}
+if(as.character(model$family[1])=="poisson" & type=="response") {
+result$se.fit <- NULL
+if(!offset){
+names(result)[ncol(result)] <- "rate"
+}else{
+names(result)[ncol(result)] <- "count"
+}
+if(ci){
+result$ul <- result.gold[,1] - qnorm(1-alpha/2)* result.gold[,2]
+result$ul <- exp(result$ul)
+result$ll <- result.gold[,1] + qnorm(1-alpha/2)* result.gold[,2]
+result$ll <- exp(result$ll)
+names(result)[c(ncol(result)-1, ncol(result))] <- c(paste("lower",100-100*alpha,"ci",sep=""),paste("upper",100-100*alpha,"ci",sep=""))
+}
+}
+if(as.character(model$family[1])=="gaussian" & type=="response") {
+names(result)[names(result)=="fit"] <- "mean"
+names(result)[names(result)=="se.fit"] <- "se.mean"
+}
+if(ci & (type=="link"| as.character(model$family[1])=="gaussian") & se.fit){
+result$ul <- result[,ncol(result)-1] - qnorm(1-alpha/2)* result[,ncol(result)]
+result$ll <- result[,ncol(result)-2] + qnorm(1-alpha/2)* result[,ncol(result)-1]
+names(result)[c(ncol(result)-1, ncol(result))] <- c(paste("lower",100-100*alpha,"ci",sep=""),paste("upper",100-100*alpha,"ci",sep=""))
+}
+result
+}
 ## Aggregate a numeric variable
 aggregate.numeric <- function (x, by, FUN = c("length", "mean", "median", "sd", "min", 
-    "max"), na.rm = TRUE, ...) 
+    "max"), na.rm = TRUE, length.warning=TRUE, ...) 
 {
 if(length(FUN)==1 & class(FUN)=="function") {
 FUN <- as.character(substitute(FUN)) 
 }else{
-if(any(is.na(x))){
+if(any(is.na(x)) & length.warning){
     if (any(FUN == "var") | any(FUN == "sd")) {
         na.rm <- TRUE
         cat("\n", "Note: 'na.rm' is forced to TRUE to allow computation of 'var' and/or 'sd'.", 

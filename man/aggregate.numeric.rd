@@ -4,13 +4,14 @@
 \description{Split the numeric variable into subsets, computes summary statistics for each, and return the results in a data frame.}
 \usage{
 \method{aggregate}{numeric}(x, by, FUN=c("length","mean","median","sd","min","max"), 
-	na.rm=TRUE, ...)
+	na.rm=TRUE, length.warning=TRUE, ...)
 }
 \arguments{
        \item{x}{a numeric variable}
        \item{by}{a list of grouping elements, each as long as the variables in 'x'.  Names for the grouping variables are provided if they are not given. The elements of the list will be coerced to factors (if they are not already factors).}
        \item{FUN}{scalar functions to compute the summary statistics which can be applied to all data subsets.}
        \item{na.rm}{whether missing values will be removed during the computation of the statistics.}
+       \item{length.warning}{warning if x has any missing value}
        \item{...}{additional arguments to 'aggregate'}
 }
 \details{This is the 'aggregate' method for objects inheriting from class '"numeric"'.
@@ -25,7 +26,7 @@ The 'FUN' argument in 'aggregate.data.frame' can accept only one function.
 
 'aggregate' in Epicalc is 'backward compatible' with the 'aggregate' function from the stats package. In other words, Epicalc users do not need to change basic syntax or arguments. However, the naming system of the returned object is slightly different. In addition to the ability to provide more statistics in one command, another useful feature of 'aggregate.numeric' in Epicalc is the default values of FUN. Without typing such an argument, 'aggregate.numeric' gives commonly wanted statistics in a shorter line of command.
 
-Note that 'na.rm', the additional argument, is forced to TRUE to allow computation of 'var' and 'sd', when they are in the FUN argument, and 'length' is computed with missing records included. In standard R functions, the equivalent argument is '"na.rm"=TRUE'.
+Note that 'na.rm', the additional argument, is forced to TRUE to allow computation of 'var' and 'sd', when they are in the FUN argument, and 'length' is computed with missing records included. In standard R functions, the equivalent argument is '"na.rm"=TRUE'. Default value of the argument 'length.warning' is TRUE. A condition where 'x' has any missing value will be noticed, which is useful during data exploration. In further analysis, after the missing problem has been recognized, users may change this into FALSE to increase efficiency of output. Both 'na.rm' and 'length.warning' will have no effect if there is not any missing x.
 }
 \author{Virasakdi Chongsuvivatwong
        \email{ <cvirasak@medicine.psu.ac.th>}
@@ -74,6 +75,8 @@ aggregate(year, by = list(STAGE = stage), FUN = c("mean","median"),
 # Omitted the FUN argument can save a lot of time.
 aggregate(year, by = list(HOSPITAL = hospital, STAGE = stage))
 
+# Warning of na.rm 
+aggregate(year, by = list(HOSPITAL = hospital, STAGE = stage), length.warning=FALSE)
 }
 \keyword{database}
 
