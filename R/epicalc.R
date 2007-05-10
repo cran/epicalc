@@ -1490,20 +1490,17 @@ cat("\n")
 }
 
 #### ROC curve from Logistic Regression
-lroc <- function (logistic.model, table=FALSE, add=FALSE, title=FALSE, line.col="red", auc.label=FALSE) {
+lroc <- function (logistic.model, graph=TRUE, add=FALSE, title=FALSE, 
+    line.col="red", auc.coords=NULL, ...) {
 if(add){
   title <- FALSE
 }
 table(logistic.model$fitted.values,logistic.model$y) -> firsttable
-firsttable <- firsttable[order(as.numeric(rownames(firsttable))),]
-cat("\n")
 colnames(firsttable) <- c("Non-diseased","Diseased")
 rownames(firsttable) <- substr(rownames(firsttable), 1,6)
-if(table) {
-  cat("Table of observed group frequency by predicted probability")
-  print.noquote(firsttable)
-  }
-cat("\n")
+firsttable1 <- cbind(as.numeric(rownames(firsttable)),firsttable)
+rownames(firsttable1) <- rep("",nrow(firsttable1))
+colnames(firsttable1)[1]<- "predicted.prob"
 secondtable <- firsttable
 for(i in 1:length(secondtable[,1]))
 	{
@@ -1511,28 +1508,23 @@ for(i in 1:length(secondtable[,1]))
 			sum(firsttable[,1])
 	secondtable[i,2]<-(sum(firsttable[,2])-sum(firsttable[(1:i),2]))/
 			sum(firsttable[,2])
+	rownames(secondtable)[i] <- paste(">",rownames(secondtable)[i])
 	}
 secondtable <- rbind((c(1,1)),secondtable)
 colnames(secondtable) <- c("1-Specificity","Sensitivity")
-cat("\n")
-if(table){print(round(secondtable, digits=4))}
-cat("\n")
 ## Model description
 model.des <- paste("logit (", deparse(logistic.model$formula),")",sep="")
-
 ## Area under the curve
 auc <- 0
 for(i in 1:(nrow(secondtable)-1)) {
 	auc <- auc+ (secondtable[i,1]-secondtable[(i+1),1])*
 		.5*(secondtable[i,2]+secondtable[(i+1),2])
 	}
-cat("Number of observations =", length(logistic.model$y), "\n")
-cat("Area under the curve   =", round(auc,4), "\n")
-cat("\n")
+if(graph){
 if(!add){
 plot(secondtable[,1],secondtable[,2], xlab="1-Specificity",
 		ylab="Sensitivity", xlim=(c(0,1)), 
-		ylim=(c(0,1)), asp=1)
+		ylim=(c(0,1)), asp=1, ...)
 if(title){
   title(main =model.des)
 }
@@ -1551,28 +1543,25 @@ abline(h=.6, lty=2, col="blue")
 abline(h=.8, lty=2, col="blue")
 abline(h=1, lty=2, col="blue")
 auclabel <- paste("Area under the curve =", round(auc, 3))
-if(add){auc.label <- FALSE}
-if(auc.label){ text(1,.1, pos=2, auclabel)}
+  if(!is.null(auc.coords)){text(x=auc.coords[1],y=auc.coords[2], pos=4, labels=auclabel, ...)}
 }else{
-points(secondtable[,1],secondtable[,2])
-lines(secondtable[,1],secondtable[,2], col=line.col)
+points(secondtable[,1],secondtable[,2], ...)
+lines(secondtable[,1],secondtable[,2], col=line.col, ...)
+}}
+list(model.description=model.des, auc=auc, predicted.table=firsttable1, diagnostic.table=secondtable)
 }
-returns <- list(auc=auc, model.description=model.des, line.col=line.col)
-}
+
 ### ROC curve from a table
-roc.from.table <- function(table, graph=TRUE) {
+roc.from.table <- function(table, graph=TRUE, add=FALSE, title=FALSE, line.col="red", auc.coords=NULL, ...) {
 if (dim(table)[2] !=2) stop("There must be 2 columns")
 if (table[1,1]/table[1,2] < table[nrow(table),1]/table[nrow(table),2]) {
 	stop("At higher cut-off point, there should be more non-diseased")
 	}
-cat("Table of observed group frequency", "\n")
 firsttable <- table
 colnames(firsttable) <- c("Non-diseased","Diseased")
 if(length(rownames(firsttable))==0) {
 	rownames(firsttable) <- rep("", times=nrow(firsttable))
 }
-print.noquote(firsttable)
-cat("\n")
 secondtable <- firsttable
 for(i in 1:length(secondtable[,1]))
 	{
@@ -1583,24 +1572,18 @@ for(i in 1:length(secondtable[,1]))
 	rownames(secondtable)[i] <- paste(">",rownames(secondtable)[i])
 	}
 secondtable <- rbind((c(1,1)),secondtable)
-colnames(secondtable) <- c("1-Specificity","Sensitivity")
-cat("\n")
-print(round(secondtable, digits=4))
-cat("\n")
 ## Area under the curve
 auc <- 0
 for(i in 1:(nrow(secondtable)-1)) {
 	auc <- auc+ (secondtable[i,1]-secondtable[(i+1),1])*
 		.5*(secondtable[i,2]+secondtable[(i+1),2])
 	}
-cat("Number of observations =", sum(table), "\n")
-cat("Area under the curve   =", round(auc,4), "\n")
-cat("\n")
-if(graph==TRUE){
+if(graph){
+if(!add){
 	plot(secondtable[,1],secondtable[,2], xlab="1-Specificity",
 		ylab="Sensitivity", xlim=(c(0,1)), 
-		ylim=(c(0,1)), asp=1, 
-		main = "ROC curve of the diagnostic table")
+		ylim=(c(0,1)), asp=1, ...)
+	if(title){title(main = "ROC curve of the diagnostic table")}
 	lines(secondtable[,1],secondtable[,2], col="red")
 	lines(x=c(0,1),y=c(0,1), lty=2, col="blue")
 	abline(v=0, lty=2, col="blue")
@@ -1616,9 +1599,13 @@ if(graph==TRUE){
 	abline(h=.8, lty=2, col="blue")
 	abline(h=1, lty=2, col="blue")
 	auclabel <- paste("Area under the curve =", round(auc, 3))
-	text(0,.95, pos=4, auclabel)
+}else{
+	point(secondtable[,1],secondtable[,2], ...)
+  lines(secondtable[,1],secondtable[,2], col=line.col, ...)
+  }
+  if(!is.null(auc.coords)){text(x=auc.coords[1],y=auc.coords[2], pos=4, labels=auclabel, ...)}
 }
-returns <- list(auc=auc, diagnostic.table=secondtable)
+list(auc=auc, original.table=firsttable, diagnostic.table=secondtable)
 }
 
 ### Kappa statistics
@@ -2160,7 +2147,7 @@ if(is.data.frame(filename)){
 attach(.data, warn.conflicts=FALSE)
 }
 ### Dot plot
-dotplot <- function(x, bin="auto", by=NULL, xmin=NULL, xmax=NULL, time.format=NULL, time.step=NULL, ...){
+dotplot <- function(x, bin="auto", by=NULL, xmin=NULL, xmax=NULL, time.format=NULL, time.step=NULL, pch=18, ...){
 if (bin=="auto"){
 if(!is.null(attr(max(x, na.rm=TRUE)-min(x, na.rm=TRUE), "units")) & !any(class(x)=="difftime")){
   unit1 <- "weeks"
@@ -2303,10 +2290,10 @@ if(is.null(by)){
 	}
 	if(max(freq)<20){
 		plot(xgr,freq, xaxt="n", xlab=" ",main=string3,	ylab=titleString()$frequency,
-      ylim=c(0,20), xlim = xlim, ...)
+      ylim=c(0,20), xlim = xlim, pch=pch, ...)
 	}else{
   plot(xgr,freq, xaxt="n", xlab=" ",main=string3,	ylab=titleString()$frequency, 
-       xlim = xlim, ...)
+       xlim = xlim, pch=pch, ...)
 	}
 }else{ 
 	order1 <- order(by0,value)
@@ -2335,14 +2322,14 @@ if(is.factor(by0)){
   if(max(y)<20){
 	plot(xgr,y, xaxt="n", yaxt="n",
 		xlab=" ",main=main.lab, ylim=c(-1,20),
-		ylab=" ", col=as.numeric(by1), pch=18, xlim=xlim, ...)
+		ylab=" ", col=as.numeric(by1), pch=pch, xlim=xlim, ...)
 	}else{
 	plot(xgr,y, xaxt="n", yaxt="n",
 		xlab=" ",main=main.lab, ylim=c(-1,max(y)),
-		ylab=" ", col=as.numeric(by1), pch=18, xlim=xlim, ...)
+		ylab=" ", col=as.numeric(by1), pch=pch, xlim=xlim, ...)
 	}
 	abline(h=yline, col="blue")
-	axis(2,at=yline, labels=levels(by1), padj=0, las=1)
+	axis(2,at=yline, labels=levels(by1), padj=0, las=1, ...)
 	par(mai=c(0.95625, 0.76875, 0.76875, 0.39375))
 	}
 	if(any(class(x)=="POSIXct")){
@@ -2683,7 +2670,7 @@ keepData <- function (x = .data, sample = NULL, exclude = NULL, subset, select,
     attach(.data)
 }
 ## Adjusted mean, proportion and rate
-adjust <- function(adjust = NULL, by, model, offset=FALSE, 
+adjust <- function(adjust = NULL, by, model, standard=NULL, offset=FALSE, 
    type = c("response", "link"), se.fit=TRUE, alpha=.05, ci=FALSE, 
    ...){
 if(length(type)==2) type <- "response"
@@ -2730,9 +2717,15 @@ newdata1 <- newdata0[,(ncol(newdata0)-(ncol(data.for.new.glm)-2)):ncol(newdata0)
 if(length(grep("offset", names(model$model)))> 0 ){
 newdata1 <- newdata0[,(ncol(newdata0)-(ncol(data.for.new.glm)-1)):ncol(newdata0)  ]
 }
+if(!is.null(standard)){
+if(length(standard)!=length(newglm$coefficient)-1){stop("In appropriate length of standard value(s) for predictor(s)")}
+for(i in 1:length(standard)){
+if(!is.na(standard[i])){newdata1[,i] <- standard[i]}
+}
+}
 result.gold <- as.data.frame(predict.glm(newglm,newdata=newdata1, type="link", 
     se.fit)[c(1,2)])
-result0 <- predict.glm(newglm,newdata=newdata0, type, se.fit)[c(1,2)]
+result0 <- predict.glm(newglm,newdata=newdata1, type, se.fit)[c(1,2)]
 result <- data.frame(newdata0[,1:length(by.vars)], as.data.frame(result0))
 names(result)[1:length(by.vars)] <- names(model$model)[by.vars]
 if(!se.fit) names(result)[length(names(result))] <- "fit"
@@ -2823,3 +2816,122 @@ if(any(is.na(x)) & length.warning){
     }
     y
 }
+## Confidence interval
+ci <- function(x, ...){
+UseMethod("ci")
+}
+ci.default <- function(x, ...){
+    if (is.logical(x)){ 
+    ci.binomial(x, ...)
+    }else{
+        if(is.numeric(x)){
+         if(min(x, na.rm=TRUE)==0 & max(x, na.rm=TRUE)==1){
+          ci.binomial(x,  ...)
+          }
+          }else{
+              if(is.factor(x) & length(levels(x))==2){
+              x <- as.numeric(unclass(x))-1
+              ci.binomial(x, ...)
+              }else{
+               ci.numeric(x, ...)
+              }
+          }
+        }
+}
+
+
+ci.binomial <- function(x, size, precision, alpha=.05, ...){
+success <- x
+if(missing(size)){
+success1 <- success
+if(min(success, na.rm=TRUE)!=0 | max(success, na.rm=TRUE)!=1){stop("This is not a binary vector.")}
+success <- length(na.omit(success1)[na.omit(success1) >0 ])
+size <- length(na.omit(success1))
+}
+reverse <- rep(FALSE, length(success))
+reverse[success/size > .5] <- TRUE
+
+#reverse[success==size & success!=0] <- TRUE
+
+success[reverse] <- size[reverse]-success[reverse]
+if(missing(precision)){
+precision <- success/size/10000}
+precision[success==0 |success==size] <-.01/size[success==0 |success==size]
+probab <- success/size
+success1 <- success
+success1[success > 0] <-  success[success > 0]-1
+for(i in 1:length(success)){while(pbinom(success1[i], size[i], probab[i], lower.tail=FALSE) > alpha/2){
+probab[i] <- probab[i] - precision[i]
+}}
+estimate <- success/size
+se <- sqrt(estimate*(1-estimate)/size)
+ll <- probab
+
+probab <- success/size
+for(i in 1:length(success)){while(pbinom(success[i], size[i], probab[i], lower.tail=TRUE) > alpha/2){
+probab[i] <- probab[i]+ precision[i]
+}}
+ul <- probab
+data.frame.a <- data.frame(events=success,total=size,probability = estimate, se=se,
+  ll=ll, ul=ul)
+data.frame.a[reverse,] <- data.frame(events=size[reverse]-success[reverse],total=size[reverse],probability = 1-estimate[reverse], se=se[reverse], ll=1-ul[reverse], ul=1-ll[reverse])
+
+names(data.frame.a)[5] <- paste("exact.lower",100*(1-alpha),"ci",sep="")
+names(data.frame.a)[6] <- paste("exact.upper",100*(1-alpha),"ci",sep="")
+if(nrow(data.frame.a)==1){rownames(data.frame.a) <- ""}
+data.frame.a
+}
+
+## Confidence interval of continuous variable(s)
+ci.numeric <- function(x, n, sds, alpha=.05, ...){
+means <- x
+mean1 <- means
+if(missing(n) & missing(sds)){
+means <- mean(mean1, na.rm=TRUE)
+n <- length(na.omit(mean1))
+sds <- sd(mean1, na.rm=TRUE)
+}
+se <- sds/sqrt(n)
+ll <- means - qt(p=(1-alpha/2), df = n-1)*se
+ul <- means + qt(p=(1-alpha/2), df = n-1)*se
+data.frame.a <- data.frame(n=n,mean=means, sd=sds, se=se, 
+  ll=ll, ul=ul)
+names(data.frame.a)[5] <- paste("lower",100*(1-alpha),"ci",sep="")
+names(data.frame.a)[6] <- paste("upper",100*(1-alpha),"ci",sep="")
+if(nrow(data.frame.a)==1){rownames(data.frame.a) <- ""}
+data.frame.a
+}
+
+# Confidence interval for Poisson variables
+ci.poisson <- function(x, person.time, precision,  alpha=.05, ...){
+count <- x
+incidence <- count/person.time
+if(missing(precision)){
+precision <- incidence/1000
+precision[incidence==0] <- 0.001/person.time[incidence==0] 
+}
+lamda <- incidence * person.time
+for(i in 1:length(count)){
+while(ppois(count[i], lamda[i], lower.tail=TRUE) > alpha/2){
+incidence[i] <- incidence[i] + precision[i]
+lamda[i] <- incidence[i] * person.time[i]
+}}
+ul <- incidence
+
+incidence <- count/person.time
+lamda <- incidence * person.time
+count1 <- count-1
+count1[count==0] <- count[count==0]
+for(i in 1:length(count)){
+while(ppois(count1[i], lamda[i], lower.tail=FALSE) > alpha/2){
+incidence[i] <- incidence[i] - precision[i]
+lamda[i] <- incidence[i] * person.time[i]
+}}
+ll <- incidence
+data.frame.a <- data.frame(events=count,person.time=person.time,incidence=count/person.time, se=sqrt(count)/person.time, ll=ll, ul=ul)
+names(data.frame.a)[5] <- paste("exact.lower",100*(1-alpha),"ci",sep="")
+names(data.frame.a)[6] <- paste("exact.upper",100*(1-alpha),"ci",sep="")
+if(nrow(data.frame.a)==1){rownames(data.frame.a) <- ""}
+data.frame.a
+}
+

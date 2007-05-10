@@ -4,7 +4,7 @@
 \description{Plot of frequency in dots}
 \usage{
 dotplot(x, bin = "auto", by = NULL, xmin = NULL, xmax = NULL, 
-    time.format = NULL, time.step = NULL, ...) 
+    time.format = NULL, time.step = NULL, pch=18, ...) 
 }
 \arguments{
 	\item{x}{a numeric vector. Allowed types also include "Date" and "POSIXct"}
@@ -14,6 +14,7 @@ dotplot(x, bin = "auto", by = NULL, xmin = NULL, xmax = NULL,
 	\item{xmax}{upper bound of x in the graph}
 	\item{time.format}{format for time or date at the tick marks}
 	\item{time.step}{a character string indicating increment of the sequence of tick marks}
+	\item{pch}{Either an integer specifying a symbol or a single character to be used as the default in plotting points}
 	\item{...}{graphical parameters for the dots when there is no stratification}
 }
 \details{'dotplot' in Epicalc is similar to a histogram. Each dot represents one record. Attributes of the dots can be further specified in '...' when there is no strafication. Otherwise, the dots are plotted as a diamond shape and the colours are automatically chosen based on the current palette and the number of strata.
@@ -33,7 +34,9 @@ Setting proper 'xmin', 'xmax' and 'time.step' can improve the location of tick m
 a <- rep(1:2, 250)
 b <- rnorm(500,mean=a)
 dotplot(b)
-dotplot(b,by=a)
+dotplot(b, pch=1)
+dotplot(b, by=a)
+dotplot(b, by=a, pch=1) # You may try other values of 'pch'
 
 # For the commands below,
 # if dates in X axis are not readable, 

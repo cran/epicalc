@@ -4,18 +4,20 @@
 \title{ROC curve}
 \description{Receiver Operating Characteristic curve of a logistic regression model and a diagnostic table}
 \usage{
-lroc(logistic.model, table=FALSE, add=FALSE, title=FALSE, 
-	line.col="red", auc.label=FALSE)
-roc.from.table(table, graph = TRUE) 
+lroc(logistic.model, graph = TRUE, add = FALSE, title = FALSE, 
+    line.col = "red", auc.coords = NULL, ...)
+roc.from.table(table, graph = TRUE, add = FALSE, title = FALSE, 
+	line.col = "red", auc.coords = NULL, ...) 
 }
 \arguments{
 	\item{logistic.model}{A model from logistic regression}
 	\item{table}{A cross tabulation of the levels of a test (rows) vs a gold standard positive and negative (columns)}
+	\item{graph}{Draw ROC curve}
 	\item{add}{Whether the line is drawn on the existing ROC curve}
 	\item{title}{If true, the model will be displayed as main title}
 	\item{line.col}{Color of the line}
-	\item{auc.label}{Whether the value of area under the curve should be displayed (only for 'add=FALSE')}
-	\item{graph}{Draw ROC curve}
+	\item{auc.coords}{Coordinates for label of 'auc'}
+	\item{...}{Additional graphic parameters}
 }
 \details{
 'lroc' graphs the ROC curve of a logistic regression model. If `table=TRUE', the diagnostic table based on the regression will be printed out.
@@ -36,8 +38,8 @@ logistic.display(model1)
 # Having two spontaneous abortions is quite close to being infertile!
 # This is actually not a causal relationship
 
-lroc1 <- lroc(model1, table=TRUE)
-lroc1 # Note the returned list
+lroc(model1, title=TRUE, auc.coords=c(.5,.1))
+lroc1 <- lroc(model1) # The main title and auc text have disappeared
 model2 <- glm(case ~ factor(spontaneous), data=infert, family=binomial)
 logistic.display(model2)
 lroc2 <- lroc(model2, add=TRUE, line.col="black")
@@ -51,8 +53,15 @@ lrtest(model1, model2)
 # ROC from a diagnostic table
 table1 <- as.table(cbind(c(1,27,56,15,1),c(0,0,10,69,21)))
 colnames(table1) <- c("Non-diseased", "Diseased")
-rownames(table1) <- c("(0,15]","(15,30]","(30,45]","(45,60]","60+")
+rownames(table1) <- c("15-","30-","45-","60-","90-")
 table1
-roc.from.table(table1, graph=TRUE)
+roc.from.table(table1)
+roc.from.table(table1, title=TRUE, auc.coords=c(.4,.1), cex=1.2)
+
+# Application of the returned list
+roc1 <- roc.from.table(table1, graph=FALSE)
+cut.points <- rownames(roc1$diagnostic.table)
+text(x=roc1$diagnostic.table[,1],roc1$diagnostic.table[,2], 
+	labels=cut.points, cex=1.2, col="brown", pos=4)
 }
 \keyword{array}
