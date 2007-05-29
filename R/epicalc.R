@@ -1429,8 +1429,7 @@ for(i in 1:(dim(x)[2])) {
 	if ((typeof(x[i][1,])=="character")|| is.na(mean(na.omit(as.numeric(x[[i]]))))   )  {
   a[i,3:7] <- ""
   }
-	else
-####
+	else{
 		if(any(class(x[[i]])=="date")){
       x[[i]] <- as.Date(paste(date.mdy(x[[i]])$year,"-", date.mdy(x[[i]])$month,"-", date.mdy(x[[i]])$day, sep=""))
     }                               
@@ -1443,7 +1442,7 @@ for(i in 1:(dim(x)[2])) {
 }
 	else
 	if (any(class(x[[i]])=="POSIXt")){
-#if(1==0){
+
 	a[i,c(3,4,6,7)] <- format(c(summary(x[[i]])[4],summary(x[[i]])[3],
 			summary(x[[i]])[1],summary(x[[i]])[6]), "%Y-%m-%d %H:%M")
 	a[i,5] <- NA 
@@ -1468,12 +1467,6 @@ for(i in 1:(dim(x)[2])) {
 	else
 	if  (is.factor(x[i][2,])){
 	a[i,2] <- as.character(length(na.omit(x[[i]])))
-#  defactored <- as.integer(as.data.frame(attr(x, "label.table")[attr(attr(x,"label.table"), "names")==attr(x, "val.labels")[i]])[,1])
-#	a[i,3:7] <- round(c(mean(na.omit(defactored)), 
-#			median(na.omit(defactored)), 
-#			sd(na.omit(defactored)), 
-#			min(na.omit(defactored)), 
-#			max(na.omit(defactored))),3)
 
 
 	a[i,3:7] <- round(c(mean(na.omit(unclass(x[i][,]))), 
@@ -1481,7 +1474,7 @@ for(i in 1:(dim(x)[2])) {
 			sd(na.omit(unclass(x[i][,]))), 
 			min(na.omit(unclass(x[i][,]))), 
 			max(na.omit(unclass(x[i][,])))),3)
-}
+}}
 }
 cat("\n")
 print.noquote (a[,], digits=3)

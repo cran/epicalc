@@ -61,7 +61,7 @@ roc.from.table(table1, title=TRUE, auc.coords=c(.4,.1), cex=1.2)
 # Application of the returned list
 roc1 <- roc.from.table(table1, graph=FALSE)
 cut.points <- rownames(roc1$diagnostic.table)
-text(x=roc1$diagnostic.table[,1],roc1$diagnostic.table[,2], 
+text(x=roc1$diagnostic.table[,1], y=roc1$diagnostic.table[,2], 
 	labels=cut.points, cex=1.2, col="brown", pos=4)
 }
 \keyword{array}
