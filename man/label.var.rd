@@ -1,8 +1,8 @@
-\name{label.var}
+\name{Variable manipulation}
 \alias{label.var}
 \alias{pack}
 \alias{sortBy}
-\title{Label a variable, pack variables into a data frame and sort all data}
+\title{Variable manipulation}
 \description{Label a variable; integrate outside variable(s) into .data; sort the whole dataset.}
 \usage{
 label.var(var, label, pack = TRUE)   
@@ -16,9 +16,9 @@ sortBy(...)
 	\item{dataFrame}{Destination data frame where all variables of the same length are packed into}
 	\item{...}{index variable(s) used for sorting}
 }
-\details{A data frame adopted from Stata or SPSS often has a 'variable label', which is recognized (but ignored) by R. 
+\details{A data frame adopted from Stata or SPSS sometimes has 'variable label', which is adopted as an attribute (but not used) by R. 
 
-Epicalc exploits this attribute by displaying them in the output from 'des()' and graphs,  such as those resulting from 'summ(var)', tab1(var)', 'tabpct(var1, var2)'.
+Epicalc exploits this attribute by displaying them in the output from 'des()' and graphs following 'summ(var)', tab1(var)', 'tabpct(var1, var2)'.
 
 'label.var' adds or changes the variable label or description to a variable in '.data'. If the variable is a free vector, the variable is added into '.data'. The argument 'pack', if TRUE, removes the original vector. This is useful to avoid redundancy and confusion. 
 
@@ -31,6 +31,9 @@ Finally, the whole dataset, and the variables outside, can be sorted by an index
 }
 \seealso{'use','des'}
 \examples{
+data(Oswego)
+use(Oswego)
+
 sbp <- c(120, 100, 110, 120, 140, 120,  NA,  NA) 
 dbp <- c( 80,  80,  70,  80,  70,  NA,  70,  60)
 .data <- data.frame(sbp, dbp)

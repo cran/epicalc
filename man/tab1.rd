@@ -5,7 +5,8 @@
 \usage{
 tab1 (x0, decimal = 1, sort.group = c(FALSE, "decreasing", 
 "increasing"), cum.percent = !any(is.na(x0)), graph = TRUE, 
-missing = TRUE, bar.values = c("frequency", "percent", "none")) 
+missing = TRUE, bar.values = c("frequency", "percent", "none"),
+horiz=FALSE) 
 }
 \arguments{
 	\item{x0}{a variable}
@@ -15,10 +16,11 @@ missing = TRUE, bar.values = c("frequency", "percent", "none"))
 	\item{graph}{automatic graphing}
 	\item{missing}{include the missing values category or <NA> in the graphic display}
 	\item{bar.values}{include the value of frequeny, percentage or none at the end of each bar}
+	\item{horiz}{set the bar chart to horizontal orientation}
 }
 \details{'tab1' is an advanced one-way tabulation providing a nice table as well as a bar chart. The description of the variable is also used in the main title of the graph.
 
-The bar chart is vertical unless the number of categories is more than six \strong{and} any of the labels of the levels consists of more than 8 characters.
+The bar chart is vertical unless the number of categories is more than six \strong{and} any of the labels of the levels consists of more than 8 characters \strong{or} 'horiz' is set as TRUE.
 
 }
 \value{Output table}
@@ -39,6 +41,9 @@ tab1(ill, cum.percent=FALSE)
 tab1(chocolate) # Cumulative percentage is automatically off.
 tab1(chocolate, cum.percent=TRUE) # Slightly too many columns!
 tab1(chocolate, missing=FALSE, bar.values="percent")
+agegr <- cut(age, breaks=c(0,20,60,80))
+tab1(agegr)
+tab1(agegr, horiz=TRUE)
 
 }
 \keyword{aplot}

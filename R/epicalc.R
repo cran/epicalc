@@ -1602,64 +1602,191 @@ list(auc=auc, original.table=firsttable, diagnostic.table=secondtable)
 }
 
 ### Kappa statistics
-kap <- function(kaptable,wttable=NULL) {
-if (ncol(kaptable) != nrow(kaptable)) stop("Column & row not equal length")
-if (is.null(wttable)) {
-	wttable <- kaptable
-	wttable[]<- 0
-	for (i in 1:nrow(kaptable)) wttable[i,i]<- 1
-	}
-po <- 0; pe <- 0
-exptable <- kaptable
-bigbracket <- 0
-wbari <- rep(0, ncol(kaptable)) # marginal mean weight of rows
-wbarj <- rep(0, nrow(kaptable)) # marginal mean weight of columns
-for(i in 1:nrow(kaptable)) {
-	for(j in 1:ncol(kaptable)) {
-	wbari[i] <- wbari[i] + wttable[i,j]*sum(kaptable[,j])/sum(kaptable)
-	}
+kap <- function(x, ...){
+UseMethod("kap")
 }
-for(j in 1:ncol(kaptable)) {
-	for(i in 1:nrow(kaptable)) {
-	wbarj[j] <- wbarj[j] + wttable[i,j]*sum(kaptable[i,])/sum(kaptable)
-	}
+kap.default <- function(x, ...){
+    if (is.table(x)){ 
+    kap.table(x, ...)
+    }
 }
-for(i in 1:nrow(kaptable)) {
-	for (j in 1:ncol(kaptable)) {
-		po <- po + wttable[i,j]*kaptable[i,j]/sum(kaptable)
-		exptable[i,j] <- sum(kaptable[i,])*
-			sum(kaptable[,j])/sum(kaptable)/sum(kaptable)
+### Kappa statistics from a table cross-tab ratings of 2 raters
+kap.table <- function (x, wttable = c(NULL, "w", "w2"), print.wttable = FALSE, ...) 
+{
+kaptable <- x
+    if (ncol(kaptable) != nrow(kaptable)) 
+        stop("Column & row not equal length")
+    if(is.null(wttable) | (is.character(wttable)& length(wttable)==2)){
+        wttable <- kaptable
+        wttable[] <- 0
+        for (i in 1:nrow(kaptable)) wttable[i, i] <- 1
+    }else{
+    if(!is.matrix(wttable)){
+    if (wttable=="w"| wttable=="w2"){
+    wttable1 <- kaptable
+    wttable1[] <- 0
+        for (i in 1:nrow(kaptable)) {
+            for (j in 1:ncol(kaptable)){
+            if(wttable=="w") {wttable1[i, j] <- 1 - abs(i-j)/(ncol(kaptable)-1)}
+            if(wttable=="w2") {wttable1[i, j] <- 1 - (abs(i-j)/(ncol(kaptable)-1))^2}
+            }
+        }
+        wttable <- wttable1
+    }}}
+    po <- 0
+    pe <- 0
+    exptable <- kaptable
+    bigbracket <- 0
+    wbari <- rep(0, ncol(kaptable))
+    wbarj <- rep(0, nrow(kaptable))
+    for (i in 1:nrow(kaptable)) {
+        for (j in 1:ncol(kaptable)) {
+            wbari[i] <- wbari[i] + wttable[i, j] * sum(kaptable[, 
+                j])/sum(kaptable)
+        }
+    }
+    for (j in 1:ncol(kaptable)) {
+        for (i in 1:nrow(kaptable)) {
+            wbarj[j] <- wbarj[j] + wttable[i, j] * sum(kaptable[i, 
+                ])/sum(kaptable)
+        }
+    }
+    for (i in 1:nrow(kaptable)) {
+        for (j in 1:ncol(kaptable)) {
+            po <- po + wttable[i, j] * kaptable[i, j]/sum(kaptable)
+            exptable[i, j] <- sum(kaptable[i, ]) * sum(kaptable[, 
+                j])/sum(kaptable)/sum(kaptable)
+            pe <- pe + wttable[i, j] * exptable[i, j]
+            bigbracket <- bigbracket + exptable[i, j] * (wttable[i, 
+                j] - (wbari[i] + wbarj[j]))^2
+        }
+    }
+    kap <- (po - pe)/(1 - pe)
+    if(print.wttable)  print(wttable)
+    if (length(colnames(kaptable)) == 0) {
+        rownames(kaptable) <- paste("Group", as.character(1:nrow(kaptable)), 
+            sep = "")
+        colnames(kaptable) <- rownames(kaptable)
+        attr(attr(kaptable, "dimnames"), "names") <- c("Rater A", 
+            "Rater B")
+        cat("\n")
+        print(kaptable)
+    }
+    else {
+        print(kaptable)
+    }
+    cat("\n")
+    cat("Observed agreement =", round(po * 100, 2), "%", "\n")
+    cat("Expected agreement =", round(pe * 100, 2), "%", "\n")
+    cat("Kappa =", round(kap, 3), "\n")
+    sekap <- 1/(1 - pe)/sqrt(sum(kaptable)) * sqrt(bigbracket - 
+        pe^2)
+    z <- kap/sekap
+    p.value <- pnorm(z, lower.tail = FALSE)
+    if (p.value < 0.001) {
+        P.value <- "< 0.001"
+    }
+    else {
+        P.value <- as.character(round(p.value, 3))
+    }
+    cat("Standard error =", round(sekap, digits = 3), ", Z =", 
+        round(z, digits = 3), ", P value =", P.value, "\n", "\n")
+    returns <- list(po = po, pe = pe, kappa = kap, std.error = sekap, 
+        z = z, p.value = p.value)
+}
+## Kappa statistics with two raters
+kap.2.raters <- function(x, rater2, ...){
+rater1 <- x
+kaptable <- table(rater1, rater2)
+if(any(rownames(kaptable)!= colnames(kaptable))) {stop("Table to use for kappa calculation must be symmetrical")}
+kap.table(kaptable, ...) 
+}
+## Kappa statistics with more than two raters
+kap.m.raters <- function(x, raters, ...){
+id <- x
+category.levels <- NULL
+for(i in 1:ncol(raters)){
+  category.levels <- c(category.levels, names(table(raters[,i])))
+}
+category.levels <- unique(category.levels)
+category.counts <- rep(0, times=length(id)*length(category.levels))
+dim(category.counts) <- c(length(id), length(category.levels))
+for(j in 1:length(category.levels)){
+if(is.factor(raters[,1])){
+    for(i in 1:length(id)){
+    category.counts[i,j] <- sum(raters[i,][!is.na(raters[i,])]==category.levels[j])
+    }
+  }else{
+    for(i in 1:length(id)){
+    category.counts[i,j] <- sum(raters[i,][!is.na(raters[i,])]==as.numeric(category.levels[j]))
+  }
+}
+colnames(category.counts) <- category.levels
+}
+kap.ByCategory(x, as.data.frame(category.counts))
+}
 
-		pe <- pe + wttable[i,j]*exptable[i,j]
 
-
-		bigbracket <- bigbracket + exptable[i,j]*
-			( wttable[i,j] - (wbari[i]+ wbarj[j]))^2
-		}
-	}
-kap <- (po-pe)/(1-pe)
-if(length(colnames(kaptable)) == 0){
-rownames(kaptable) <- paste("Group",as.character(1:nrow(kaptable)), sep="")
-colnames(kaptable) <- rownames(kaptable)
-attr(attr(kaptable, "dimnames"),"names") <- c("Rater A", "Rater B")
-cat("\n")
-print(kaptable)
+## Kappa statistics with id of the ratee and counts of rated categories
+kap.ByCategory <- function(x, category.counts, ...){
+id <- x
+n <- length(id)
+mi <- rowSums(category.counts)
+mbar <- sum(mi/n)
+pbar <- NULL
+qbar <- NULL
+kapp <- NULL
+z <- NULL
+sekap <- NULL
+p.value <- NULL
+for(j in 1:ncol(category.counts)){
+  xi <- category.counts[,j]
+  last.pbar <- sum(xi/(n*mbar))
+  pbar <- c(pbar, last.pbar)
+  last.qbar <- 1-last.pbar
+  qbar <- c(qbar, last.qbar)
+  B <- 1/n*sum((xi-mi*last.pbar)^2/mi) # Between-subject mean square
+  W <- 1/(n*(mbar-1))*sum(xi*(mi-xi)/mi) # Within-subject mean square
+  mbarH <- 1/(mean(1/mi)) # harmonic mean of mi
+  kapp <- c(kapp, (B-W)/(B+(mbar-1)*W))
+  if(ncol(category.counts)==2| var(mi)==0){
+    last.sekap <- 1/((mbar-1)*sqrt(n*mbarH))*
+        sqrt(2*(mbarH-1)+(mbar-mbarH)*(1-4*last.pbar*last.qbar)/(mbar*last.pbar*last.qbar))
+    sekap <- c(sekap, last.sekap)
+    last.z <- (B-W)/(B+(mbar-1)*W)/last.sekap
+    z <- c(z, last.z)
+    last.p.value <- pnorm(last.z, lower.tail = FALSE)
+    p.value <- c(p.value, last.p.value)
+  }
+}
+if(ncol(category.counts)==2){
+data.frame(kappa=kapp[1], std.error=last.sekap, z=last.z, p.value=last.p.value, row.names="")
 }else{
-print(kaptable)}
-cat("\n")
-cat("Observed agreement =",round(po*100,2),"%","\n")
-cat("Expected agreement =",round(pe*100,2),"%","\n")
-cat("Kappa =",round(kap,3), "\n")
-sekap <- 1/(1-pe)/sqrt(sum(kaptable))*sqrt(bigbracket-pe^2)
-z <- kap/sekap
-p.value <- pnorm(z, lower.tail=FALSE)
-if (p.value < 0.001) {P.value <- "< 0.001"} else
-			{P.value <- as.character(round(p.value, 3))}
-cat("Standard error =", round(sekap,digits = 3), 
-	", Z =", round(z, digits = 3), 
-	", P value =", P.value ,"\n","\n")
-returns <- list(po=po, pe=pe, kappa=kap, std.error=sekap, z=z, p.value=p.value)
+  if( var(mi)==0){
+each.category <- data.frame(kappa = kapp, std.error = sekap, 
+        z = z, p.value = p.value, row.names=colnames(category.counts))
+}else{
+each.category <- data.frame(kappa = kapp, std.error = ".", z=".", p.value = ".", row.names=colnames(category.counts)) 
 }
+kapp.bar <- sum(pbar*qbar*kapp)/sum(pbar*qbar)
+  if(ncol(category.counts)==2| var(mi)==0){
+m <- mi[1]
+sekap.bar <- sqrt(2)/(sum(pbar*qbar)*sqrt(n*m*(m-1)))*sqrt((sum(pbar*qbar))^2-sum(pbar*qbar*(qbar-pbar)))
+z.bar <- kapp.bar/sekap.bar
+p.value.bar <- pnorm(z.bar, lower.tail = FALSE)
+row.names.overall <- ""
+for(i in 1:max(nchar(colnames(category.counts)))){row.names.overall <- paste(row.names.overall, " ", sep="")}
+Overall <-data.frame(kappa = kapp.bar, std.error = sekap.bar, z=z.bar, p.value = p.value.bar, row.names=row.names.overall) 
+list(Each.category=each.category, Overall=Overall)
+}else{
+row.names.overall <- ""
+for(i in 1:max(nchar(colnames(category.counts)))){row.names.overall <- paste(row.names.overall, " ", sep="")}
+Overall <-data.frame(kappa = kapp.bar, std.error = ".", z=".", p.value = ".", row.names=row.names.overall) 
+list(Each.category=each.category, Overall=Overall)
+}
+}
+}
+ 
 ### Make 2 x 2 table
 make2x2 <- function(caseexp, controlex, casenonex, controlnonex) {
 table <- c(controlnonex, controlex, casenonex, caseexp)
@@ -1958,7 +2085,7 @@ detach(.data)
 attach(.data, warn.conflicts=FALSE)
 }
 ### One-way tabulation
-tab1 <- function (x0, decimal=1, sort.group=c(FALSE,"decreasing","increasing"), cum.percent=!any(is.na(x0)), graph=TRUE, missing=TRUE, bar.values=c("frequency","percent", "none")) {
+tab1 <- function (x0, decimal=1, sort.group=c(FALSE,"decreasing","increasing"), cum.percent=!any(is.na(x0)), graph=TRUE, missing=TRUE, bar.values=c("frequency","percent", "none"), horiz=FALSE) {
 if(graph){
 		var1 <- as.character(substitute(x0))
 		if(length(var1)>1){
@@ -2000,7 +2127,7 @@ if(graph){
 			table.to.plot <- table.to.plot[order(table.to.plot,names(table.to.plot), decreasing=TRUE)]
 		}
 	})
-	if(max(nchar(names(table.to.plot)))>8 & length(table.to.plot)>6){
+	if((max(nchar(names(table.to.plot)))>8 & length(table.to.plot)>6)|horiz==TRUE){
 		par(mai=c(0.95625, 0.1, 0.76875, 0.39375)+.1+c(0,par()$cin[1]*max(nchar(names(table.to.plot))*.75),0,0))
 		barplot(table.to.plot,main=string3, horiz=TRUE, las=1, xlim=c(0, max(table.to.plot)*1.2), xlab = scale.label) -> y.coordinates
 		suppressWarnings(if(bar.values=="frequency" | bar.values=="percent" | length(bar.values)==3){
@@ -2760,29 +2887,42 @@ names(result)[c(ncol(result)-1, ncol(result))] <- c(paste("lower",100-100*alpha,
 result
 }
 ## Aggregate a numeric variable
-aggregate.numeric <- function (x, by, FUN = c("length", "mean", "median", "sd", "min", 
-    "max"), na.rm = TRUE, length.warning=TRUE, ...) 
+aggregate.numeric <- function (x, by, FUN = c("count", "sum", "mean", "median", "sd", "min", 
+    "max"), na.rm = TRUE, length.warning = TRUE, ...) 
 {
-if(length(FUN)==1 & class(FUN)=="function") {
-FUN <- as.character(substitute(FUN)) 
-}else{
-if(any(is.na(x)) & length.warning){
-    if (any(FUN == "var") | any(FUN == "sd")) {
-        na.rm <- TRUE
-        cat("\n", "Note: 'na.rm' is forced to TRUE to allow computation of 'var' and/or 'sd'.", 
-            "\n")
+count <- function(x1) {length(na.omit(x1))}
+    if (length(FUN) == 1 & class(FUN) == "function") {
+        FUN <- as.character(substitute(FUN))
     }
-    if (any(FUN == "length")) {
-        cat("\n", "      'length' is computed with missing records included.", 
-            "\n")
-    }
-    cat("\n")
-    }
+    else {
+        if (any(is.na(x)) & length.warning) {
+            if (any(FUN == "var") | any(FUN == "sd") | any(FUN=="mean") |any(FUN=="sum")) {
+                na.rm <- TRUE
+                cat("\n", "Note: missing values removed.", 
+                  "\n")
+            }
+            if (any(FUN == "length")) {
+                cat("\n", "      'length' is computed with missing records included.", 
+                  "\n")
+            }
+            cat("\n")
+        }
     }
     if (FUN[1] != "length") {
-        y <- aggregate.data.frame(x, by, FUN = FUN[1], na.rm = na.rm)
-        names(y)[length(names(y))] <- paste(FUN[1], as.character(substitute(x)), 
-            sep = ".")
+        if(FUN[1]=="count"){
+        y <- aggregate.data.frame(x, by, FUN = count)
+            names(y)[length(names(y))] <- paste("count", as.character(substitute(x)), 
+               sep = ".")
+        }else{
+            if(FUN[1]=="sum"|FUN[1]=="mean"|FUN[1]=="median"|FUN[1]=="var"|
+                  FUN[1]=="sd"|FUN[1]=="min"|FUN[1]=="max"){
+              y <- aggregate.data.frame(x, by, FUN = FUN[1], na.rm = TRUE)
+            }else{
+            y <- aggregate.data.frame(x, by, FUN = FUN[1])
+            }
+            names(y)[length(names(y))] <- paste(FUN[1], as.character(substitute(x)), 
+               sep = ".")
+            }
     }
     else {
         y <- aggregate.data.frame(x, by, FUN = length)
@@ -2791,17 +2931,24 @@ if(any(is.na(x)) & length.warning){
     if (length(FUN) > 1) {
         for (i in 2:length(FUN)) {
             if (FUN[i] != "length") {
-                y1 <- aggregate.data.frame(x, by, FUN = FUN[i], 
-                  na.rm = na.rm)
-                names(y1)[length(names(y1))] <- paste(FUN[i], 
-                  as.character(substitute(x)), sep = ".")
+                if(FUN[i]=="count"){
+                y1 <- aggregate.data.frame(x, by, FUN = count)
                 y <- data.frame(y, y1[, length(names(y1))])
+                }else{
+                if(FUN[i]=="sum"|FUN[i]=="mean"|FUN[i]=="median"|FUN[i]=="var"|
+                  FUN[i]=="sd"|FUN[i]=="min"|FUN[i]=="max"){
+                  y1 <- aggregate.data.frame(x, by, FUN = FUN[i], 
+                  na.rm = TRUE)
+                  }else{
+                y1 <- aggregate.data.frame(x, by, FUN = FUN[i])
+                }
+                y <- data.frame(y, y1[, length(names(y1))])
+                }
                 names(y)[length(names(y))] <- paste(FUN[i], as.character(substitute(x)), 
                   sep = ".")
             }
             else {
                 y1 <- aggregate.data.frame(x, by, FUN = length)
-                names(y1)[length(names(y1))] <- FUN[i]
                 y <- data.frame(y, y1[, length(names(y1))])
                 names(y)[length(names(y))] <- FUN[i]
             }
@@ -2809,6 +2956,7 @@ if(any(is.na(x)) & length.warning){
     }
     y
 }
+
 ## Confidence interval
 ci <- function(x, ...){
 UseMethod("ci")
@@ -2843,8 +2991,6 @@ size <- length(na.omit(success1))
 }
 reverse <- rep(FALSE, length(success))
 reverse[success/size > .5] <- TRUE
-
-#reverse[success==size & success!=0] <- TRUE
 
 success[reverse] <- size[reverse]-success[reverse]
 if(missing(precision)){
@@ -2926,5 +3072,47 @@ names(data.frame.a)[5] <- paste("exact.lower",100*(1-alpha),"ci",sep="")
 names(data.frame.a)[6] <- paste("exact.upper",100*(1-alpha),"ci",sep="")
 if(nrow(data.frame.a)==1){rownames(data.frame.a) <- ""}
 data.frame.a
+}
+
+# Rename 
+rename <- function(x1, x2, ...){
+UseMethod("rename")
+}
+ren <- rename
+rename.default <- function(x1, x2, ...){
+    if (any(names(.data)==as.character(substitute(x1)))){ 
+names(.data)[names(.data)==as.character(substitute(x1))] <<- as.character(substitute(x2))
+detach(.data); attach(.data)
+    }else{
+        if(length(grep(pattern=x1, x=names(.data)))> 0){
+         rename.pattern(x1, x2, printNote=TRUE)
+          }else{
+            stop(paste("\n","\"",as.character(substitute(x1)),"\""," is neither a var name nor an available pattern"))
+          }
+        }
+}
+
+## Rename a variable
+rename.var <- function(x1, x2, ...){
+if(any(names(.data)==as.character(substitute(x1)))){
+names(.data)[names(.data)==as.character(substitute(x1))] <<- as.character(substitute(x2))
+detach(.data); attach(.data)
+}else{
+  if(any(names(.data)==x1)){
+    names(.data)[names(.data)==x1] <<- as.character(substitute(x2))
+    detach(.data); attach(.data)
+        }else{
+  stop(paste("\n","\"",as.character(substitute(x1)),"\""," does not exist in the default data frame",sep=""))
+}}}
+## Rename pattern of variables
+rename.pattern <- function(x1, x2, printNote=TRUE, ...){
+if(length(grep(pattern=x1, x=names(.data)))==0) stop(paste("Pattern ","\"",as.character(substitute(x1)),"\""," does not exist", sep=""))
+table1 <- cbind(names(.data)[grep(pattern=x1, x=names(.data))], sub(pattern=x1, replacement=x2, x=names(.data))[grep(pattern=x1, x=names(.data))])
+rownames(table1) <- rep("    ",length(names(.data)[grep(pattern=x1, x=names(.data))])); colnames(table1) <- c("Old var names", "New var names")
+if(printNote){
+cat("Note the following change(s) in variable name(s):", "\n")
+print(table1)}
+names(.data) <<- sub(pattern=x1, replacement=x2,x=names(.data))
+detach(.data); attach(.data)
 }
 

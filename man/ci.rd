@@ -8,9 +8,13 @@
 \description{Compute confidence interval of variables or values input from keyboard.}
 \usage{
 ci(x, ...)
+
 \method{ci}{default}(x,...)
-\method{ci}{binomial}(x, size, precision, alpha = 0.05, ...) 
-\method{ci}{numeric}(x, n, sds, alpha = 0.05, ...) 
+
+\method{ci}{binomial}(x, size, precision, alpha = 0.05, ...)
+
+\method{ci}{numeric}(x, n, sds, alpha = 0.05, ...)
+
 \method{ci}{poisson}(x, person.time, precision, alpha = 0.05, ...) 
 }
 \arguments{

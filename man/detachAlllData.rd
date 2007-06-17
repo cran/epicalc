@@ -1,7 +1,7 @@
 \name{Detach all data frames}
 \alias{detachAllData}
-\title{Detach all data frame}
-\description{Detach alldata frames}
+\title{Detach all data frames}
+\description{Detach all data frames}
 \usage{
 detachAllData()
 }
