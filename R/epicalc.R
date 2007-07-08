@@ -2509,7 +2509,13 @@ levels(.data[,i])[levels(.data[,i])==old.value] <<- new.value
 }
 }
 if(length(old.value)==nrow(.data)){
+if(length(var.order)==1){
 	.data[,var.order] <<- replace(.data[,var.order], old.value, new.value)
+}else{
+for(i in 1:length(var.order)){
+	.data[,var.order[i]] <<- replace(.data[,var.order[i]], old.value, new.value)
+}
+}
 }
 detach(.data)
 attach(.data, warn.conflicts=FALSE)
