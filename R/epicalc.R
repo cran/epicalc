@@ -15,6 +15,16 @@
 .distribution.of <- "Distribution of"
 .by <- "by"
 .frequency <- "Frequency"
+.ylab.for.summ <- "Subject sorted by X-axis values"
+.percent <- "Percent"
+.cum.percent <- "Cum. percent"
+.var.name <- "Var. name"
+.obs <- "obs."
+.mean <- "mean  "
+.median <- "median "
+.sd <- "s.d.  "
+.min <- "min.  "
+.max <- "max.  "
 
 codebook <- function(dataFrame = .data){
 cat("\n",attr(dataFrame, "datalabel"),"\n","\n")
@@ -27,7 +37,7 @@ for(i in 1:ncol(dataFrame)) {
   if(any(class(x1[,i])=="factor")){
       table1 <-(t(t(table(dataFrame[,i]))))
       table1 <- cbind(table1, format(table1/sum(table1)*100, digits=3))
-      colnames(table1) <- c("Frequency","Percent")
+      colnames(table1) <- c(.frequency,.percent)
     if(is.null(attr(dataFrame, "val.labels")[i])){
       print.noquote(table1, right=TRUE)
     }else{
@@ -466,7 +476,7 @@ if(graph==TRUE & design=="cohort"){
 
 
 	if(any(cctable<5)) {
-		cat("One of more cells is/are less than 5, not appropriate for graphing","\n","\n")
+		cat("Cell counts too small - graph not shown","\n","\n")
 	}else{
 		y <- rep(NA, ncol(cctable))
 		x <- 1:ncol(cctable)
@@ -1311,26 +1321,26 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 			x1 <- x[order(x)]; y <- 1:length(x1)
 			if(is.factor(x1)){
 				plot(as.numeric(x1),y, pch=18, col="blue", main=string3,
-					xlab=" ",ylab="Subjects sorted by X-axis values ",  xaxt="n")
+					xlab=" ",ylab=.ylab.for.summ,  xaxt="n")
 				axis(1, at=1:length(levels(x1)),labels=levels(x1))
 			} else
 			if(any(class(x)=="POSIXt")){
 				plot(x1,y, pch=18, col="blue", main=string3,
-					xlab=" ",ylab="Subject sorted by X-axis values", xaxt="n")
+					xlab=" ",ylab=.ylab.for.summ, xaxt="n")
 				axis(1, at=time.pretty, labels=as.character(time.pretty,format=format.time))
 			}else
 			if(any(class(x)=="Date")){
 				if(numdate < 700){
 					plot(x1,y, pch=18, col="blue", main=string3,
-						xlab=" ",ylab="Subject sorted by X-axis values", yaxt="n", xaxt="n")
+						xlab=" ",ylab=.ylab.for.summ, yaxt="n", xaxt="n")
 					axis(1, at=date.pretty, labels=as.character(date.pretty,format=format.time))
 				}else{
 					plot(x1,y, pch=18, col="blue", main=string3,
-						xlab=" ",ylab="Subject sorted by X-axis values", yaxt="n")
+						xlab=" ",ylab=.ylab.for.summ, yaxt="n")
 				}
 			}else{
 				plot(x1,y, pch=18, col="blue", main=string3,
-					xlab=" ", ylab="Subject sorted by X-axis values", yaxt="n")
+					xlab=" ", ylab=.ylab.for.summ, yaxt="n")
 				if(any(class(x)=="difftime")){unit <-attr(x,"unit")} else {unit<-" "}
 				title(xlab=unit)
 			}
@@ -1380,7 +1390,7 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 							ifelse(is.na(mean(na.omit(x1))), NA,sd(na.omit(x1)))  , 
 						summary(x1)[1],summary(x1)[6]),3 )
 					}
-					colnames(a) <- c("obs.", "mean  ", "median ", "s.d.  ", "min.  ", "max.  ")
+					colnames(a) <- c(.obs, .mean, .median, .sd, .min, .max)
 					rownames(a) <- " "	
 					cat(paste("For",as.character(substitute(by)),"=",levels(by1)[i]),"\n")
 					print.noquote(a, row.names=NULL)
@@ -1408,7 +1418,7 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 						quantile(na.omit(x), .5), ifelse(is.na(mean(na.omit(x))), NA,round(sd(na.omit(x)),2))  , 
 					min(na.omit(x)), max(na.omit(x)) ),3 )
 				}
-				colnames(a) <- c("obs.", "mean  ", "median ", "s.d.  ", "min.  ", "max.  ")
+				colnames(a) <- c(.obs, .mean, .median, .sd, .min, .max)
 				rownames(a) <- " "	
 				print.noquote(a, row.names=NULL)
 			}
@@ -1422,7 +1432,7 @@ else
 {
 a <- rep("", (dim(x)[2])*7)
 dim(a) <- c(dim(x)[2], 7)
-colnames(a) <- c("Var. name", "obs.", "mean  ", "median ", "s.d.  ",  "min.  ", "max.  ")
+colnames(a) <- c(.var.name, .obs, .mean, .median, .sd,  .min, .max)
 a[,1] <- attr(x, "names")
 rownames(a) <- 1:nrow(a)
 for(i in 1:(dim(x)[2])) {
@@ -2165,10 +2175,10 @@ suppressWarnings(if(sort.group=="increasing"){
 })
 if(cum.percent){
 		output <- rbind(output,c(sum(as.integer(output[,1])),100,100,100,100))
-		colnames(output) <- c("Frequency","  %(NA+)", "cum.%(NA+)","  %(NA-)","cum.%(NA-)")
+		colnames(output) <- c(.frequency,"  %(NA+)", "cum.%(NA+)","  %(NA-)","cum.%(NA-)")
   }else{
 		output <- rbind(output,c(sum(as.integer(output[,1])),100,100))
-		colnames(output) <- c("Frequency","  %(NA+)", "  %(NA-)")  
+		colnames(output) <- c(.frequency,"  %(NA+)", "  %(NA-)")  
   }
 		rownames(output)[nrow(output)] <- "  Total"
 }
@@ -2184,11 +2194,11 @@ suppressWarnings(if(sort.group=="increasing"){
 if(cum.percent){
 	output <- cbind(output,round(percent,decimal),round(cumsum(percent),decimal))
 	output <- rbind(output,c(sum(output[,1]),100,100))
-	colnames(output) <- c("Frequency","Percent","Cum. percent")
+	colnames(output) <- c(.frequency,.percent,.cum.percent)
   }else{
 	output <- cbind(output,round(percent,decimal))
 	output <- rbind(output,c(sum(output[,1]),100))
-	colnames(output) <- c("Frequency","Percent")
+	colnames(output) <- c(.frequency,.percent)
   }
 	rownames(output)[length(rownames(output))] <- "  Total"
 }

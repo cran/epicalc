@@ -47,7 +47,9 @@ summ()
 table(sick, treated)
 recode(vars=c(sick, treated), old.value="Y", new.value="yes")
 table(sick, treated)
-recode(vars=c(sick,treated), is.na(sick), "N") # Missing value of sick changed into "no". 
+
+# Recode both sick and treated to "N" if sick status is missing. 
+recode(vars=c(sick,treated), is.na(sick), new.value="N") 
 table(sick, treated) 
 }
 \keyword{database}
