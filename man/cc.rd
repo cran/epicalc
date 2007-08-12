@@ -52,7 +52,7 @@ These two graphic commands are automatically called by 'cc' and 'cci'.
 
 Alternatively, a table saved from 'make2x2' can be supplied as the 'cctable' argument for the 'cc' command. The squares on the values of each group (case vs control and exposed vs unexposed) represent the relative sample sizes for each group.
 
-'mhor' computes stratum-specific odds ratios and 95 percent confidence intervals and the Mantel-Hanzsel odds ratio and chi-squared test is given as well as the homogeneity test. A stratified odds ratio graph is displayed. 
+'mhor' computes stratum-specific odds ratios and 95 percent confidence intervals and the Mantel-Haenszel odds ratio and chi-squared test is given as well as the homogeneity test. A stratified odds ratio graph is displayed. 
 }
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}

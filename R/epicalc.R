@@ -15,6 +15,8 @@
 .distribution.of <- "Distribution of"
 .by <- "by"
 .frequency <- "Frequency"
+.frequency1 <- "Frequency"
+.No.of.observations <- "No. of observations = "
 .ylab.for.summ <- "Subject sorted by X-axis values"
 .percent <- "Percent"
 .cum.percent <- "Cum. percent"
@@ -37,7 +39,7 @@ for(i in 1:ncol(dataFrame)) {
   if(any(class(x1[,i])=="factor")){
       table1 <-(t(t(table(dataFrame[,i]))))
       table1 <- cbind(table1, format(table1/sum(table1)*100, digits=3))
-      colnames(table1) <- c(.frequency,.percent)
+      colnames(table1) <- c(.frequency1,.percent)
     if(is.null(attr(dataFrame, "val.labels")[i])){
       print.noquote(table1, right=TRUE)
     }else{
@@ -153,7 +155,7 @@ x1 <- x[1,]
         rownames(a) <- vars
         cat("\n")
         cat(attr(x, "datalabel"), "\n")
-        cat("No. of observations =")
+        cat(.No.of.observations)
         cat(nrow(x), "\n") 
         print.noquote(a)
         cat("\n")
@@ -187,7 +189,7 @@ x1 <- .data[1,]
                 rownames(a) <- vars
                 cat("\n")
                 cat(attr(.data, "datalabel"), "\n")
-                cat("No. of observations =")
+                cat(.No.of.observations)
                 cat(nrow(.data), "\n")
                 print.noquote(a)
                 cat("\n")
@@ -275,7 +277,7 @@ x1 <- x[1,]
             rownames(a) <- 1:nrow(a)
             cat("\n")
             cat(attr(x, "datalabel"), "\n")
-            cat("No. of observations =")
+            cat(.No.of.observations)
             cat(nrow(x), "\n")
             print.noquote(a)
             cat("\n")
@@ -1356,7 +1358,7 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 	if(is.data.frame(x)){
 		cat ("\n")
 		cat(attr(x, "datalabel"), "\n")
-		cat("No. of observations = "); cat(nrow(x), "\n")
+		cat(.No.of.observations); cat(nrow(x), "\n")
 	}
 	if(is.vector(x) | is.vector(unclass(x))|(is.factor(x))|any(class(x)=="POSIXt"|class(x)=="difftime")){
 		if(typeof(x)=="character"){stop(paste(as.character(substitute(x)),"is a character vector"))}
@@ -2194,11 +2196,11 @@ suppressWarnings(if(sort.group=="increasing"){
 if(cum.percent){
 	output <- cbind(output,round(percent,decimal),round(cumsum(percent),decimal))
 	output <- rbind(output,c(sum(output[,1]),100,100))
-	colnames(output) <- c(.frequency,.percent,.cum.percent)
+	colnames(output) <- c(.frequency1,.percent,.cum.percent)
   }else{
 	output <- cbind(output,round(percent,decimal))
 	output <- rbind(output,c(sum(output[,1]),100))
-	colnames(output) <- c(.frequency,.percent)
+	colnames(output) <- c(.frequency1,.percent)
   }
 	rownames(output)[length(rownames(output))] <- "  Total"
 }
@@ -2245,34 +2247,40 @@ lookup <- function (x, lookup.array)
 ### Use various file formats
 use <- function(filename, clear=TRUE, tolower=TRUE) {
 library(foreign)
-if(clear){
-	detachAllData()
-}
 if(is.character(filename)){
-#if(suppressWarnings(any(tolower(list.files())==tolower(filename), na.rm=TRUE))){
   ext <- tolower(substring(filename,first=nchar(filename)-3, last=nchar(filename)) )
   if( ext == ".dta") {
-  	.data <<- read.dta(filename)}
+  	.data <<- read.dta(filename)
+    }else{
   if( ext == ".dbf") {
  	  .data <<- read.dbf(filename)
-if(tolower)	  names(.data) <<- tolower(names(.data))}
+if(tolower)	  names(.data) <<- tolower(names(.data))
+    }else{
   if( ext == ".rec") {
 	  .data <<- read.epiinfo(filename)
-if(tolower)	  names(.data) <<- tolower(names(.data))}
+if(tolower)	  names(.data) <<- tolower(names(.data))
+}else{
   if( ext == ".sav") {
 	 .data <<- read.spss(filename)
 	 var.labels <- attr(.data, "variable.labels")
 if(tolower)	 names(.data) <<- tolower(names(.data))
 	 .data <<- as.data.frame(.data)
-	 attr(.data, "var.labels") <<- var.labels}
+	 attr(.data, "var.labels") <<- var.labels
+   }else{
 #   if( ext == ".csv") {
   if( substring(filename,first=nchar(filename)-3, last=nchar(filename))==".csv") {
-	 .data <<- read.csv(filename, header=TRUE, sep=",")}
-#  }else{stop("File not found")}
+	 .data <<- read.csv(filename, header=TRUE, sep=",")
+   }else{
+   stop("This type of file cannot be 'use'd.")
+   }
+}}}}
 }else{
 if(is.data.frame(filename)){
   .data <<- filename
-  }else{stop("The argument is not a data frame")}
+  }else{stop("The argument is not a data frame or no such file")}
+}
+if(clear){
+	detachAllData()
 }
 attach(.data, warn.conflicts=FALSE)
 }
@@ -2506,29 +2514,38 @@ if(pack){
 	attach(.data, warn.conflicts=FALSE)
 }
 ### Recoding a variable or set of variables for the same final value
-recode <- function(vars, old.value, new.value){
-var.names<-as.character(substitute(vars))
-if(length(var.names)>1){var.names <- var.names[-1]}
-var.order <- match(var.names, names(.data))
-if(is.numeric(old.value) | is.integer(old.value) | any(class(vars)=="POSIXt")){
-	.data[,var.order][.data[,var.order]==old.value] <<- new.value
-}else
-for(i in var.order){
-if(is.factor(.data[,i])){
-levels(.data[,i])[levels(.data[,i])==old.value] <<- new.value
-}
-}
-if(length(old.value)==nrow(.data)){
-if(length(var.order)==1){
-	.data[,var.order] <<- replace(.data[,var.order], old.value, new.value)
-}else{
-for(i in 1:length(var.order)){
-	.data[,var.order[i]] <<- replace(.data[,var.order[i]], old.value, new.value)
-}
-}
-}
-detach(.data)
-attach(.data, warn.conflicts=FALSE)
+recode <- function (vars, old.value, new.value) 
+{
+    var.names <- as.character(substitute(vars))
+    if (length(var.names) > 1) {
+        var.names <- var.names[-1]
+    }
+    var.order <- match(var.names, names(.data))
+    if (is.numeric(old.value) | is.integer(old.value) | any(class(vars) == 
+        "POSIXt")) {
+        .data[, var.order][.data[, var.order] == old.value] <<- new.value
+    }
+    else for (i in var.order) {
+        if (is.factor(.data[, i])) {
+            if(is.character(old.value)){
+            levels(.data[, i])[levels(.data[, i]) == old.value] <<- new.value
+            }
+        }
+    }
+    if (length(old.value) == nrow(.data)) {
+        if (length(var.order) == 1) {
+            .data[, var.order] <<- replace(.data[, var.order], 
+                old.value, new.value)
+        }
+        else {
+            for (i in 1:length(var.order)) {
+                .data[, var.order[i]] <<- replace(.data[, var.order[i]], 
+                  old.value, new.value)
+            }
+        }
+    }
+    detach(.data)
+    attach(.data, warn.conflicts = FALSE)
 }
 
 
@@ -3130,5 +3147,25 @@ cat("Note the following change(s) in variable name(s):", "\n")
 print(table1)}
 names(.data) <<- sub(pattern=x1, replacement=x2,x=names(.data))
 detach(.data); attach(.data)
+}
+## Expand
+expand <- function(aggregate.data, index.var="Freq", retain.freq=FALSE){
+output <- NULL
+for(i in 1:nrow(aggregate.data)){
+if(retain.freq){
+output <- rbind(output, aggregate.data[rep(i, aggregate.data[,which(names(aggregate.data)==index.var)][i]),])
+}else{
+output <- rbind(output, aggregate.data[rep(i, aggregate.data[,which(names(aggregate.data)==index.var)][i]),][,-which(names(aggregate.data)==index.var)])
+}}
+data.frame(output,row.names=1:nrow(output))}
+## BE to AD
+BE2AD <- function(Date.in.BE){
+if(class(Date.in.BE)!="Date") {stop("The class of the variable must be Date")}
+year <- format(Date.in.BE, "%Y")
+year <- as.integer(year)
+AD <- year-543
+month <- format(Date.in.BE, "%m")
+day <- format(Date.in.BE, "%d")
+as.Date(paste(AD,"-",month,"-",day, sep=""))
 }
 
