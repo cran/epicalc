@@ -20,11 +20,22 @@ Matched tabulation is tallying based on each matched set. The simplest form is M
 \seealso{'table', 'cc' and 'clogit'}
 \examples{
 attach(infert)
+
+## Not run:
+
+# matchTab(case, induced, stratum)
+# Tabulation successful but OR not computed
+# because 'induced' is not binary
+
+## End(Not run)
+
 ia <- induced > 0
 matchTab(case, ia, stratum)
 detach(infert)
+
 # See also
 library(survival)
 clogit(case ~ ia + strata(stratum), data=infert)
+
 }
 \keyword{array}
