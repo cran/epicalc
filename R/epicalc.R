@@ -1924,29 +1924,35 @@ n.for.2means <- function (mu1, mu2, sd1, sd2, ratio=1, alpha=.05,
 }
 ### Pack all related variables into the existing .data
 pack <- function(dataFrame=.data){
-data1 <- dataFrame
-j <- NULL
-k <- attr(data1, "var.labels")
-candidate.objects <- setdiff(lsNoFunction(), as.character(ls.str(mode="list")[]))
-for(i in 1:length(candidate.objects)){
-	if(length(candidate.objects)==0) stop("No related vector outside the default data frame")
-	if(length(get(candidate.objects[i]))==nrow(data1)){
-		if(any(names(data1)==candidate.objects[i])){
-			data1[,names(.data)==candidate.objects[i]] <- get(candidate.objects[i])
-		}else{
-			data1 <- as.data.frame(cbind(data1,get(candidate.objects[i])))
-			names(data1)[ncol(data1)] <- candidate.objects[i]
-			j <- c(j,i)
-			if(!is.null(k)){ k <- c(k,"")} 
-		}
-		if(!is.null(attr(.data,"var.labels"))){attr(data1, "var.labels")<-k}
-		}
-	}
-	detach(.data)
-	rm(list=candidate.objects[j], pos=1)
-	.data <<- data1
-	attach(.data, warn.conflicts=FALSE)
+    data1 <- dataFrame
+    j <- NULL
+    k <- attr(data1, "var.labels")
+    candidate.objects <- setdiff(lsNoFunction(), as.character(ls.str(mode = "list")[]))
+    if (length(candidate.objects) == 0) 
+        stop("No related vector outside the default data frame")
+    for (i in 1:length(candidate.objects)) {
+        if (length(get(candidate.objects[i])) == nrow(data1)) {
+            if (any(names(data1) == candidate.objects[i])) {
+                data1[, names(.data) == candidate.objects[i]] <- get(candidate.objects[i])
+                j <- c(j, i)
+            }
+            else {
+                data1 <- data.frame(data1, get(candidate.objects[i]))
+                names(data1)[ncol(data1)] <- candidate.objects[i]
+                j <- c(j, i)
+                if (!is.null(k)) {
+                  k <- c(k, "")
+                }
+            }
+        }
+    }
+    attr(data1, "var.labels") <- k
+    detach(.data)
+    rm(list = candidate.objects[j], pos = 1)
+    .data <<- data1
+    attach(.data, warn.conflicts = FALSE)
 }
+
 ### Power calcuation
 power.for.2means <- function (mu1, mu2, n1, n2, sd1, sd2, alpha=.05) {
 	if(mu1 >mu2) stop("Please make mu2 > m1")
@@ -2026,9 +2032,14 @@ if(length(table(exposed))!=2){
 stop("Exposure variable not binary")
 }
 exposed1 <- exposed
+if(is.factor(exposed)){
+	cat(paste("Exposure status:", as.character(substitute(exposed)), "=", levels(exposed)[2],"\n"))
+}else{
+	cat(paste("Exposure status:", as.character(substitute(exposed)), "=", max(exposed, na.rm=TRUE),"\n"))
+}
+cat("\n")
 if(is.factor(exposed1)){
 	exposed1 <- exposed1==levels(exposed1)[2]
-	cat(paste("Exposure status:", as.character(substitute(exposed)), "=", levels(exposed)[2],"\n"))
 }
 control <- 1-case
 aggregate.data.frame(control, list(strata=strata), sum) -> a
@@ -2057,25 +2068,27 @@ cat (rowi0-rowi1,"match sets with incomplete information omitted from tabulation
 cat ("Total number of match sets in the tabulation =", rowi1,"\n")
 all.unexposed <- ii$all.subjects-ii$all.exposed
 ii$ncontrol.exposed1 <- factor(ii$ncontrol.exposed, levels=as.character(0:max(ii$ncontrols)))
-ii$ncase.exposed1 <- factor(ii$ncase.exposed, levels=as.character(0:1))
+ii$ncase.exposed1 <- factor(ii$ncase.exposed, levels=as.character(0:max(ii$ncase.exposed)))
 table(ii$ncase.exposed1, ii$ncontrol.exposed1, ii$ncontrols, dnn=c("No. of cases exposed","No. of controls exposed","No. of controls per case"))->matchTable
 cat("\n")
 for(i in 1:max(ii$ncontrols)){
 	cat(paste("Number of controls =",i,"\n"))
-	print(matchTable[,1:(i+1),i])
+	print(matchTable[1:max(c(2,max(which(rowSums(matchTable[,,i])>0)))),1:(i+1),i])
 	cat("\n")
 }
-if(any(ii$ncase.exposed)>1){
-cat(paste("No. of cases exposed > 1. Odds ratio not computed.","\n"))
-}else{
 numerator <- (ii$ncontrols-ii$ncontrol.exposed)*ii$ncase.exposed/(ii$ncontrols+1)
 denominator <- ii$ncontrol.exposed*(1-ii$ncase.exposed)/(ii$ncontrols+1)
 if(sum(denominator) <1){
 cat("Inadequate discordant pairs. Odds ratio not computed"); cat("\n")
 }else{
+if(any(ii$ncase.exposed>1)){
+cat(paste(c("More than one cases exposed in strata # ", as.character(ii$strata[ii$ncase.exposed > 1]), ". M-H odds ratio not computed."), sep=""))
+cat("\n", "\n")
+}else{
 mhor <- sum(numerator)/sum(denominator)
 cat(paste("Odds ratio by Mantel-Haenszel method =", round(mhor,3), "\n", "\n"))
 ### computing MLE-OR using clogit
+}
 library(survival)
 model <- clogit(case ~ exposed + strata(strata))
 clogitor <- exp(model$coefficients)
@@ -2083,7 +2096,7 @@ lnci95 <- c(model$coefficients-qnorm(0.975)*sqrt(model$var),model$coefficients+q
 ci95.mleor <- exp(lnci95)
 cat(paste("Odds ratio by maximum likelihood estimate (MLE) method =", round(clogitor,3),"\n","95%CI=",round(ci95.mleor[1],3),",",round(ci95.mleor[2],3), "\n"))
 cat("\n")
-}}}
+}}
  
 ### Goodness-of-fit test for poisson assumption after regression
 poisgof <- function(model) {
@@ -2529,19 +2542,17 @@ if(pack){
 ### Recoding a variable or set of variables for the same final value
 recode <- function (vars, old.value, new.value) 
 {
-    var.names <- as.character(substitute(vars))
-    if (length(var.names) > 1) {
-        var.names <- var.names[-1]
-    }
-    var.order <- match(var.names, names(.data))
-    if (is.numeric(old.value) | is.integer(old.value) | any(class(vars) == 
+        nl <- as.list(1:ncol(.data))
+        names(nl) <- names(.data)
+            var.order <- eval(substitute(vars), nl, parent.frame())
+    if (is.numeric(old.value) | is.integer(old.value) | any(class(.data[,var.order]) == 
         "POSIXt")) {
         .data[, var.order][.data[, var.order] == old.value] <<- new.value
     }
     else for (i in var.order) {
         if (is.factor(.data[, i])) {
-            if(is.character(old.value)){
-            levels(.data[, i])[levels(.data[, i]) == old.value] <<- new.value
+            if (is.character(old.value)) {
+                levels(.data[, i])[levels(.data[, i]) == old.value] <<- new.value
             }
         }
     }
@@ -2560,7 +2571,6 @@ recode <- function (vars, old.value, new.value)
     detach(.data)
     attach(.data, warn.conflicts = FALSE)
 }
-
 
 ### Multinomial summary display
 mlogit.display <- function(multinom.model, decimal=2, alpha=.05) {

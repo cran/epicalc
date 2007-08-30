@@ -33,8 +33,9 @@ sick      <- factor(sick, labels=yesno)
 treated   <- factor(treated, labels=yesno)
 .data     <- data.frame(age, systolic, diastolic, sick, treated)
 attach(.data, warn.conflicts=FALSE)
-# All but .data are to be deleted to avoid confusion with free vectors.
-rm(list=ls()) 
+pack()
+# 'pack() integate all variables into .data
+# to avoid confusion with free vectors.
 
 # The above lines generate a hypothetical data frame. 
 # In reality, one just exploits 'use("datafile")', if the "datafile" exists.
