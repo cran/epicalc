@@ -3182,7 +3182,7 @@ output <- rbind(output, aggregate.data[rep(i, aggregate.data[,which(names(aggreg
 }}
 data.frame(output,row.names=1:nrow(output))}
 ## BE to AD
-BE2AD <- function(Date.in.BE){
+be2ad <- function(Date.in.BE){
 if(class(Date.in.BE)!="Date") {stop("The class of the variable must be Date")}
 year <- format(Date.in.BE, "%Y")
 year <- as.integer(year)
@@ -3192,3 +3192,152 @@ day <- format(Date.in.BE, "%d")
 as.Date(paste(AD,"-",month,"-",day, sep=""))
 }
 
+## Cronbach's alpha
+alpha <- function(vars, dataFrame=.data, reverse=TRUE){
+nl <- as.list(1:ncol(dataFrame))
+names(nl) <- names(dataFrame)
+selected <- eval(substitute(vars), nl, parent.frame())
+selected.dataFrame <- dataFrame[,selected]#na.omit(dataFrame[,selected])
+selected.matrix <- NULL
+for(i in selected){
+selected.matrix <- cbind(selected.matrix, unclass(dataFrame[,i]))
+}
+colnames(selected.matrix) <- names(selected.dataFrame)
+  cov1 <- cov(selected.matrix, use="complete.obs")
+  cor1 <- cor(selected.matrix, use="complete.obs")
+if(reverse){
+  sign1 <- sign(addmargins(cor1, margin=1)[nrow(cor1)+1,])
+  which.neg <- which(sign1 < 0)
+  selected.matrix[,which.neg] <- -1*selected.matrix[,which.neg]
+    cov2 <- cov(selected.matrix, use="complete.obs")
+    cor2 <- cor(selected.matrix, use="complete.obs")
+}else{
+  cov2 <- cov1
+  cor2 <- cor1
+}
+cat("Number of items in the scale =", ncol(cor2), "\n")
+cat("Sample size =", nrow(na.omit(dataFrame[,selected])), "\n")
+cat(paste("Average inter-item correlation =", format((sum(cor2)-ncol(cor2))/((ncol(cor2))^2-ncol(cor2)), digits=4), "\n", "\n"))
+reliability <- function (S) 
+{
+    reliab <- function(S, R) {
+        k <- dim(S)[1]
+        ones <- rep(1, k)
+        v <- as.vector(ones %*% S %*% ones)
+        alpha <- (k/(k - 1)) * (1 - (1/v) * sum(diag(S)))
+        rbar <- mean(R[lower.tri(R)])
+        std.alpha <- k * rbar/(1 + (k - 1) * rbar)
+        c(alpha = alpha, std.alpha = std.alpha)
+    }
+    result <- list()
+    if ((!is.numeric(S)) || !is.matrix(S) || (nrow(S) != ncol(S)) || 
+        any(abs(S - t(S)) > max(abs(S)) * 1e-10) || nrow(S) < 
+        2) 
+        stop(gettextRcmdr("argument must be a square, symmetric, numeric covariance matrix"))
+    k <- dim(S)[1]
+    s <- sqrt(diag(S))
+    R <- S/(s %o% s)
+    rel <- reliab(S, R)
+    result$alpha <- rel[1]
+    result$st.alpha <- rel[2]
+    if (k < 3) {
+        warning(gettextRcmdr("there are fewer than 3 items in the scale"))
+        return(invisible(NULL))
+    }
+    rel <- matrix(0, k, 3)
+    for (i in 1:k) {
+        rel[i, c(1, 2)] <- reliab(S[-i, -i], R[-i, -i])
+        a <- rep(0, k)
+        b <- rep(1, k)
+        a[i] <- 1
+        b[i] <- 0
+        cov <- a %*% S %*% b
+        var <- b %*% S %*% b
+        rel[i, 3] <- cov/(sqrt(var * S[i, i]))
+    }
+    rownames(rel) <- rownames(S)
+    colnames(rel) <- c("Alpha", "Std.Alpha", "r(item, rest)")
+    result$rel.matrix <- rel
+    class(result) <- "reliability"
+    result
+}
+cat("Based on 'reliability' function in 'Rcmdr' package by Fox J. et al:", "\n")
+cat(paste("Cronbach's alpha:", "\n"))
+cat(paste("      unstandardized value =", format(reliability(cov2)$alpha, digits=4), "\n"))
+cat(paste("        standardized value =", format(reliability(cov2)$st.alpha, digits=4), "\n", "\n"))
+if(reverse){
+cat(paste("Item(s) reversed and new alpha if the item omitted:", "\n"))
+Reversed <- ifelse(sign1 <0, "x    ",".    ")
+result <-cbind(Reversed,format(reliability(cov2)$rel.matrix, digits=3))
+}else{
+cat(paste("Note: no attempt to reverse any item.","\n"))
+cat(paste("New alpha if item omitted:", "\n"))
+result <-cbind(format(reliability(cov2)$rel.matrix, digits=3))
+}
+print.noquote(result, right=TRUE)
+}
+
+## Table stack
+tableStack <- function(vars, minlevel=1, maxlevel=5,count=TRUE, means=TRUE, medians=TRUE, sds=TRUE, decimal=3, dataFrame=.data){
+nl <- as.list(1:ncol(dataFrame))
+names(nl) <- names(dataFrame)
+selected <- eval(substitute(vars), nl, parent.frame())
+selected.class <- NULL
+for(i in selected){
+selected.class <- c(selected.class, class(dataFrame[,i]))
+}
+if(length(table(selected.class)) > 1){
+stop("All vars should be in the same class")
+}
+if(class(dataFrame[,selected][,1])=="logical"){
+for(i in selected){
+dataFrame[,i] <- factor(dataFrame[,i])
+}
+}
+nlevel <- as.list(minlevel:maxlevel)
+names(nlevel) <- eval(substitute(minlevel:maxlevel), nlevel, parent.frame())
+table1 <- NULL
+for(i in as.integer(selected)){
+if(!is.factor(dataFrame[,i])){
+x <- factor(dataFrame[,i]); levels(x) <- nlevel
+tablei <- table(x)
+}else{
+tablei <- table(dataFrame[,i])
+}
+if (count) {tablei <- c(tablei, length(na.omit(dataFrame[,i])))
+names(tablei)[length(tablei)] <- "count"
+}
+if (means) {tablei <- c(tablei, format(mean(as.numeric(dataFrame[,i]), na.rm=TRUE), digits=decimal))
+names(tablei)[length(tablei)] <- "mean"
+}
+if (medians) {tablei <- c(tablei, format(median(as.numeric(dataFrame[,i]), na.rm=TRUE), digits=decimal))
+names(tablei)[length(tablei)] <- "median"
+}
+if (sds) {tablei <- c(tablei, format(sd(as.numeric(dataFrame[,i]), na.rm=TRUE), digits=decimal))
+names(tablei)[length(tablei)] <- "sd"
+}
+table1 <- rbind(table1, tablei)
+}
+results <- data.frame(table1, row.names=names(nl)[selected])
+if(is.factor(dataFrame[,selected][,1])){
+names(results)[1:(ncol(results)-4)] <- levels(dataFrame[,selected][,1])
+}else{
+names(results)[1:(ncol(results)-4)] <- names(nlevel)
+}
+results
+}
+
+# Unclass data frame
+unclassDataframe <- function(vars){
+if(!exists(".data")) stop("Default data frame .data does not exist")
+nl <- as.list(1:ncol(.data))
+names(nl) <- names(.data)
+selected <- eval(substitute(vars), nl, parent.frame())
+for(i in selected){
+.data[,i] <<- unclass(.data[,i])
+}
+if(is.element(".data", search())){
+detach(.data)
+attach(.data)
+}
+}
