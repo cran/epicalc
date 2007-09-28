@@ -13,7 +13,7 @@ unclassDataframe (vars)
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
 }
-\seealso{'unclass'}
+\seealso{'unclass', 'alpha', 'tableStack'}
 \examples{
 expect1 <- c(3,4,3,2,5,3,2,5,2,4,4,3,2,4,4, 
    1,3,2,4,4,4,3,4,2,4,5,4,4,3,4)

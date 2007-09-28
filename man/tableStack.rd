@@ -3,8 +3,9 @@
 \title{Tabulation of variables in a stack form}
 \description{One-way tabulate variables with the same possible range of distribution and stack into a new table with or without other descriptive statistics}
 \usage{
-tableStack(vars, minlevel = 1, maxlevel = 5, count = TRUE, means = TRUE, 
-    medians = TRUE, sds = TRUE, decimal = 3, dataFrame = .data)    
+tableStack (vars, minlevel = 1, maxlevel = 5, count = TRUE, means = TRUE, 
+    medians = TRUE, sds = TRUE, decimal = 3, dataFrame = .data, 
+    vars.to.reverse = NULL, var.labels = TRUE, reverse = FALSE) 
 }
 \arguments{
 	\item{vars}{a vector of variables in the data frame}
@@ -16,11 +17,15 @@ tableStack(vars, minlevel = 1, maxlevel = 5, count = TRUE, means = TRUE,
 	\item{sds}{whether standard deviations of all selected items should be displayed}
 	\item{decimal}{number of decimals displayed in the statistics}
 	\item{dataFrame}{source data frame of the variables}
+	\item{vars.to.reverse}{variable(s) to reverse}
+	\item{var.labels}{presence of descriptions of variables on the last column of output}
+	\item{reverse}{whether item(s) negatively correlated with other majority will be reversed}
 }
 \details{This function simultaneously explores several variables with a fixed integer rating scale. For non-factor variables, default values for tabulation are 1 to 5 but can be specified by user.
 
-The classes of the variables can be 'integer', 'numeric', 'factor' or 'logical but not any mixture.
+The classes of the variables can be 'integer', 'factor' or 'logical but not any mixture.
 
+Unlike, 'alpha', the argument 'reverse' default value is FALSE. It is also overwritten by 'vars.to.reverse'. Both command is ineffective when the variables are not of 'integer'. It is advised to run 'unclassDataframe' before running 'tableStack' with 'reverse=TRUE' or 'vars.to.reverse=...' .
 } 
 \value{A data frame containing the frequency of each value for each variable with or without descriptive statistics.
 
@@ -28,7 +33,7 @@ The classes of the variables can be 'integer', 'numeric', 'factor' or 'logical b
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
 }
-\seealso{'table', 'tab1', 'summ'}
+\seealso{'table', 'tab1', 'summ', 'alpha', 'unclassDataframe'}
 \examples{
 data(Oswego)
 use(Oswego)
@@ -55,5 +60,14 @@ for (i in 1:4) {
    levels(data1[,i]) <- level.lab
 }
 tableStack(vars=1:4, dataFrame=data1)
+
+data(Attitudes)
+use(Attitudes)
+
+## Please use full screen of Rconsole
+## for better display of the labels.
+tableStack(qa1:qa18)
+tableStack(qa1:qa18, reverse=TRUE)
+
 }
 \keyword{aplot}
