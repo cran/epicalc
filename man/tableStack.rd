@@ -3,8 +3,8 @@
 \title{Tabulation of variables in a stack form}
 \description{One-way tabulate variables with the same possible range of distribution and stack into a new table with or without other descriptive statistics}
 \usage{
-tableStack (vars, minlevel = 1, maxlevel = 5, count = TRUE, means = TRUE, 
-    medians = TRUE, sds = TRUE, decimal = 3, dataFrame = .data, 
+tableStack (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, means = TRUE, 
+    medians = FALSE, sds = TRUE, decimal = 3, dataFrame = .data, total=TRUE, 
     vars.to.reverse = NULL, var.labels = TRUE, reverse = FALSE) 
 }
 \arguments{
@@ -17,6 +17,7 @@ tableStack (vars, minlevel = 1, maxlevel = 5, count = TRUE, means = TRUE,
 	\item{sds}{whether standard deviations of all selected items should be displayed}
 	\item{decimal}{number of decimals displayed in the statistics}
 	\item{dataFrame}{source data frame of the variables}
+	\item{total}{availability of means and sd of total and mean scores}
 	\item{vars.to.reverse}{variable(s) to reverse}
 	\item{var.labels}{presence of descriptions of variables on the last column of output}
 	\item{reverse}{whether item(s) negatively correlated with other majority will be reversed}
@@ -25,10 +26,11 @@ tableStack (vars, minlevel = 1, maxlevel = 5, count = TRUE, means = TRUE,
 
 The classes of the variables can be 'integer', 'factor' or 'logical but not any mixture.
 
-Unlike, 'alpha', the argument 'reverse' default value is FALSE. It is also overwritten by 'vars.to.reverse'. Both command is ineffective when the variables are not of 'integer'. It is advised to run 'unclassDataframe' before running 'tableStack' with 'reverse=TRUE' or 'vars.to.reverse=...' .
-} 
-\value{A data frame containing the frequency of each value for each variable with or without descriptive statistics.
+Unlike, 'alpha', the argument 'reverse' default value is FALSE. This argument is overwritten by 'vars.to.reverse'.
 
+Options for 'reverse', 'vars.to.reverse' and statistics of 'means', 'medians', 'sds' and 'total' are available only if the items are integer. To obtain statistics of factor items, user need to use 'unclassDataframe' to turn them into integer.
+} 
+\value{a list of elements of the output results.
 }
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
@@ -39,8 +41,6 @@ data(Oswego)
 use(Oswego)
 des()
 tableStack(bakedham:fruitsalad)
-
-
 
 expect1 <- c(3,4,3,2,5,3,2,5,2,4,4,3,2,4,4, 
    1,3,2,4,4,4,3,4,2,4,5,4,4,3,4)
@@ -53,13 +53,19 @@ found2  <- c(1,1,2,1,3,1,1,2,2,4,3,3,1,1,3,
 data1 <- data.frame(expect1, expect2, found1, found2)
 tableStack(vars=1:4, dataFrame=data1)
 
-level.lab <- list("Excellent"=1, "Good"=2,
-   "Fair"=3, "Poor"=4, "Very poor"=5)
+level.lab <- list("Very poor"=1, "poor"=2,
+   "Fair"=3, "good"=4, "Very good"=5)
 for (i in 1:4) {
    data1[,i] <- factor(data1[,i])
    levels(data1[,i]) <- level.lab
 }
-tableStack(vars=1:4, dataFrame=data1)
+rm(expect1, expect2, found1, found2, level.lab)
+use(data1)
+tableStack(vars=1:4)
+unclassDataframe(vars=1:4)
+tableStack(vars=1:4) -> output
+output
+
 
 data(Attitudes)
 use(Attitudes)

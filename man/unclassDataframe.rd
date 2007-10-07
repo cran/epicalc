@@ -26,8 +26,8 @@ found2  <- c(1,1,2,1,3,1,1,2,2,4,3,3,1,1,3,
 .data <- data.frame(expect1, expect2, found1, found2)
 rm(expect1, expect2, found1, found2) # clean up
 des()
-level.lab <- list("Excellent"=1, "Good"=2,
-   "Fair"=3, "Poor"=4, "Very poor"=5)
+level.lab <- list("Very poor"=1, "Poor"=2,
+   "Fair"=3, "Good"=4, "Very good"=5)
 for (i in 1:4) {
    .data[,i] <- factor(.data[,i])
    levels(.data[,i]) <- level.lab
