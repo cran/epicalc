@@ -3,9 +3,10 @@
 \title{Tabulation of variables in a stack form}
 \description{One-way tabulate variables with the same possible range of distribution and stack into a new table with or without other descriptive statistics}
 \usage{
-tableStack (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, means = TRUE, 
-    medians = FALSE, sds = TRUE, decimal = 3, dataFrame = .data, total=TRUE, 
-    vars.to.reverse = NULL, var.labels = TRUE, reverse = FALSE) 
+tableStack (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, 
+    means = TRUE, medians = FALSE, sds = TRUE, decimal = 3, dataFrame = .data, 
+    total = TRUE, vars.to.reverse = NULL, var.labels = TRUE, 
+    reverse = FALSE, by = NULL, chisqTest=TRUE)
 }
 \arguments{
 	\item{vars}{a vector of variables in the data frame}
@@ -21,6 +22,8 @@ tableStack (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, means = TR
 	\item{vars.to.reverse}{variable(s) to reverse}
 	\item{var.labels}{presence of descriptions of variables on the last column of output}
 	\item{reverse}{whether item(s) negatively correlated with other majority will be reversed}
+  \item{by}{a variable for column breakdown}
+  \item{chisqTest}{whether P values of chi-squared test should be computed}
 }
 \details{This function simultaneously explores several variables with a fixed integer rating scale. For non-factor variables, default values for tabulation are 1 to 5 but can be specified by user.
 
@@ -29,6 +32,9 @@ The classes of the variables can be 'integer', 'factor' or 'logical but not any 
 Unlike, 'alpha', the argument 'reverse' default value is FALSE. This argument is overwritten by 'vars.to.reverse'.
 
 Options for 'reverse', 'vars.to.reverse' and statistics of 'means', 'medians', 'sds' and 'total' are available only if the items are integer. To obtain statistics of factor items, user need to use 'unclassDataframe' to turn them into integer.
+
+On a variable is specified to 'by' argument, all the output gives only cross tabulations between each variables of 'vars' and the 'by' variable. Unless switched to 'FALSE', P value from chi-squared test of each table is displayed without warning of expected sample size for each cell where user must be careful.
+
 } 
 \value{a list of elements of the output results.
 }
@@ -41,6 +47,7 @@ data(Oswego)
 use(Oswego)
 des()
 tableStack(bakedham:fruitsalad)
+tableStack(bakedham:fruitsalad, by= ill)
 
 expect1 <- c(3,4,3,2,5,3,2,5,2,4,4,3,2,4,4, 
    1,3,2,4,4,4,3,4,2,4,5,4,4,3,4)

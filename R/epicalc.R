@@ -2684,85 +2684,125 @@ if(is.null(inputTable)){
   }
 }
 
-
-followup.plot <-function(id, time, outcome, by=NULL, n.of.lines=NULL, legend=TRUE, line.col="blue"){
-plot(time, outcome, xlab=" ", ylab=" ", type="n")
-id.factor <- factor(id)
-if(is.null(n.of.lines)){
-if(!is.null(by)){
-id <- id[order(id, time, by)]
-time <- time[order(id, time, by)]
-outcome <-outcome[order(id, time,by )]
-by <- by[order(id, time, by)]
-by.factor <- factor(by)
-  for(i in 1:length(levels(by.factor))){
-    for(j in 1:length(levels(id.factor))){
-       lines(time[id.factor==levels(id.factor)[j] & by.factor==levels(by.factor)[i]],
-          outcome[id.factor==levels(id.factor)[j] & by.factor==levels(by.factor)[i]], col=i)
-    }
-  }
-if(legend){legend("topright", legend=levels(factor(by)), col=1:length(levels(factor(by))), bg="white", lty=1)}
-}else{
-id <- id[order(id, time)]
-time <- time[order(id, time)]
-outcome <- outcome[order(id, time)]
-if(length(levels(factor(id))) < 8){
-    for(j in 1:length(levels(id.factor))){
-       lines(time[id.factor==levels(id.factor)[j]],
-          outcome[id.factor==levels(id.factor)[j]], col=j)
-      }
-      if(legend){
-          legend("topright", legend=levels(factor(id[order(id)])), col=1:length(levels(factor(id))), bg="white", lty=1)
-      }
-    }else{
-    for(j in 1:length(levels(id.factor))){
-    if(line.col=="multicolor"){       
-          lines(time[id.factor==levels(id.factor)[j]],
-              outcome[id.factor==levels(id.factor)[j]], col=j)
-        }else{
-          lines(time[id.factor==levels(id.factor)[j]],
-              outcome[id.factor==levels(id.factor)[j]], col=line.col)
-        }
-
-      }
-    }
-      
-  }
-}
-
-else
-
+## Followup plot
+followup.plot <- function (id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, 
+    line.col = "blue", stress = NULL, stress.labels = FALSE, label.col = 1, stress.col = NULL, 
+    stress.width = NULL, stress.type=NULL, ...) 
 {
-order.id.selected <- sample(c(rep(TRUE, n.of.lines),
-  rep(FALSE, length(levels(factor(id)))-n.of.lines)))
-if(!is.null(by)){
-id <- id[order(id, time, by)]
-time <- time[order(id, time, by)]
-by <- by[order(id, time, by)]
-id.factor <- factor(id)
-by.factor <- factor(by)
-  for(i in 1:length(levels(by.factor))){
-    for(j in 1:length(levels(id.factor))){
-       lines(time[id.factor==levels(id.factor)[j] & by.factor==levels(by.factor)[i]]*order.id.selected[j],
-          outcome[id.factor==levels(id.factor)[j] & by.factor==levels(by.factor)[i]]*order.id.selected[j], col=i)
+
+    plot(time, outcome, xlab = " ", ylab = " ", type = "n", ...)
+id1 <- id; time1 <- time; by1 <- by; outcome1 <- outcome
+    if (is.null(n.of.lines)) {
+        if (!is.null(by)) {
+            id <- id[order(id1, time1, by1)]
+            id.factor <- factor(id)
+            time <- time[order(id1, time1, by1)]
+            outcome <- outcome[order(id1, time1, by1)]
+            by <- by[order(id1, time1, by1)]
+            by.factor <- factor(by)
+            for (i in 1:length(levels(by.factor))) {
+                for (j in 1:length(levels(id.factor))) {
+                  lines(time[id.factor == levels(id.factor)[j] & by.factor == levels(by.factor)[i]], 
+                  outcome[id.factor == levels(id.factor)[j] & by.factor == levels(by.factor)[i]], 
+                    col = i, lty = i)
+                }
+            }
+            if (legend) {
+                legend("topright", legend = levels(factor(by)), 
+                  col = 1:length(levels(factor(by))), bg = "white", 
+                  lty = 1:length(levels(factor(by))))
+            }
+        }
+        else {
+            id <- id[order(id1, time1)]
+            id.factor <- factor(id)
+            time <- time[order(id1, time1)]
+            outcome <- outcome[order(id1, time1)]
+            if (length(levels(factor(id))) < 8) {
+                for (j in 1:length(levels(id.factor))) {
+                  lines(time[id.factor == levels(id.factor)[j]], 
+                    outcome[id.factor == levels(id.factor)[j]], 
+                    col = j)
+                  }
+                if (legend) {
+                  legend("topright", legend = levels(factor(id[order(id1)])), 
+                    col = 1:length(levels(factor(id))), bg = "white", 
+                    lty = 1)
+                }
+            }
+            else {
+                for (j in 1:length(levels(id.factor))) {
+                  if (line.col == "multicolor") {
+                    lines(time[id.factor == levels(id.factor)[j]], 
+                      outcome[id.factor == levels(id.factor)[j]], 
+                      col = j)
+                  }
+                  else {
+                    lines(time[id.factor == levels(id.factor)[j]], 
+                      outcome[id.factor == levels(id.factor)[j]], 
+                      col = line.col)
+                  }
+                }
+            }
+        }
     }
-  }
-if(legend){legend("topright", legend=levels(factor(by)), col=1:length(levels(factor(by))), lty=1, bg="white")}
-}else{
-id <- id[order(id, time)]
-id.factor <- factor(id)
-time <- time[order(id, time)]
-    for(j in 1:length(levels(id.factor))){
-      if(line.col=="multicolor"){
-           lines(time[id.factor==levels(id.factor)[j]]*order.id.selected[j],
-                outcome[id.factor==levels(id.factor)[j]]*order.id.selected[j], col=j)
-           }else{
-           lines(time[id.factor==levels(id.factor)[j]]*order.id.selected[j],
-                outcome[id.factor==levels(id.factor)[j]]*order.id.selected[j], col=line.col)
-           }
-    }  
-  }
-}
+    else {
+        order.id.selected <- sample(c(rep(TRUE, n.of.lines), 
+            rep(FALSE, length(levels(factor(id))) - n.of.lines)))
+        if (!is.null(by)) {
+            id <- id[order(id1, time1, by1)]
+            time <- time[order(id1, time1, by1)]
+            outcome <- outcome [order(id1, time1, by1)]
+            by <- by[order(id1, time1, by1)]
+            id.factor <- factor(id)
+            by.factor <- factor(by)
+            for (i in 1:length(levels(by.factor))) {
+                for (j in 1:length(levels(id.factor))) {
+                  lines(time[id.factor == levels(id.factor)[j] & 
+                    by.factor == levels(by.factor)[i]] * order.id.selected[j], 
+                    outcome[id.factor == levels(id.factor)[j] & 
+                      by.factor == levels(by.factor)[i]] * order.id.selected[j], 
+                    col = i, lty = i)
+                }
+            }
+            if (legend) {
+                legend("topright", legend = levels(factor(by)), 
+                  col = 1:length(levels(factor(by))), lty = 1:length(levels(factor(by))), 
+                  bg = "white")
+            }
+        }
+        else {
+            id <- id[order(id1, time1)]
+            id.factor <- factor(id)
+            time <- time[order(id1, time1)]
+            outcome <- outcome[order(id1, time1)]
+            for (j in 1:length(levels(id.factor))) {
+                if (line.col == "multicolor") {
+                  lines(time[id.factor == levels(id.factor)[j]] * 
+                    order.id.selected[j], outcome[id.factor == 
+                    levels(id.factor)[j]] * order.id.selected[j], 
+                    col = j)
+                }
+                else {
+                  lines(time[id.factor == levels(id.factor)[j]] * 
+                    order.id.selected[j], outcome[id.factor == 
+                    levels(id.factor)[j]] * order.id.selected[j], 
+                    col = line.col)
+                }
+            }
+        }
+    }
+    for (j in 1:length(levels(id.factor))) {
+                  text(time[id.factor == levels(id.factor)[j]],
+                  outcome[id.factor ==  levels(id.factor)[j]], 
+                    labels = j, col = any(stress.labels*stress %in% j)*label.col)
+    }
+    for (j in 1:length(levels(id.factor))) {
+                  lines(time[id.factor == levels(id.factor)[j]],
+                  outcome[id.factor ==  levels(id.factor)[j]], 
+                    col = any(stress %in% j)*stress.col,
+                    lwd = stress.width, lty = stress.type)
+    }
 }
 
 ## Subsetting .data
@@ -3340,7 +3380,7 @@ if(var.labels && !is.null(attributes(dataFrame)$var.labels)){
 tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, 
     means = TRUE, medians = FALSE, sds = TRUE, decimal = 3, dataFrame = .data, 
     total = TRUE, vars.to.reverse = NULL, var.labels = TRUE, 
-    reverse = FALSE) 
+    reverse = FALSE, by = NULL, chisqTest=TRUE) 
 {
     nl <- as.list(1:ncol(dataFrame))
     names(nl) <- names(dataFrame)
@@ -3363,6 +3403,7 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
         stop("Variables must be in 'integer' class before reversing. \n        Try 'unclassDataframe' first'")
     }
     selected.dataFrame <- dataFrame[, selected]
+if(is.null(by)){
     selected.matrix <- NULL
     for (i in selected) {
         selected.matrix <- cbind(selected.matrix, unclass(dataFrame[, 
@@ -3385,7 +3426,8 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
         for (i in which.neg) {
             dataFrame[, selected][, i] <- maxlevel + 1 - dataFrame[, 
                 selected][, i]
-            selected.matrix[, i] <- maxlevel + 1 - selected.matrix[, i]
+            selected.matrix[, i] <- maxlevel + 1 - selected.matrix[, 
+                i]
         }
         reverse <- FALSE
         sign1 <- rep(1, ncol(selected.matrix))
@@ -3403,8 +3445,8 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
         for (i in which.neg) {
             dataFrame[, selected][, i] <- maxlevel + 1 - dataFrame[, 
                 selected][, i]
-            selected.matrix[, i] <- maxlevel + 1 - selected.matrix[, i]
-     
+            selected.matrix[, i] <- maxlevel + 1 - selected.matrix[, 
+                i]
         }
     }
     table1 <- NULL
@@ -3519,15 +3561,47 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
     }
     if (total) {
         if (is.integer(selected.dataFrame[, 1])) {
-            results <- c(results, list(total.score=rowSums(selected.matrix)),
-            list(mean.score = rowMeans(selected.matrix)),
-            list(mean.of.total.scores = mean.of.total.scores, 
-                sd.of.total.scores = sd.of.total.scores, 
-                mean.of.average.scores = mean.of.average.scores, 
-                sd.of.average.scores = sd.of.average.scores))
+            results <- c(results, list(total.score = rowSums(selected.matrix)), 
+                list(mean.score = rowMeans(selected.matrix)), 
+                list(mean.of.total.scores = mean.of.total.scores, 
+                  sd.of.total.scores = sd.of.total.scores, mean.of.average.scores = mean.of.average.scores, 
+                  sd.of.average.scores = sd.of.average.scores))
         }
     }
     results <- results
+}else{
+by1 <- factor(by)
+table2 <- NULL
+for(i in 1:length(selected)){
+if(chisqTest){
+label.row <- 
+  c(rep("", length(levels(by1))), 
+  ifelse(suppressWarnings(chisq.test(table(dataFrame[,selected[i]], by1))$p.value) < 0.001,
+  "< 0.001", 
+  suppressWarnings(format(chisq.test(table(dataFrame[,selected[i]], by1))$p.value, digits=decimal))))
+label.row <- t(label.row)
+rownames(label.row) <- ifelse(!is.null(attributes(dataFrame)$var.labels[selected][i]),
+            attributes(dataFrame)$var.labels[selected[i]], 
+            names(dataFrame)[selected][i])
+colnames(label.row)<- c(levels(by1),"P value(X2 test)")
+table2 <- rbind(table2,
+  label.row, 
+  cbind(table(dataFrame[,selected[i]], by1),
+              rep("", length(levels(factor(dataFrame[,selected[i]]))))), 
+  rep("", length(levels(by1))+1))
+}else{
+label.row <- rep("", length(levels(by1)))
+label.row <- t(label.row)
+rownames(label.row) <- ifelse(!is.null(attributes(dataFrame)$var.labels[selected][i]),
+            attributes(dataFrame)$var.labels[selected[i]], 
+            names(dataFrame)[selected][i])
+table2 <- rbind(table2,
+  label.row, 
+  table(dataFrame[,selected[i]], by1),
+  rep("", length(levels(by1))))
+}}
+print.noquote(table2, right=TRUE)
+results <- table2}
 }
 # Unclass data frame
 unclassDataframe <- function(vars){
