@@ -33,6 +33,9 @@ cat("\n",attr(dataFrame, "datalabel"),"\n","\n")
 x1 <- dataFrame[1,]
 for(i in 1:ncol(dataFrame)) {
   cat(paste(names(dataFrame)[i],"\t", ":", "\t", attr(dataFrame,"var.labels")[i]),"\n")
+  if(all(is.na(dataFrame[,i]))){ 
+  cat(paste("All elements of ", names(dataFrame)[i], " have a missing value", "\n"))
+  }else{
   if(any(class(x1[,i])=="character") | any(class(x1[,i])=="AsIs") ){
     cat("A character vector","\n")
   }else{
@@ -50,6 +53,7 @@ for(i in 1:ncol(dataFrame)) {
     }
     }else{
     summ(dataFrame[,i], graph=FALSE)
+    }
     }
     }
   cat("\n","==================","\n")
@@ -3378,24 +3382,51 @@ if(var.labels && !is.null(attributes(dataFrame)$var.labels)){
 
 ## Table stack
 tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, 
-    means = TRUE, medians = FALSE, sds = TRUE, decimal = 3, dataFrame = .data, 
+    means = TRUE, medians = FALSE, sds = TRUE, decimal = 1, dataFrame = .data, 
     total = TRUE, vars.to.reverse = NULL, var.labels = TRUE, 
-    reverse = FALSE, by = NULL, chisqTest=TRUE) 
+    reverse = FALSE, by = NULL, vars.to.factor = NULL, iqr = "auto", 
+    prevalence = TRUE, percent = c("column", "row", "none"), 
+    test = TRUE, name.test = TRUE) 
 {
     nl <- as.list(1:ncol(dataFrame))
     names(nl) <- names(dataFrame)
     selected <- eval(substitute(vars), nl, parent.frame())
-    selected.class <- NULL
-    for (i in selected) {
-        selected.class <- c(selected.class, class(dataFrame[, 
-            i]))
-    }
-    if (length(table(selected.class)) > 1) {
-        stop("All vars should be in the same class")
-    }
-    if (class(dataFrame[, selected][, 1]) == "logical") {
+    if (is.null(by)) {
+        selected.class <- NULL
         for (i in selected) {
-            dataFrame[, i] <- factor(dataFrame[, i])
+            selected.class <- c(selected.class, class(dataFrame[, 
+                i]))
+        }
+        if (length(table(table(selected.class))) > 1) 
+            warning("Without 'by', classes of all selected variables should be the same.")
+    }
+    selected.to.factor <- eval(substitute(vars.to.factor), 
+        nl, parent.frame())
+if(!is.character(iqr)){
+    selected.iqr <- eval(substitute(iqr), nl, parent.frame())
+    intersect.selected <- intersect(selected.iqr, selected.to.factor)
+    if (length(intersect.selected) != 0) {
+        stop(paste(names(dataFrame)[intersect.selected], "must cannot simultaneously describe IQR and be coerced factor"))
+    }
+    for (i in selected.iqr) {
+        if (!is.integer(dataFrame[, i]) & !is.numeric(dataFrame[, 
+            i])) {
+            stop(paste(names(dataFrame)[i], "is neither integer nor numeric, not possible to compute IQR"))
+        }
+    }
+}
+    for (i in selected) {
+        if (is.logical(dataFrame[, i])) {
+            dataFrame[, i] <- as.factor(dataFrame[, i])
+            levels(dataFrame[, i]) <- c("No", "Yes")
+        }
+        if (class(dataFrame[, i]) == "integer" & !is.null(by)) {
+            if (any(selected.to.factor == i)) {
+                dataFrame[, i] <- factor(dataFrame[, i])
+            }
+            else {
+                dataFrame[, i] <- as.numeric(dataFrame[, i])
+            }
         }
     }
     if ((reverse || suppressWarnings(!is.null(vars.to.reverse))) && 
@@ -3403,205 +3434,362 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
         stop("Variables must be in 'integer' class before reversing. \n        Try 'unclassDataframe' first'")
     }
     selected.dataFrame <- dataFrame[, selected]
-if(is.null(by)){
-    selected.matrix <- NULL
-    for (i in selected) {
-        selected.matrix <- cbind(selected.matrix, unclass(dataFrame[, 
-            i]))
-    }
-    colnames(selected.matrix) <- names(selected.dataFrame)
-    if (minlevel == "auto") {
-        minlevel <- min(selected.matrix, na.rm = TRUE)
-    }
-    if (maxlevel == "auto") {
-        maxlevel <- max(selected.matrix, na.rm = TRUE)
-    }
-    nlevel <- as.list(minlevel:maxlevel)
-    names(nlevel) <- eval(substitute(minlevel:maxlevel), nlevel, 
-        parent.frame())
-    if (suppressWarnings(!is.null(vars.to.reverse))) {
-        nl1 <- as.list(1:ncol(dataFrame))
-        names(nl1) <- names(dataFrame[, selected])
-        which.neg <- eval(substitute(vars.to.reverse), nl1, parent.frame())
-        for (i in which.neg) {
-            dataFrame[, selected][, i] <- maxlevel + 1 - dataFrame[, 
-                selected][, i]
-            selected.matrix[, i] <- maxlevel + 1 - selected.matrix[, 
-                i]
-        }
-        reverse <- FALSE
-        sign1 <- rep(1, ncol(selected.matrix))
-        sign1[which.neg] <- -1
-    }
-    if (reverse) {
-        score <- factanal(na.omit(selected.matrix), factor = 1, 
-            score = "regression")$score
-        sign1 <- NULL
-        for (i in 1:length(selected)) {
-            sign1 <- c(sign1, sign(cor(score, na.omit(selected.matrix)[, 
-                i], use = "pairwise")))
-        }
-        which.neg <- which(sign1 < 0)
-        for (i in which.neg) {
-            dataFrame[, selected][, i] <- maxlevel + 1 - dataFrame[, 
-                selected][, i]
-            selected.matrix[, i] <- maxlevel + 1 - selected.matrix[, 
-                i]
-        }
-    }
-    table1 <- NULL
-    for (i in as.integer(selected)) {
-        if (!is.factor(dataFrame[, i])) {
-            x <- factor(dataFrame[, i])
-            levels(x) <- nlevel
-            tablei <- table(x)
-        }
-        else {
-            tablei <- table(dataFrame[, i])
-        }
-        if (count) {
-            tablei <- c(tablei, length(na.omit(dataFrame[, i])))
-            names(tablei)[length(tablei)] <- "count"
-        }
-        if (is.integer(selected.dataFrame[, 1])) {
-            if (total) {
-                means <- TRUE
-            }
-            if (means) {
-                tablei <- c(tablei, format(mean(as.numeric(dataFrame[, 
-                  i]), na.rm = TRUE), digits = decimal))
-                names(tablei)[length(tablei)] <- "mean"
-            }
-            if (medians) {
-                tablei <- c(tablei, format(median(as.numeric(dataFrame[, 
-                  i]), na.rm = TRUE), digits = decimal))
-                names(tablei)[length(tablei)] <- "median"
-            }
-            if (sds) {
-                tablei <- c(tablei, format(sd(as.numeric(dataFrame[, 
-                  i]), na.rm = TRUE), digits = decimal))
-                names(tablei)[length(tablei)] <- "sd"
-            }
-        }
-        table1 <- rbind(table1, tablei)
-    }
-    results <- as.table(table1)
-    rownames(results) <- names(selected.dataFrame)
-    if (is.integer(selected.dataFrame[, 1])) {
-        rownames(results) <- names(nl)[selected]
-        if (is.factor(dataFrame[, selected][, 1])) {
-            colnames(results)[1:(ncol(results) - (count + means + 
-                medians + sds))] <- levels(dataFrame[, selected][, 
-                1])
-        }
-        else {
-            colnames(results)[1:(ncol(results) - (count + means + 
-                medians + sds))] <- names(nlevel)
-        }
-    }
-    result0 <- results
-    if (var.labels) {
-        if (!is.null(attributes(dataFrame)$var.labels)) {
-            results <- as.table(cbind(results, attributes(dataFrame)$var.labels[selected]))
-        }
-        if (!is.null(attributes(dataFrame)$var.labels)) 
-            colnames(results)[ncol(results)] <- "description"
-    }
-    if (is.integer(selected.dataFrame[, 1])) {
-        if (reverse || (!is.null(vars.to.reverse))) {
-            Reversed <- ifelse(sign1 < 0, "    x   ", "    .   ")
-            results <- cbind(Reversed, results)
-        }
-        sumMeans <- 0
-        sumN <- 0
+    if (is.null(by)) {
+        selected.matrix <- NULL
         for (i in selected) {
-            sumMeans <- sumMeans + mean(as.numeric(dataFrame[, 
-                i]), na.rm = TRUE) * length(na.omit(dataFrame[, 
+            selected.matrix <- cbind(selected.matrix, unclass(dataFrame[, 
                 i]))
-            sumN <- sumN + length(na.omit(dataFrame[, i]))
         }
-        mean.of.total.scores <- weighted.mean(rowSums(selected.matrix), 
-            w = rowSums(!is.na(selected.matrix)), na.rm = TRUE)
-        sd.of.total.scores <- sd(rowSums(selected.matrix), na.rm = TRUE)
-        mean.of.average.scores <- weighted.mean(rowMeans(selected.matrix), 
-            w = rowSums(!is.na(selected.matrix)), na.rm = TRUE)
-        sd.of.average.scores <- sd(rowMeans(selected.matrix), 
-            na.rm = TRUE)
-        countCol <- which(colnames(results) == "count")
-        meanCol <- which(colnames(results) == "mean")
-        sdCol <- which(colnames(results) == "sd")
-        if (total) {
-            results <- rbind(results, rep("", reverse || suppressWarnings(!is.null(vars.to.reverse)) + 
-                (maxlevel + 1 - minlevel) + (count + means + 
-                medians + sds + var.labels)))
-            results[nrow(results), countCol] <- length((rowSums(selected.dataFrame))[!is.na(rowSums(selected.dataFrame))])
-            results[nrow(results), meanCol] <- format(mean.of.total.scores, 
-                digits = decimal)
-            results[nrow(results), sdCol] <- format(sd.of.total.scores, 
-                digits = decimal)
-            rownames(results)[nrow(results)] <- " Total score"
-            results <- rbind(results, rep("", reverse || suppressWarnings(!is.null(vars.to.reverse)) + 
-                (maxlevel + 1 - minlevel) + (count + means + 
-                medians + sds + var.labels)))
-            results[nrow(results), countCol] <- length(rowSums(selected.dataFrame)[!is.na(rowSums(selected.dataFrame))])
-            results[nrow(results), meanCol] <- format(mean.of.average.scores, 
-                digits = decimal)
-            results[nrow(results), sdCol] <- format(sd.of.average.scores, 
-                digits = decimal)
-            rownames(results)[nrow(results)] <- " Average score"
+        colnames(selected.matrix) <- names(selected.dataFrame)
+        if (minlevel == "auto") {
+            minlevel <- min(selected.matrix, na.rm = TRUE)
         }
-    }
-    print.noquote(results)
-    results <- list(table = result0)
-    if (reverse || suppressWarnings(!is.null(vars.to.reverse))) 
-        results <- c(results, list(items.reversed = names(selected.dataFrame)[sign1 < 
-            0]))
-    if (var.labels && !is.null(attributes(dataFrame)$var.labels)) {
-        results <- c(results, list(item.labels = attributes(dataFrame)$var.labels[selected]))
-    }
-    if (total) {
+        if (maxlevel == "auto") {
+            maxlevel <- max(selected.matrix, na.rm = TRUE)
+        }
+        nlevel <- as.list(minlevel:maxlevel)
+        names(nlevel) <- eval(substitute(minlevel:maxlevel), 
+            nlevel, parent.frame())
+        if (suppressWarnings(!is.null(vars.to.reverse))) {
+            nl1 <- as.list(1:ncol(dataFrame))
+            names(nl1) <- names(dataFrame[, selected])
+            which.neg <- eval(substitute(vars.to.reverse), nl1, 
+                parent.frame())
+            for (i in which.neg) {
+                dataFrame[, selected][, i] <- maxlevel + 1 - 
+                  dataFrame[, selected][, i]
+                selected.matrix[, i] <- maxlevel + 1 - selected.matrix[, 
+                  i]
+            }
+            reverse <- FALSE
+            sign1 <- rep(1, ncol(selected.matrix))
+            sign1[which.neg] <- -1
+        }
+        if (reverse) {
+            score <- factanal(na.omit(selected.matrix), factor = 1, 
+                score = "regression")$score
+            sign1 <- NULL
+            for (i in 1:length(selected)) {
+                sign1 <- c(sign1, sign(cor(score, na.omit(selected.matrix)[, 
+                  i], use = "pairwise")))
+            }
+            which.neg <- which(sign1 < 0)
+            for (i in which.neg) {
+                dataFrame[, selected][, i] <- maxlevel + 1 - 
+                  dataFrame[, selected][, i]
+                selected.matrix[, i] <- maxlevel + 1 - selected.matrix[, 
+                  i]
+            }
+        }
+        table1 <- NULL
+        for (i in as.integer(selected)) {
+            if (!is.factor(dataFrame[, i])) {
+                x <- factor(dataFrame[, i])
+                levels(x) <- nlevel
+                tablei <- table(x)
+            }
+            else {
+                tablei <- table(dataFrame[, i])
+            }
+            if (count) {
+                tablei <- c(tablei, length(na.omit(dataFrame[, 
+                  i])))
+                names(tablei)[length(tablei)] <- "count"
+            }
+            if (is.integer(selected.dataFrame[, 1])) {
+                if (total) {
+                  means <- TRUE
+                }
+                if (means) {
+                  tablei <- c(tablei, round(mean(as.numeric(dataFrame[, 
+                    i]), na.rm = TRUE), digits = decimal))
+                  names(tablei)[length(tablei)] <- "mean"
+                }
+                if (medians) {
+                  tablei <- c(tablei, round(median(as.numeric(dataFrame[, 
+                    i]), na.rm = TRUE), digits = decimal))
+                  names(tablei)[length(tablei)] <- "median"
+                }
+                if (sds) {
+                  tablei <- c(tablei, round(sd(as.numeric(dataFrame[, 
+                    i]), na.rm = TRUE), digits = decimal))
+                  names(tablei)[length(tablei)] <- "sd"
+                }
+            }
+            table1 <- rbind(table1, tablei)
+        }
+        results <- as.table(table1)
+        rownames(results) <- names(selected.dataFrame)
         if (is.integer(selected.dataFrame[, 1])) {
-            results <- c(results, list(total.score = rowSums(selected.matrix)), 
-                list(mean.score = rowMeans(selected.matrix)), 
-                list(mean.of.total.scores = mean.of.total.scores, 
-                  sd.of.total.scores = sd.of.total.scores, mean.of.average.scores = mean.of.average.scores, 
-                  sd.of.average.scores = sd.of.average.scores))
+            rownames(results) <- names(nl)[selected]
+            if (is.factor(dataFrame[, selected][, 1])) {
+                colnames(results)[1:(ncol(results) - (count + 
+                  means + medians + sds))] <- levels(dataFrame[, 
+                  selected][, 1])
+            }
+            else {
+                colnames(results)[1:(ncol(results) - (count + 
+                  means + medians + sds))] <- names(nlevel)
+            }
         }
+        result0 <- results
+        if (var.labels) {
+            if (!is.null(attributes(dataFrame)$var.labels)) {
+                results <- as.table(cbind(results, attributes(dataFrame)$var.labels[selected]))
+            }
+            if (!is.null(attributes(dataFrame)$var.labels)) 
+                colnames(results)[ncol(results)] <- "description"
+        }
+        if (is.integer(selected.dataFrame[, 1])) {
+            if (reverse || (!is.null(vars.to.reverse))) {
+                Reversed <- ifelse(sign1 < 0, "    x   ", "    .   ")
+                results <- cbind(Reversed, results)
+            }
+            sumMeans <- 0
+            sumN <- 0
+            for (i in selected) {
+                sumMeans <- sumMeans + mean(as.numeric(dataFrame[, 
+                  i]), na.rm = TRUE) * length(na.omit(dataFrame[, 
+                  i]))
+                sumN <- sumN + length(na.omit(dataFrame[, i]))
+            }
+            mean.of.total.scores <- weighted.mean(rowSums(selected.matrix), 
+                w = rowSums(!is.na(selected.matrix)), na.rm = TRUE)
+            sd.of.total.scores <- sd(rowSums(selected.matrix), 
+                na.rm = TRUE)
+            mean.of.average.scores <- weighted.mean(rowMeans(selected.matrix), 
+                w = rowSums(!is.na(selected.matrix)), na.rm = TRUE)
+            sd.of.average.scores <- sd(rowMeans(selected.matrix), 
+                na.rm = TRUE)
+            countCol <- which(colnames(results) == "count")
+            meanCol <- which(colnames(results) == "mean")
+            sdCol <- which(colnames(results) == "sd")
+            if (total) {
+                results <- rbind(results, rep("", reverse || 
+                  suppressWarnings(!is.null(vars.to.reverse)) + 
+                    (maxlevel + 1 - minlevel) + (count + means + 
+                    medians + sds + var.labels)))
+                results[nrow(results), countCol] <- length((rowSums(selected.dataFrame))[!is.na(rowSums(selected.dataFrame))])
+                results[nrow(results), meanCol] <- round(mean.of.total.scores, 
+                  digits = decimal)
+                results[nrow(results), sdCol] <- round(sd.of.total.scores, 
+                  digits = decimal)
+                rownames(results)[nrow(results)] <- " Total score"
+                results <- rbind(results, rep("", reverse || 
+                  suppressWarnings(!is.null(vars.to.reverse)) + 
+                    (maxlevel + 1 - minlevel) + (count + means + 
+                    medians + sds + var.labels)))
+                results[nrow(results), countCol] <- length(rowSums(selected.dataFrame)[!is.na(rowSums(selected.dataFrame))])
+                results[nrow(results), meanCol] <- round(mean.of.average.scores, 
+                  digits = decimal)
+                results[nrow(results), sdCol] <- round(sd.of.average.scores, 
+                  digits = decimal)
+                rownames(results)[nrow(results)] <- " Average score"
+            }
+        }
+        print.noquote(results)
+        results <- list(table = result0)
+        if (reverse || suppressWarnings(!is.null(vars.to.reverse))) 
+            results <- c(results, list(items.reversed = names(selected.dataFrame)[sign1 < 
+                0]))
+        if (var.labels && !is.null(attributes(dataFrame)$var.labels)) {
+            results <- c(results, list(item.labels = attributes(dataFrame)$var.labels[selected]))
+        }
+        if (total) {
+            if (is.integer(selected.dataFrame[, 1])) {
+                results <- c(results, list(total.score = rowSums(selected.matrix)), 
+                  list(mean.score = rowMeans(selected.matrix)), 
+                  list(mean.of.total.scores = mean.of.total.scores, 
+                    sd.of.total.scores = sd.of.total.scores, 
+                    mean.of.average.scores = mean.of.average.scores, 
+                    sd.of.average.scores = sd.of.average.scores))
+            }
+        }
+        results <- results
     }
-    results <- results
-}else{
-by1 <- factor(by)
-table2 <- NULL
-for(i in 1:length(selected)){
-if(chisqTest){
-label.row <- 
-  c(rep("", length(levels(by1))), 
-  ifelse(suppressWarnings(chisq.test(table(dataFrame[,selected[i]], by1))$p.value) < 0.001,
-  "< 0.001", 
-  suppressWarnings(format(chisq.test(table(dataFrame[,selected[i]], by1))$p.value, digits=decimal))))
-label.row <- t(label.row)
-rownames(label.row) <- ifelse(!is.null(attributes(dataFrame)$var.labels[selected][i]),
-            attributes(dataFrame)$var.labels[selected[i]], 
-            names(dataFrame)[selected][i])
-colnames(label.row)<- c(levels(by1),"P value(X2 test)")
-table2 <- rbind(table2,
-  label.row, 
-  cbind(table(dataFrame[,selected[i]], by1),
-              rep("", length(levels(factor(dataFrame[,selected[i]]))))), 
-  rep("", length(levels(by1))+1))
-}else{
-label.row <- rep("", length(levels(by1)))
-label.row <- t(label.row)
-rownames(label.row) <- ifelse(!is.null(attributes(dataFrame)$var.labels[selected][i]),
-            attributes(dataFrame)$var.labels[selected[i]], 
-            names(dataFrame)[selected][i])
-table2 <- rbind(table2,
-  label.row, 
-  table(dataFrame[,selected[i]], by1),
-  rep("", length(levels(by1))))
-}}
-print.noquote(table2, right=TRUE)
-results <- table2}
+    else {
+        by1 <- factor(by)
+        name.test <- ifelse(test, name.test, FALSE)
+        if(is.character(iqr)){
+        if(iqr=="auto"){
+        selected.iqr <- NULL
+        for(i in 1:length(selected)){
+        if(is.integer(dataFrame[,selected[i]]) | is.numeric(dataFrame[,selected[i]])){
+        if( shapiro.test(lm(dataFrame[,selected[i]] ~ by1)$residuals)$p.value < .01
+            | bartlett.test(dataFrame[,selected[i]] ~ by1)$p.value < .01){
+        selected.iqr <- c(selected.iqr, selected[i])}
+        }}
+        }else{selected.iqr <- NULL}
+        }
+        table2 <- NULL
+        for (i in 1:length(selected)) {
+            if (is.factor(dataFrame[, selected[i]])) {
+                x <- table(dataFrame[, selected[i]], by1)
+                nr <- nrow(x)
+                nc <- ncol(x)
+                sr <- rowSums(x)
+                if (any(sr) == 0) {
+                  stop(paste(names(dataFrame)[selected[i]], " has zero count in at least one row"))
+                }
+                sc <- colSums(x)
+                if (any(sc) == 0) {
+                  stop(paste(names(dataFrame)[selected[i]], " has zero count in at least one column"))
+                 }
+
+                x.row.percent <- round(x/rowSums(x) * 100, 2)
+                table0 <- x
+                if (nrow(x) == 2 & prevalence) {
+                  table00 <- addmargins(x, margin = 1)
+                  table0 <- paste(table00[2, ], "/", table00[3, 
+                    ], "(", round(table00[2, ]/table00[3, ] * 
+                    100, decimal), "%)", sep = "")
+                  table0 <- t(table0)
+                  rownames(table0) <- "  prevalence"
+                }
+                else {
+                  if (any(percent == "column")) {
+                    x.col.percent <- round(x/colSums(x) * 100, 
+                      decimal)
+                    x.col.percent1 <- matrix(paste(x, "(", x.col.percent, 
+                      ")", sep = ""), nrow(x), ncol(x))
+                    table0 <- x.col.percent1
+                  }
+                  else {
+                    if (any(percent == "row")) {
+                      x.row.percent <- round(x/rowSums(x) * 100, 
+                        decimal)
+                      x.row.percent1 <- matrix(paste(x, "(", 
+                        x.row.percent, ")", sep = ""), nrow(x), 
+                        ncol(x))
+                      table0 <- x.row.percent1
+                    }
+                  }
+                  rownames(table0) <- paste("  ", rownames(x))
+                  colnames(table0) <- colnames(x)
+                }
+                if (test) {
+                  E <- outer(sr, sc, "*")/sum(x)
+                  dim(E) <- NULL
+                  if ((sum(E < 5))/length(E) > 0.2) {
+                    test.method <- "Fisher's exact test"
+                    p.value <- fisher.test(x)$p.value
+                  }
+                  else {
+                    test.method <- paste("Chisq. (", suppressWarnings(chisq.test(x)$parameter), 
+                      " df) = ", suppressWarnings(round(chisq.test(x)$statistic, 
+                        decimal + 1)), sep = "")
+                    p.value <- suppressWarnings(chisq.test(x)$p.value)
+                  }
+                }
+            }
+            if (is.numeric(dataFrame[, selected[i]])) {
+                if (any(selected.iqr == selected[i])) {
+                  term1 <- NULL
+                  term2 <- NULL
+                  term3 <- NULL
+                  for (j in 1:length(levels(by1))) {
+                    term1 <- c(term1, quantile(dataFrame[by1 == 
+                      levels(by1)[j], selected[i]], na.rm = TRUE)[3])
+                    term2 <- c(term2, quantile(dataFrame[by1 == 
+                      levels(by1)[j], selected[i]], na.rm = TRUE)[2])
+                    term3 <- c(term3, quantile(dataFrame[by1 == 
+                      levels(by1)[j], selected[i]], na.rm = TRUE)[4])
+                    term.numeric <- paste(round(term1, decimal), 
+                      "(", round(term2, decimal), ",", round(term3, 
+                        decimal), ")", sep = "")
+                    term.numeric <- t(term.numeric)
+                  }
+                  rownames(term.numeric) <- "  median(IQR)"
+                }
+                else {
+                  term1 <- as.vector(tapply(X = dataFrame[, selected[i]], 
+                    INDEX = list(by1), FUN = "mean", na.rm = TRUE))
+                  term2 <- as.vector(tapply(X = dataFrame[, selected[i]], 
+                    INDEX = list(by1), FUN = "sd", na.rm = TRUE))
+                  term.numeric <- paste(round(term1, decimal), 
+                    "(", round(term2, decimal), ")", sep = "")
+                  term.numeric <- t(term.numeric)
+                  rownames(term.numeric) <- "  mean(SD)"
+                }
+                table0 <- term.numeric
+                if (test) {
+                  if (any(selected.iqr == selected[i])) {
+                    if (length(levels(by1)) > 2) {
+                      test.method <- "Kruskal-Wallis test"
+                      p.value <- kruskal.test(dataFrame[, selected[i]] ~ 
+                        by1)$p.value
+                    }
+                    else {
+                      test.method <- "Ranksum test"
+                      p.value <- wilcox.test(dataFrame[, selected[i]] ~ 
+                        by1, exact = FALSE)$p.value
+                    }
+                  }
+                  else {
+                    if (length(levels(by1)) > 2) {
+                      test.method <- paste("ANOVA F-test (", 
+                        anova(lm(dataFrame[, selected[i]] ~ by1))[1, 
+                          1], ", ", anova(lm(dataFrame[, selected[i]] ~ 
+                          by1))[2, 1], " df) = ", round(anova(lm(dataFrame[, 
+                          selected[i]] ~ by1))[1, 4], decimal + 
+                          1), sep = "")
+                      p.value <- anova(lm(dataFrame[, selected[i]] ~ 
+                        by1))[1, 5]
+                    }
+                    else {
+                      test.method <- paste("t-test", paste("(", 
+                        t.test(dataFrame[, selected[i]] ~ by1, 
+                          var.equal = TRUE)$parameter, " df)", 
+                        sep = ""), "=", round(abs(t.test(dataFrame[, 
+                        selected[i]] ~ by1, var.equal = TRUE)$statistic), 
+                        decimal + 1))
+                      p.value <- t.test(dataFrame[, selected[i]] ~ 
+                        by1, var.equal = TRUE)$p.value
+                    }
+                  }
+                }
+            }
+            if (test) {
+                if (name.test) {
+                  label.row <- c(rep("", length(levels(by1))), 
+                    test.method, ifelse(p.value < 0.001, "< 0.001", 
+                      round(p.value, decimal + 2)))
+                  label.row <- t(label.row)
+                  colnames(label.row) <- c(levels(by1), "Test stat.", 
+                    "  P value")
+                  table0 <- cbind(table0, "", "")
+                  blank.row <- rep("", length(levels(by1)) + 
+                    2)
+                }
+                else {
+                  label.row <- c(rep("", length(levels(by1))), 
+                    ifelse(p.value < 0.001, "< 0.001", round(p.value, 
+                      decimal + 2)))
+                  label.row <- t(label.row)
+                  colnames(label.row) <- c(levels(by1), "  P value")
+                  table0 <- cbind(table0, "")
+                  blank.row <- rep("", length(levels(by1)) + 
+                    1)
+                }
+            }
+            else {
+                label.row <- c(rep("", length(levels(by1))))
+                label.row <- t(label.row)
+                colnames(label.row) <- c(levels(by1))
+                blank.row <- rep("", length(levels(by1)))
+            }
+            rownames(label.row) <- ifelse(!is.null(attributes(dataFrame)$var.labels[selected][i]), 
+                attributes(dataFrame)$var.labels[selected[i]], 
+                names(dataFrame)[selected][i])
+            rownames(label.row) <- ifelse(rownames(label.row) == 
+                "", names(dataFrame[selected[i]]), rownames(label.row))
+            blank.row <- t(blank.row)
+            rownames(blank.row) <- ""
+            table2 <- rbind(table2, label.row, table0, blank.row)
+        }
+        print.noquote(table2, right = TRUE)
+        results <- table2
+    }
 }
 # Unclass data frame
 unclassDataframe <- function(vars){
