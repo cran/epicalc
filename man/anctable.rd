@@ -20,12 +20,11 @@ data(ANCtable)
 }
 \examples{
 data(ANCtable)
-use(ANCtable)
-des()
-glm1 <- glm(death==1 ~ factor(anc) ,weights=Freq, family=binomial)
+des(ANCtable)
+glm1 <- glm(death==1 ~ factor(anc) ,weights=Freq, family=binomial, data=ANCtable)
 logistic.display(glm1)
 glm2 <- glm(death==1 ~ factor(anc) + factor(clinic) ,weights=Freq, 
-	family=binomial)
+	family=binomial, data=ANCtable)
 logistic.display(glm2)
 lrtest(glm1, glm2)
 }

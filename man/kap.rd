@@ -21,7 +21,7 @@ kap(x, ...)
 \method{kap}{ByCategory}(x, category.counts, ...)
 }
 \arguments{
-	\item{x}{an object surving the first argument for different methods
+	\item{x}{an object serving the first argument for different methods
 		\tabular{lll}{
         	\tab FUNCTION \tab 'x'\cr
         	\tab 'kap.table' \tab table\cr

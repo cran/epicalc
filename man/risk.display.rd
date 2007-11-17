@@ -6,7 +6,8 @@
 \title{Tables for multivariate odds ratio, incidence density etc}
 \description{Display of various epidemiological modelling results in a medically understandable format}
 \usage{
-logistic.display(logistic.model, alpha = 0.05, decimal = 3) 
+logistic.display(logistic.model, alpha = 0.05, crude = TRUE, crude.p.value = FALSE, 
+    decimal = 2) 
 idr.display(count.model, decimal = 3, alpha = 0.05) 
 mlogit.display(multinom.model, decimal = 2, alpha = 0.05) 
 ordinal.or.display(ordinal.model, decimal = 3, alpha = 0.05)  
@@ -16,6 +17,8 @@ ordinal.or.display(ordinal.model, decimal = 3, alpha = 0.05)
 \arguments{
 	\item{logistic.model}{a model from a logistic regression}
 	\item{alpha}{significance level}
+	\item{crude}{whether crude odds ratios should also be displayed}
+	\item{crude.p.value}{whether crude P value should also be displayed}
 	\item{decimal}{number of decimal places displayed}
 	\item{count.model}{a model from a Poisson or negative binomial regression}
 	\item{multinom.model}{a model from multinomial or polytomous regression}
@@ -30,7 +33,14 @@ model0 <- glm(case ~ induced + spontaneous, family=binomial, data=infert)
 summary(model0)
 logistic.display(model0)
 
+data(ANCdata)
+glm1 <- glm(death ~ anc + clinic, family=binomial, data=ANCdata)
+logistic.display(glm1)
+ 
 library(MASS)
+model1 <- glm(Origin ~ Weight + AirBags + DriveTrain, family=binomial, data=Cars93)
+logistic.display(model1, decimal=3, crude.p.value=TRUE)
+
 library(nnet)
 
 # Ordinal logistic regression

@@ -1016,166 +1016,251 @@ if (graph==TRUE){
 }
 #### Logistic regression display
 
-logistic.display <- function(logistic.model, alpha=.05, decimal=3) {
-model <- logistic.model
-if(class(model)[1]!="glm" | class(model)[2]!="lm" | model$family$family != "binomial"){
-	stop("model not from logistic regression")
-}
-s1 <- summary(model)
-orci <- as.data.frame(s1$coefficients)
-colnames(orci) <- c("OR", paste("lower",100-100*alpha,"ci",sep=""), paste("upper",100-100*alpha,"ci",sep=""),"P value")
-orci[,3] <- exp(orci[,1]+qnorm(1-alpha/2)*orci[,2])
-orci[,2] <- exp(orci[,1]-qnorm(1-alpha/2)*orci[,2])
-orci[,1] <- exp(orci[,1])
-cat("\n")                                           
-a <- orci[rownames(orci) !="(Intercept)",];         
-print(round(a, decimal))                                 
-cat("\n") 
-cat(c("Log-likelihood = ", round(logLik(model),decimal+2)), "\n")
-cat("No. of observations = ", length(model$y), "\n")                            
-cat("AIC value =", s1$aic, "\n" )       
-cat("\n")                                           
-#return(model)                                       
-}
+logistic.display <- function (logistic.model, alpha = 0.05, crude=TRUE, crude.p.value=FALSE, decimal = 2) 
+{
+    model <- logistic.model
+    if (class(model)[1] != "glm" | class(model)[2] != "lm" | 
+        model$family$family != "binomial") {
+        stop("model not from logistic regression")
+    }
+    var.names <- attr(model$terms, "term.labels")
+    orci0 <- NULL
+    for(i in 1:length(var.names)){
+        formula0 <- as.formula(paste(names(model$model)[1], "~", var.names[i]))
+        if(class(model$data)=="data.frame"){
+        model0 <- glm(formula0, weights=model$prior.weights, family=binomial, data=model$data)
+        }else{
+        model0 <- glm(formula0, weights=model$prior.weights, family=binomial)
+        }
+    orci0 <- rbind(orci0, (summary(model0))$coefficients[-1,])   
+    }
+    orci0 <- rbind(matrix(rep(0,4),1,4), orci0)
+    colnames(orci0) <- c("crudeOR", paste("lower0", 100 - 100 * alpha, 
+        "ci", sep = ""), paste("upper0", 100 - 100 * alpha, "ci", 
+        sep = ""), "crude P value")
+    orci0[, 3] <- exp(orci0[, 1] + qnorm(1 - alpha/2) * orci0[, 
+        2])
+    orci0[, 2] <- exp(orci0[, 1] - qnorm(1 - alpha/2) * orci0[, 
+        2])                                               
+    orci0[, 1] <- exp(orci0[, 1])
+    s1 <- summary(model)
+    orci <- s1$coefficients
+    colnames(orci) <- c("OR", paste("lower", 100 - 100 * alpha, 
+        "ci", sep = ""), paste("upper", 100 - 100 * alpha, "ci", 
+        sep = ""), "Wald's test P value")
+    orci[, 3] <- exp(orci[, 1] + qnorm(1 - alpha/2) * orci[, 
+        2])
+    orci[, 2] <- exp(orci[, 1] - qnorm(1 - alpha/2) * orci[, 
+        2])                                               
+    orci[, 1] <- exp(orci[, 1])
+    cat("\n")
+    decimal1 <- ifelse(abs(orci[,1]-1) < .01,  4, decimal)
+    decimal0 <- ifelse(abs(orci0[,1]-1) < .01,  4, decimal)
+    a <- cbind(paste(round(orci[,1], decimal1),"(",round(orci[,2], decimal1),",",
+          round(orci[,3], decimal1),")", sep=""), ifelse(orci[,4] < .001, "< 0.001",round(orci[,4],decimal+1)))
+    colnames(a) <- c("adj. OR(95%CI)","Wald's test P value")
+    rownames.a <- rownames(a) 
+    if(crude){
+    if(crude.p.value){
+    a0 <- cbind(paste(round(orci0[,1], decimal0),"(",round(orci0[,2], decimal0),",",
+          round(orci0[,3], decimal0),")", sep=""), ifelse(orci0[,4] < .001, "< 0.001",round(orci0[,4],decimal+1)))
+    a <- cbind(a0,a)
+    rownames(a) <- rownames.a
+    colnames(a) <- c("crude. OR(95%CI)","crude P value", "adj. OR(95%CI)","Wald's test P value")
+    }else{
+    a <- cbind(cbind(paste(round(orci0[,1], decimal1),"(",round(orci0[,2], decimal1),",",
+          round(orci0[,3], decimal1),")", sep=""), a))
+    colnames(a) <- c("crude. OR(95%CI)", "adj. OR(95%CI)","Wald's test P value")
+    }
+    }
+    table1 <- NULL
+    coeff.names <- names(model$coefficients)
+            label.row0 <- rep("", ncol(a))
+            label.row0 <- t(label.row0)
+            blank.row <- rep("", ncol(a))
+            blank.row <- t(blank.row)
+            rownames(blank.row) <- ""
+    for(i in 1:length(var.names)){ # i is the variable order  in model
+        if(length(var.names)==1){
+        formula1 <- as.formula(paste(names(model$model)[1], "~", "1"))
+        }else{   
+        formula1 <- as.formula(paste(names(model$model)[1], "~", paste(var.names[-i], collapse="+")))
+        }
+        if(class(model$data)=="data.frame"){
+        model1 <- glm(formula1, family=binomial, weights=model$prior.weights, data=model$data)
+        }else{
+        model1 <- glm(formula1, family=binomial, weights=model$prior.weights)
+        }
+        lr.p.value <- lrtest(model1, model, print=FALSE)$p.value
+        lr.p.value <- ifelse(lr.p.value < .001, "< 0.001",round(lr.p.value,decimal+1))
+      table0 <- a[var.names[i]==substr(rownames(a),1,nchar(var.names[i])) ,]
+      if(is.null(nrow(table0))) table0 <- t(table0)
+      if(nrow(table0)==1){
+            table0 <- cbind(table0, lr.p.value)
+            colnames(table0) <- c(colnames(a),"LR-test P value")
+            if(!is.null(attr(model$data, "var.labels"))){
+            rownames(table0) <- attr(model$data, "var.labels")[attr(model$data, "names")==var.names[i]]
+            }else{
+            if(exists(".data") & any(search()==".data")){
+            rownames(table0) <- ifelse(!is.null(attributes(.data)$var.labels[names(.data)==var.names[i]]), 
+                attributes(.data)$var.labels[names(.data)==var.names[i]], 
+                var.names[i])
+            }else{
+            rownames(table0) <- var.names[i]
+            }
+            }
+            rownames(table0) <- ifelse(rownames(table0) == 
+                "", var.names[i], rownames(table0))
+            if(attr(model$term, "dataClasses")[names(attr(model$term, "dataClasses"))==var.names[i]]=="factor"){
+            chosen.level <- unlist(unlist(model$xlevels))[grep(var.names[i],names(unlist(model$xlevels)))][2]
+            ref.level <- unlist(unlist(model$xlevels))[grep(var.names[i],names(unlist(model$xlevels)))][1]
+            rownames(table0) <- paste(rownames(table0),": ",chosen.level," vs ", ref.level, sep="")
+            }
+        table1 <- rbind(table1, cbind(table0), cbind(blank.row,""))
+      }else{
+            label.row <- cbind(label.row0, lr.p.value)
+            colnames(label.row) <- c(colnames(a),"LR-test P value")
+            if(!is.null(attr(model$data, "var.labels"))){
+            rownames(label.row) <- attr(model$data, "var.labels")[attr(model$data, "names")==var.names[i]]
+            }else{
+            if(exists(".data") & any(search()==".data")){
+            rownames(label.row) <- ifelse(!is.null(attributes(.data)$var.labels[names(.data)==var.names[i]]), 
+                attributes(.data)$var.labels[names(.data)==var.names[i]], 
+                var.names[i])
+            }else{
+            rownames(label.row) <- var.names[i]
+            }
+            }
+            rownames(label.row) <- ifelse(rownames(label.row) == 
+                "", var.names[i], rownames(label.row))
+            rownames(table0) <- gsub(var.names[i], replacement="", rownames(table0))
+            all.levels <- unlist(unlist(model$xlevels))[grep(var.names[i],names(unlist(model$xlevels)))]
+            ref.level <- setdiff(all.levels, rownames(table0))
+            rownames(label.row) <- paste(rownames(label.row), ": ref.=", ref.level, sep="")
+            rownames(table0) <- paste("  ", rownames(table0))
+        table1 <- rbind(table1, label.row, cbind(table0, ""), cbind(blank.row,""))
+      }      
+    }
 
-if(1==2){
-#### Longitudinal graphing
-longitudinal <- function(id,time,var){
-y.span <- max(na.omit(var))-min(na.omit(var))
-plot(time, var, pch=" ", ylim=c(min(na.omit(var))-0.1*y.span,
-	max(na.omit(var))+0.1*y.span), xaxt="n",
-	main=paste("Longitudinal values of",as.character(substitute(var))),
-	ylab=as.character(substitute(var)) )
-axis(side=1,at=unique(time))
-# Special lines
-mean.var <- aggregate.data.frame(var, by=list(subject=id), FUN=mean)
-mean.var <- na.omit(mean.var)
-mean.var <- mean.var[order(mean.var$x,mean.var$subject),]
-if(nrow(mean.var)>100){
-	if(nrow(mean.var)>150){
-		sample.id <- sample(unique(id),size=100)
-		for(i in sample.id){
-			lines(x=time[id==i], y= var[id==i], lty=2, col="blue")
-		}
-	} else {
-		for(i in unique(id)){
-			lines(x=time[id==i], y= var[id==i], lty=2, col="blue")
-		}
-	}
-	id.p.1 <- mean.var$subject[trunc(nrow(mean.var)*.1)]
-	id.p.5 <- mean.var$subject[trunc(nrow(mean.var)*.5)]
-	id.p.9 <- mean.var$subject[trunc(nrow(mean.var)*.9)]
-	lines(x=time[id==id.p.9], y=var[id==id.p.9], lwd=3, col="blue")
-	lines(x=time[id==id.p.5], y=var[id==id.p.5], lwd=3, col="red")
-	lines(x=time[id==id.p.1], y=var[id==id.p.1], lwd=3, col="brown")
-	leg.x <- c(min(time)+.2*(max(time)-min(time)),
-		min(time)+.5*(max(time)-min(time)),
-		min(time)+.8*(max(time)-min(time)))
-	leg.txt <- c("P90","median","P10")
-	leg.col <- c("blue","red","brown")
-	legend(x=leg.x[1],y=min(na.omit(var))+.03*y.span,
-		legend=leg.txt[1], col=leg.col[1], lwd=3, bty="n", pch=" ", xjust=0.5)
-	legend(x=leg.x[2],y=min(na.omit(var))+.03*y.span,
-		legend=leg.txt[2], col=leg.col[2], lwd=3, bty="n", pch=" ", xjust=0.5)
-	legend(x=leg.x[3],y=min(na.omit(var))+.03*y.span,
-		legend=leg.txt[3], col=leg.col[3], lwd=3, bty="n", pch=" ", xjust=0.5)
-}
-if(nrow(mean.var)<10){
-	for(i in unique(id)){
-	lines(x=time[id==i], y= var[id==i], lty=2, col=i)
-	}
-}
-}
+
+    print.noquote(table1)
+    cat("\n")
+    cat(c("Log-likelihood = ", round(logLik(model), decimal + 
+        2)), "\n")
+    cat("No. of observations = ", length(model$y), "\n")
+    cat("AIC value =", s1$aic, "\n")
+    cat("\n")
+    a <- table1
 }
 
 #### Likelihood ratio test
-lrtest <- function(model1, model2) {
-# Check class of model
-if(any(class(model1)!=class(model2))){stop("Two models have different classes")}
+lrtest <- function (model1, model2, print=TRUE) 
+{
+    if (any(class(model1) != class(model2))) {
+        stop("Two models have different classes")
+    }
+    if (any(class(model1) == "coxph") & any(class(model2) == 
+        "coxph")) {
+        if (model1$n != model2$n) {
+            stop("Two models has different sample sizes")
+        }
+        cat("\n")
+        df1 <- length(model1$coefficients)
+        df2 <- length(model2$coefficients)
+        lrt <- 2 * (model2$loglik[2] - model1$loglik[2])
+        diff.df <- df2 - df1
+        if (lrt < 0) {
+            lrt <- -lrt
+            diff.df <- -diff.df
+        }
+        if (lrt * diff.df < 0) {
+            stop("Likelihood gets worse with more variables. Test not executed")
+        }
+        if(print){
+        cat("Likelihood ratio test for Cox regression & conditional logistic regression", 
+            "\n")
+        cat("Chi-squared", diff.df, "d.f. = ", lrt, ",", "P value = ", 
+            round(pchisq(lrt, diff.df, lower.tail = FALSE), 4), 
+            "\n")
+        cat("\n")
+        }
+    }
+    if (any(class(model1) == "multinom") & any(class(model2) == 
+        "multinom")) {
+        if (any(dim(model1$residuals) != dim(model2$residuals))) {
+            stop("Two models have different outcomes or different sample sizes")
+        }
+        cat("\n")
+        df1 <- model1$edf
+        df2 <- model2$edf
+        lrt <- model2$deviance - model1$deviance
+        diff.df <- df1 - df2
+        if (lrt < 0) {
+            lrt <- -lrt
+            diff.df <- -diff.df
+        }
+        if (lrt * diff.df < 0) {
+            stop("Likelihood gets worse with more variables. Test not executed")
+        }
+        if(print){
+        cat("Likelihood ratio test for multinomial logistic regression", 
+            "\n")
+        cat("Chi-squared", diff.df, "d.f. = ", lrt, ",", "P value = ", 
+            round(pchisq(lrt, diff.df, lower.tail = FALSE), 4), 
+            "\n")
+        cat("\n")
+        }
+    }
+    if (any(class(model1) == "polr") & any(class(model2) == "polr")) {
+        if (model1$n != model2$n) {
+            stop("Two models have different outcomes or different sample sizes")
+        }
+        cat("\n")
+        df1 <- model1$edf
+        df2 <- model2$edf
+        lrt <- model2$deviance - model1$deviance
+        diff.df <- df1 - df2
+        if (lrt < 0) {
+            lrt <- -lrt
+            diff.df <- -diff.df
+        }
+        if (lrt * diff.df < 0) {
+            stop("Likelihood gets worse with more variables. Test not executed")
+        }
+        if(print){
+        cat("Likelihood ratio test for ordinal regression", "\n")
+        cat("Chi-squared", diff.df, "d.f. = ", lrt, ",", "P value = ", 
+            round(pchisq(lrt, diff.df, lower.tail = FALSE), 4), 
+            "\n")
+        cat("\n")
+        }
+    }
+    if (all(class(model1) == c("glm", "lm")) & all(class(model1) == 
+        c("glm", "lm"))) {
+        if (sum(model1$df.null) != sum(model2$df.null)) 
+            stop("Number of observation not equal!!")
+        df1 <- attributes(logLik(model1))$df
+        df2 <- attributes(logLik(model2))$df
+        lrt <- 2 * (as.numeric(logLik(model2) - logLik(model1)))
+        diff.df <- df2 - df1
+        if (lrt < 0) {
+            lrt <- -lrt
+            diff.df <- -diff.df
+        }
+        if (lrt * diff.df < 0) {
+            stop("Likelihood gets worse with more variables. Test not executed")
+        }
+        if(print){
+        cat("Likelihood ratio test for MLE method", "\n")
+        cat("Chi-squared", diff.df, "d.f. = ", lrt, ",", "P value = ", 
+            round(pchisq(lrt, diff.df, lower.tail = FALSE), 4), 
+            "\n")
+        cat("\n")
+        }
+    }
+    output <- list(model1 = model1$call, model2=model2$call, Chisquared=lrt, df = diff.df, p.value =pchisq(lrt, diff.df, lower.tail = FALSE) )
+}
 
-# conditional logistic regression & Cox regression
-if(any(class(model1)=="coxph") & any(class(model2)=="coxph")){
-if(model1$n != model2$n){stop("Two models has different sample sizes")}
-cat("\n")
-df1 <- length(model1$coefficients)
-# print(df1)
-df2 <- length(model2$coefficients)
-# print(df2)
-lrt <- 2*(model2$loglik[2] - model1$loglik[2])
-diff.df <- df2-df1
-if(lrt <0){
-	lrt <- -lrt
-	diff.df <- -diff.df
-}
-if(lrt*diff.df <0){stop("Likelihood gets worse with more variables. Test not executed")}
-cat("Likelihood ratio test for Cox regression & conditional logistic regression","\n")
-cat("Chi-squared", diff.df, "d.f. = ", lrt,",",
-	"P value = ", round(pchisq(lrt, diff.df, lower.tail = FALSE),4), "\n") 
-cat("\n")
-}
-
-# Multinomial logistic regression & ordinal regression
-if(any(class(model1)=="multinom") & any(class(model2)=="multinom")){
-if(any(dim(model1$residuals)!=dim(model2$residuals))){stop("Two models have different outcomes or different sample sizes")}
-cat("\n")
-df1 <- model1$edf
-# print(df1)
-df2 <- model2$edf
-# print(df2)
-lrt <- model2$deviance - model1$deviance
-diff.df <- df1-df2
-if(lrt <0){
-	lrt <- -lrt
-	diff.df <- -diff.df
-}
-if(lrt*diff.df <0){stop("Likelihood gets worse with more variables. Test not executed")}
-cat("Likelihood ratio test for multinomial logistic regression","\n")
-cat("Chi-squared", diff.df, "d.f. = ", lrt,",",
-	"P value = ", round(pchisq(lrt, diff.df, lower.tail = FALSE),4), "\n") 
-cat("\n")
-}
-
-# Ordinal regression
-if(any(class(model1)=="polr") & any(class(model2)=="polr")){
-if(model1$n != model2$n){stop("Two models have different outcomes or different sample sizes")}
-cat("\n")
-df1 <- model1$edf
-# print(df1)
-df2 <- model2$edf
-# print(df2)
-lrt <- model2$deviance - model1$deviance
-diff.df <- df1-df2
-if(lrt <0){
-	lrt <- -lrt
-	diff.df <- -diff.df
-}
-if(lrt*diff.df <0){stop("Likelihood gets worse with more variables. Test not executed")}
-cat("Likelihood ratio test for ordinal regression","\n")
-cat("Chi-squared", diff.df, "d.f. = ", lrt,",",
-	"P value = ", round(pchisq(lrt, diff.df, lower.tail = FALSE),4), "\n") 
-cat("\n")
-}
-
-
-
-# unconditional logistic regression
-if(all(class(model1)==c("glm","lm")) & all(class(model1)==c("glm","lm"))){
-if(sum(model1$df.null) != sum(model2$df.null)) stop("Number of observation not equal!!") 
-df1 <- attributes(logLik(model1))$df
-df2 <- attributes(logLik(model2))$df
-lrt <- 2*(as.numeric(logLik(model2) - logLik(model1)))
-diff.df <- df2-df1
-if(lrt <0){
-	lrt <- -lrt       
-	diff.df <- -diff.df
-}
-if(lrt*diff.df <0){stop("Likelihood gets worse with more variables. Test not executed")}
-cat("Likelihood ratio test for MLE method","\n")
-cat("Chi-squared", diff.df, "d.f. = ", lrt,",",
-	"P value = ", round(pchisq(lrt, diff.df, lower.tail = FALSE),4), "\n") 
-cat("\n")
-}
-}
 ### List objects excluding function
 lsNoFunction <- function() {
  setdiff(ls(envir= .GlobalEnv), as.character(lsf.str()[])
@@ -3400,21 +3485,22 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
         if (length(table(table(selected.class))) > 1) 
             warning("Without 'by', classes of all selected variables should be the same.")
     }
-    selected.to.factor <- eval(substitute(vars.to.factor), 
-        nl, parent.frame())
-if(!is.character(iqr)){
-    selected.iqr <- eval(substitute(iqr), nl, parent.frame())
-    intersect.selected <- intersect(selected.iqr, selected.to.factor)
-    if (length(intersect.selected) != 0) {
-        stop(paste(names(dataFrame)[intersect.selected], "must cannot simultaneously describe IQR and be coerced factor"))
-    }
-    for (i in selected.iqr) {
-        if (!is.integer(dataFrame[, i]) & !is.numeric(dataFrame[, 
-            i])) {
-            stop(paste(names(dataFrame)[i], "is neither integer nor numeric, not possible to compute IQR"))
+    selected.to.factor <- eval(substitute(vars.to.factor), nl, 
+        parent.frame())
+    if (!is.character(iqr)) {
+        selected.iqr <- eval(substitute(iqr), nl, parent.frame())
+        intersect.selected <- intersect(selected.iqr, selected.to.factor)
+        if (length(intersect.selected) != 0) {
+            stop(paste(names(dataFrame)[intersect.selected], 
+                "must cannot simultaneously describe IQR and be coerced factor"))
+        }
+        for (i in selected.iqr) {
+            if (!is.integer(dataFrame[, i]) & !is.numeric(dataFrame[, 
+                i])) {
+                stop(paste(names(dataFrame)[i], "is neither integer nor numeric, not possible to compute IQR"))
+            }
         }
     }
-}
     for (i in selected) {
         if (is.logical(dataFrame[, i])) {
             dataFrame[, i] <- as.factor(dataFrame[, i])
@@ -3610,16 +3696,23 @@ if(!is.character(iqr)){
     else {
         by1 <- factor(by)
         name.test <- ifelse(test, name.test, FALSE)
-        if(is.character(iqr)){
-        if(iqr=="auto"){
-        selected.iqr <- NULL
-        for(i in 1:length(selected)){
-        if(is.integer(dataFrame[,selected[i]]) | is.numeric(dataFrame[,selected[i]])){
-        if( shapiro.test(lm(dataFrame[,selected[i]] ~ by1)$residuals)$p.value < .01
-            | bartlett.test(dataFrame[,selected[i]] ~ by1)$p.value < .01){
-        selected.iqr <- c(selected.iqr, selected[i])}
-        }}
-        }else{selected.iqr <- NULL}
+        if (is.character(iqr)) {
+            if (iqr == "auto") {
+                selected.iqr <- NULL
+                for (i in 1:length(selected)) {
+                  if (is.integer(dataFrame[, selected[i]]) | 
+                    is.numeric(dataFrame[, selected[i]])) {
+                    if (shapiro.test(lm(dataFrame[, selected[i]] ~ 
+                      by1)$residuals)$p.value < 0.01 | bartlett.test(dataFrame[, 
+                      selected[i]] ~ by1)$p.value < 0.01) {
+                      selected.iqr <- c(selected.iqr, selected[i])
+                    }
+                  }
+                }
+            }
+            else {
+                selected.iqr <- NULL
+            }
         }
         table2 <- NULL
         for (i in 1:length(selected)) {
@@ -3634,9 +3727,8 @@ if(!is.character(iqr)){
                 sc <- colSums(x)
                 if (any(sc) == 0) {
                   stop(paste(names(dataFrame)[selected[i]], " has zero count in at least one column"))
-                 }
-
-                x.row.percent <- round(x/rowSums(x) * 100, 2)
+                }
+                x.row.percent <- round(x/rowSums(x) * 100, decimal)
                 table0 <- x
                 if (nrow(x) == 2 & prevalence) {
                   table00 <- addmargins(x, margin = 1)
@@ -3648,8 +3740,8 @@ if(!is.character(iqr)){
                 }
                 else {
                   if (any(percent == "column")) {
-                    x.col.percent <- round(x/colSums(x) * 100, 
-                      decimal)
+                    x.col.percent <- round(t(t(x)/colSums(x)) * 100, 
+                      decimal)         
                     x.col.percent1 <- matrix(paste(x, "(", x.col.percent, 
                       ")", sep = ""), nrow(x), ncol(x))
                     table0 <- x.col.percent1
