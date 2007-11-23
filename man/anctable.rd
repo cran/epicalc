@@ -12,7 +12,7 @@ data(ANCtable)
 \format{
   A data frame with 8 observations on the following 4 variables.
   \describe{
-    \item{\code{death}}{a numeric vector: 1=yes, 2=no}
+    \item{\code{death}}{a numeric vector: 1=no, 2=yes}
     \item{\code{anc}}{a numeric vector indicating antenatal care type: 1=old 2=new }
     \item{\code{clinic}}{a numeric vector indicating clinic code}
     \item{\code{Freq}}{a numeric vector for frequency}
@@ -20,13 +20,16 @@ data(ANCtable)
 }
 \examples{
 data(ANCtable)
-des(ANCtable)
-glm1 <- glm(death==1 ~ factor(anc) ,weights=Freq, family=binomial, data=ANCtable)
+use(ANCtable)
+death <- death==2
+anc <- factor(anc); levels(anc)=c("old", "new")
+clinic <- factor(clinic)
+glm1 <- glm(death ~ anc ,weights=Freq, family=binomial)
 logistic.display(glm1)
-glm2 <- glm(death==1 ~ factor(anc) + factor(clinic) ,weights=Freq, 
-	family=binomial, data=ANCtable)
+glm2 <- glm(death ~ anc + clinic ,weights=Freq,	family=binomial)
 logistic.display(glm2)
 lrtest(glm1, glm2)
+rm(death, anc, clinic)
 }
 \keyword{datasets}
     

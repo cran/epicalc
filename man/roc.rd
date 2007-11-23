@@ -32,15 +32,15 @@ In both cases, the area under the curve is computed.
 \seealso{'glm'}
 \examples{
 # Single ROC curve from logistic regression
-model1 <- glm(case ~ induced + factor(spontaneous), data=infert, family=binomial)
 # Note that 'induced' and 'spontaneous' are both originally continuous variables
+model1 <- glm(case ~ induced + spontaneous, data=infert, family=binomial)
 logistic.display(model1)
 # Having two spontaneous abortions is quite close to being infertile!
 # This is actually not a causal relationship
 
 lroc(model1, title=TRUE, auc.coords=c(.5,.1))
 lroc1 <- lroc(model1) # The main title and auc text have disappeared
-model2 <- glm(case ~ factor(spontaneous), data=infert, family=binomial)
+model2 <- glm(case ~ spontaneous, data=infert, family=binomial)
 logistic.display(model2)
 lroc2 <- lroc(model2, add=TRUE, line.col="black")
 legend("bottomright",legend=c(lroc1$model.description, lroc2$model.description),
