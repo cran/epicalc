@@ -5,7 +5,7 @@
 \usage{
 tableStack (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, 
     means = TRUE, medians = FALSE, sds = TRUE, decimal = 1, dataFrame = .data, 
-    total = TRUE, vars.to.reverse = NULL, var.labels = TRUE, 
+    total = TRUE, vars.to.reverse = NULL, var.labels = TRUE, var.labels.trunc =150,
     reverse = FALSE, by = NULL, vars.to.factor = NULL, iqr = "auto", 
     prevalence = TRUE, percent = c("column", "row", "none"), 
     test = TRUE, name.test = TRUE) 
@@ -23,6 +23,7 @@ tableStack (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
 	\item{total}{availability of means and sd of total and mean scores}
 	\item{vars.to.reverse}{variable(s) to reverse}
 	\item{var.labels}{presence of descriptions of variables on the last column of output}
+	\item{var.labels.trunc}{number of characters used for variable description}
 	\item{reverse}{whether item(s) negatively correlated with other majority will be reversed}
   \item{by}{a variable for column breakdown}
   \item{vars.to.factor}{variable(s) to be converted to factor for tabulaton}
@@ -69,9 +70,9 @@ tableStack(vars=4:25, by=Origin)
 
 data(Attitudes)
 use(Attitudes)
-## Please use full screen of Rconsole
-## for better display of the labels.
-tableStack(qa1:qa18)
+tableStack(qa1:qa18)  # Needs full screen of Rconsole
+tableStack(qa1:qa18, var.labels.trunc=35) 
+                      # Fits in with default R console screen
 tableStack(qa1:qa18, reverse=TRUE) -> a
 a
 ## Components of 'a' have appropriate items reversed

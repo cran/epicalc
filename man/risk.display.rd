@@ -1,5 +1,7 @@
 \name{Risk.display}
 \alias{logistic.display}
+\alias{clogistic.display}
+\alias{cox.display}
 \alias{regress.display}
 \alias{idr.display}
 \alias{mlogit.display}
@@ -10,6 +12,8 @@
 \usage{
 logistic.display(logistic.model, alpha = 0.05, crude = TRUE, crude.p.value = FALSE, 
     decimal = 2) 
+clogistic.display(clogit.model, alpha = 0.05, crude=TRUE, crude.p.value=FALSE, decimal = 2)
+cox.display (cox.model, alpha = 0.05, crude=TRUE, crude.p.value=FALSE, decimal = 2) 
 regress.display(regress.model, alpha = 0.05, crude = FALSE, crude.p.value = FALSE, 
     decimal = 2) 
 idr.display(count.model, decimal = 3, alpha = 0.05) 
@@ -25,10 +29,12 @@ The output from 'logistic.display' and 'regress.display' are ready to write (usi
 }
 \arguments{
 	\item{logistic.model}{a model from a logistic regression}
+	\item{clogit.model}{a model from a conditional logistic regression}
 	\item{regress.model}{a model from linear regression}
+	\item{cox.model}{a model from cox regression}
 	\item{alpha}{significance level}
-	\item{crude}{whether crude odds ratios should also be displayed}
-	\item{crude.p.value}{whether crude P value should also be displayed}
+	\item{crude}{whether crude results and their confidence interval should also be displayed}
+	\item{crude.p.value}{whether crude P value should also be displayed if and only if 'crude=TRUE'}
 	\item{decimal}{number of decimal places displayed}
 	\item{count.model}{a model from a Poisson or negative binomial regression}
 	\item{multinom.model}{a model from multinomial or polytomous regression}
@@ -50,6 +56,16 @@ data(ANCdata)
 glm1 <- glm(death ~ anc + clinic, family=binomial, data=ANCdata)
 logistic.display(glm1)
  
+data(VC1to6)
+use(VC1to6)
+fsmoke <- factor(smoking)
+levels(fsmoke) <- list("no"=0, "yes"=1)
+pack()
+.data -> vc1to6
+clr1 <- clogit(case ~ alcohol + fsmoke + strata(matset), data=vc1to6)
+clogistic.display(clr1)
+ 
+
 library(MASS)
 model1 <- glm(Origin ~ Weight + AirBags + DriveTrain, family=binomial, data=Cars93)
 logistic.display(model1, decimal=3, crude.p.value=TRUE)
@@ -60,10 +76,13 @@ regress.display(reg1)
 reg2 <- glm(Price ~ Weight + AirBags + DriveTrain, data=Cars93)
 regress.display(reg2)
 
+data(Compaq)
+cox1 <- coxph(Surv(year, status) ~ hospital + stage * ses, data=Compaq)
+cox.display(cox1, crude.p.value=TRUE)
 
-library(nnet)
 
 # Ordinal logistic regression
+library(nnet)
 options(contrasts = c("contr.treatment", "contr.poly"))
 house.plr <- polr(Sat ~ Infl + Type + Cont, weights = Freq, data = housing)
 house.plr

@@ -1024,7 +1024,6 @@ logistic.display <- function (logistic.model, alpha = 0.05, crude=TRUE, crude.p.
         model$family$family != "binomial") {
         stop("Model not from logistic regression")
     }
-    if(any(rowSums(attr(model$terms, "factors"))>1)) {crude=FALSE}
     var.names <- attr(model$terms, "term.labels") # Independent vars
     if(length(var.names)==1){crude <- FALSE}
     if(crude){
@@ -1033,7 +1032,25 @@ logistic.display <- function (logistic.model, alpha = 0.05, crude=TRUE, crude.p.
         formula0 <- as.formula(paste(names(model$model)[1], "~", var.names[i]))
         model0 <- glm(formula0, weights=model$prior.weights,
          family=binomial, data=model$model)
-    orci0 <- rbind(orci0, (summary(model0))$coefficients[-1,])   
+    
+    coeff.matrix <- (summary(model0))$coefficients[-1,, drop=FALSE]     
+    if(length(grep(":", var.names[i]))>0){
+    var.name.interact <- unlist(strsplit(var.names[i], ":"))
+      if(any(names(model$xlevels)==var.name.interact[1])){
+      level1 <- length(unlist(model$xlevels[var.name.interact[1]]))-1
+      }else{
+      level1 <- 1
+      }
+      if(any(names(model$xlevels)==var.name.interact[2])){
+      level2 <- length(unlist(model$xlevels[var.name.interact[2]]))-1
+      }else{
+      level2 <- 1
+      }
+    dim.coeff <- dim((summary(model0))$coefficients[-1,, drop=FALSE])
+    coeff.matrix <- matrix(rep(NA, dim.coeff[1]*dim.coeff[2]), dim.coeff[1], dim.coeff[2])
+    coeff.matrix <- coeff.matrix[1:(level1*level2), ,drop=FALSE] 
+    }
+    orci0 <- rbind(orci0, coeff.matrix)   
     }
     orci0 <- rbind(matrix(rep(0,4),1,4), orci0)
     colnames(orci0) <- c("crudeOR", paste("lower0", 100 - 100 * alpha, 
@@ -1056,7 +1073,6 @@ logistic.display <- function (logistic.model, alpha = 0.05, crude=TRUE, crude.p.
         2])                                               
     orci[, 1] <- exp(orci[, 1])
     cat("\n")
-    #print(orci)
     decimal1 <- ifelse(abs(orci[,1]-1) < .01,  4, decimal)
     a <- cbind(paste(round(orci[,1], decimal1),"(",round(orci[,2], decimal1),",",
           round(orci[,3], decimal1),")", sep=""), ifelse(orci[,4] < .001, "< 0.001",round(orci[,4],decimal+1)))
@@ -1069,16 +1085,18 @@ logistic.display <- function (logistic.model, alpha = 0.05, crude=TRUE, crude.p.
     decimal0 <- ifelse(abs(orci0[,1]-1) < .01,  4, decimal)
     if(crude.p.value){
     a0 <- cbind(paste(round(orci0[,1], decimal0),"(",round(orci0[,2], decimal0),",",
-          round(orci0[,3], decimal0),")", sep=""), ifelse(orci0[,4] < .001, "< 0.001",round(orci0[,4],decimal+1)))
+          round(orci0[,3], decimal0),")", sep=""), ifelse(orci0[,4, drop=FALSE] < .001, "< 0.001",round(orci0[,4, drop=FALSE],decimal+1)))
     a <- cbind(a0,a)
     rownames(a) <- rownames.a
     colnames(a) <- c(paste("crude OR(",100 - 100 * alpha, "%CI)",sep="") ,"crude P value", 
         paste("adj. OR(",100 - 100 * alpha, "%CI)",sep=""),"Wald's test P value")
+    a[grep(":",rownames(a)) ,1:2] <- "-"
     }else{
-    a <- cbind(cbind(paste(round(orci0[,1], decimal1),"(",round(orci0[,2], decimal1),",",
-          round(orci0[,3], decimal1),")", sep=""), a))
+    a <- cbind(paste(round(orci0[,1], decimal1),"(",round(orci0[,2], decimal1),",",
+          round(orci0[,3], decimal1),")", sep=""), a)
     colnames(a) <- c(paste("crude OR(",100 - 100 * alpha, "%CI)",sep="") , 
           paste("adj. OR(",100 - 100 * alpha, "%CI)",sep=""),"Wald's test P value")
+    a[grep(":",rownames(a)) ,1] <- "-"
     }
     }
     modified.coeff.array <- a
@@ -1125,13 +1143,13 @@ regress.display <- function (regress.model, alpha = 0.05, crude=FALSE, crude.p.v
     if(length(class(model))==2){
     if (class(model)[1] != "glm" | class(model)[2] != "lm" | 
         model$family$family != "gaussian") {
-        stop("model not from linear regression")
+        stop("Model not from linear regression")
     }}else{
     if(length(class(model))==1){
     if (class(model) != "lm" ) {
-        stop("model not from linear regression")
+        stop("Model not from linear regression")
     }}}
-    if(any(rowSums(attr(model$terms, "factors"))>1)) {crude=FALSE}
+#    if(any(rowSums(attr(model$terms, "factors"))>1)) {crude=FALSE}
     var.names <- attr(model$terms, "term.labels") # Independent vars
     if(length(var.names)==1){crude <- FALSE}
     if(crude){
@@ -1142,31 +1160,46 @@ regress.display <- function (regress.model, alpha = 0.05, crude=FALSE, crude.p.v
         model0 <- glm(formula0, weights=model$prior.weights,
          family=model$family, data=model$model)
     }else{
-        model0 <- glm(formula0, weights=model$prior.weights,
+        model0 <- lm(formula0, weights=model$prior.weights,
          data=model$model)
     }
-    reg.ci0 <- rbind(reg.ci0, (summary(model0))$coefficients[-1,])   
+    coeff.matrix <- (summary(model0))$coefficients[-1,]     
+    if(length(grep(":", var.names[i]))>0){
+    var.name.interact <- unlist(strsplit(var.names[i], ":"))
+      if(any(names(model$xlevels)==var.name.interact[1])){
+      level1 <- length(unlist(model$xlevels[var.name.interact[1]]))-1
+      }else{
+      level1 <- 1
+      }
+      if(any(names(model$xlevels)==var.name.interact[2])){
+      level2 <- length(unlist(model$xlevels[var.name.interact[2]]))-1
+      }else{
+      level2 <- 1
+      }
+    dim.coeff <- dim((summary(model0))$coefficients[-1,, drop=FALSE])
+    coeff.matrix <- matrix(rep(NA, dim.coeff[1]*dim.coeff[2]), dim.coeff[1], dim.coeff[2])
+    coeff.matrix <- coeff.matrix[1:(level1*level2), ,drop=FALSE] 
+    }
+    reg.ci0 <- rbind(reg.ci0, coeff.matrix)   
     }
     reg.ci0 <- rbind(matrix(rep(0,4),1,4), reg.ci0)
     colnames(reg.ci0) <- c("crude.Coeff", paste("lower0", 100 - 100 * alpha, 
         "ci", sep = ""), paste("upper0", 100 - 100 * alpha, "ci", 
         sep = ""), "crude P value")
-    reg.ci0[, 3] <- (reg.ci0[, 1] + qnorm(1 - alpha/2) * reg.ci0[, 
+    reg.ci0[, 3] <- (reg.ci0[, 1] + qt((1 - alpha/2), summary(model0)$df[2]) * reg.ci0[, 
         2])
-    reg.ci0[, 2] <- (reg.ci0[, 1] - qnorm(1 - alpha/2) * reg.ci0[, 
+    reg.ci0[, 2] <- (reg.ci0[, 1] - qt((1 - alpha/2), summary(model0)$df[2]) * reg.ci0[, 
         2])                                               
-#    reg.ci0[, 1] <- (reg.ci0[, 1])
     }
     s1 <- summary(model)
     reg.ci <- s1$coefficients
     colnames(reg.ci) <- c("Coeff", paste("lower", 100 - 100 * alpha, 
         "ci", sep = ""), paste("upper", 100 - 100 * alpha, "ci", 
         sep = ""), "t-test P value")
-    reg.ci[, 3] <- (reg.ci[, 1] + qnorm(1 - alpha/2) * reg.ci[, 
+    reg.ci[, 3] <- (reg.ci[, 1] + qt((1 - alpha/2), summary(model)$df[2]) * reg.ci[, 
         2])
-    reg.ci[, 2] <- (reg.ci[, 1] - qnorm(1 - alpha/2) * reg.ci[, 
+    reg.ci[, 2] <- (reg.ci[, 1] - qt((1 - alpha/2), summary(model)$df[2]) * reg.ci[, 
         2])                                        
-#    reg.ci[, 1] <- (reg.ci[, 1])
     cat("\n")
     decimal1 <- ifelse(abs(reg.ci[,1]-1) < .01,  4, decimal)
     a <- cbind(paste(round(reg.ci[,1], decimal1),"(",round(reg.ci[,2], decimal1),",",
@@ -1185,11 +1218,13 @@ regress.display <- function (regress.model, alpha = 0.05, crude=FALSE, crude.p.v
     rownames(a) <- rownames.a
     colnames(a) <- c(paste("crude coeff.(",100 - 100 * alpha, "%CI)",sep="") ,"crude P value", 
         paste("adj. coeff.(",100 - 100 * alpha, "%CI)",sep=""),"t-test P value")
+        a[grep(":",rownames(a)) ,1:2] <- "-"
     }else{
     a <- cbind(paste(round(reg.ci0[,1], decimal1),"(",round(reg.ci0[,2], decimal1),",",
           round(reg.ci0[,3], decimal1),")", sep=""), a)
     colnames(a) <- c(paste("crude coeff.(",100 - 100 * alpha, "%CI)",sep="") , 
           paste("adj. coeff.(",100 - 100 * alpha, "%CI)",sep=""),"t-test P value")
+        a[grep(":",rownames(a)) ,1] <- "-"
     }
     }
     modified.coeff.array <- a
@@ -1239,6 +1274,212 @@ if(any(model$family=="gaussian")){
     a <- table1
 }
 
+#### Conditional logistic regression display
+
+clogistic.display <- function (clogit.model, alpha = 0.05, crude=TRUE, crude.p.value=FALSE, decimal = 2) 
+{
+    model <- clogit.model
+    if(!any(class(model)=="clogit")){stop("Model not from conditional logisitic regression")}
+    var.names0 <- attr(model$terms, "term.labels") # Independent vars
+    var.names <- var.names0[-grep(pattern="strata", var.names0)]                                                    
+    if(crude){
+    orci0 <- NULL
+    for(i in 1:(length(var.names))){
+        formula0 <- as.formula(paste( rownames(attr(model$terms,"factor"))[1], "~", 
+            paste(c(var.names[i], var.names0[grep(pattern="strata", var.names0)]), collapse="+")))
+        model0 <- coxph(formula0, data=get(as.character(model$call)[3]) )
+    coeff.matrix <- summary(model0)$coef[,c(1,3:5), drop=FALSE]
+    if(length(grep(":", var.names[i]))>0){
+    var.name.interact <- unlist(strsplit(var.names[i], ":"))
+      if(is.factor(get(as.character(model$call)[3])[,var.name.interact[1]])){
+      level1 <- length(levels(get(as.character(model$call)[3])[,var.name.interact[1]]))-1
+      }else{
+      level1 <- 1
+      }
+      if(is.factor(get(as.character(model$call)[3])[,var.name.interact[2]])){
+      level2 <- length(levels(get(as.character(model$call)[3])[,var.name.interact[2]]))-1
+      }else{
+      level2 <- 1
+      }
+    dim.coeff <- dim((summary(model0))$coef[,c(1,3:5), drop=FALSE])
+    coeff.matrix <- matrix(rep(NA, dim.coeff[1]*dim.coeff[2]), dim.coeff[1], dim.coeff[2])
+    coeff.matrix <- coeff.matrix[1:(level1*level2), ,drop=FALSE] 
+    }
+    orci0 <- rbind(orci0, coeff.matrix)   
+    }
+    colnames(orci0) <- c("crudeOR", paste("lower0", 100 - 100 * alpha, 
+        "ci", sep = ""), paste("upper0", 100 - 100 * alpha, "ci", 
+        sep = ""), "crude P value")
+    orci0[, 3] <- exp(orci0[, 1] + qnorm(1 - alpha/2) * orci0[, 
+        2])
+    orci0[, 2] <- exp(orci0[, 1] - qnorm(1 - alpha/2) * orci0[, 
+        2])                                               
+    orci0[, 1] <- exp(orci0[, 1])
+    }
+    s1 <- summary(model)
+    orci <- s1$coef[, c(1,3:5), drop=FALSE]
+    colnames(orci) <- c("OR", paste("lower", 100 - 100 * alpha, 
+        "ci", sep = ""), paste("upper", 100 - 100 * alpha, "ci", 
+        sep = ""), "Wald's test P value")
+    orci[, 3] <- exp(orci[, 1] + qnorm(1 - alpha/2) * orci[, 
+        2])
+    orci[, 2] <- exp(orci[, 1] - qnorm(1 - alpha/2) * orci[, 
+        2])                                               
+    orci[, 1] <- exp(orci[, 1])
+    cat("\n")
+    decimal1 <- ifelse(abs(orci[,1]-1) < .01,  4, decimal)
+    a <- cbind(paste(round(orci[,1], decimal1),"(",round(orci[,2], decimal1),",",
+          round(orci[,3], decimal1),")", sep=""), ifelse(orci[,4] < .001, "< 0.001",round(orci[,4],decimal+1)))
+    colnames(a) <- c(paste("adj. OR(",100 - 100 * alpha, "%CI)",sep=""),"Wald's test P value")
+    if(length(var.names)==2){
+    colnames(a) <- c(paste("OR(",100 - 100 * alpha, "%CI)",sep=""),"Wald's test P value")
+    }
+    rownames.a <- rownames(a) 
+    if(crude){
+    decimal0 <- ifelse(abs(orci0[,1]-1) < .01,  4, decimal)
+    if(crude.p.value){
+    a0 <- cbind(paste(round(orci0[,1,drop=FALSE], decimal0),"(",round(orci0[,2,drop=FALSE], decimal0),",",
+          round(orci0[,3, drop=FALSE], decimal0),")", sep=""), 
+          ifelse(orci0[,4, drop=FALSE] < .001, "< 0.001",round(orci0[,4, drop=FALSE],decimal+1)))
+    a <- cbind(a0,a)
+    rownames(a) <- rownames.a
+    colnames(a) <- c(paste("crude OR(",100 - 100 * alpha, "%CI)",sep="") ,"crude P value", 
+        paste("adj. OR(",100 - 100 * alpha, "%CI)",sep=""),"Wald's test P value")
+    a[grep(":",rownames(a)) , 1:2] <- "-"
+    }else{
+    a <- cbind(paste(round(orci0[,1, drop=FALSE], decimal1),"(",round(orci0[,2, drop=FALSE], decimal1),",",
+          round(orci0[,3, drop=FALSE], decimal1),")", sep=""), a)
+    colnames(a) <- c(paste("crude OR(",100 - 100 * alpha, "%CI)",sep="") , 
+          paste("adj. OR(",100 - 100 * alpha, "%CI)",sep=""),"Wald's test P value")
+    a[grep(":",rownames(a)) , 1] <- "-"
+    }
+    }
+    modified.coeff.array <- a
+
+tableGlm(model, modified.coeff.array, decimal) -> table1    
+
+            outcome.name <- substr(as.character(model$userCall)[2], 1,  regexpr(" ", as.character(model$userCall)[2])-1)
+            outcome <- get(as.character(model$userCall)[3])[,outcome.name]
+            outcome.class <- class(outcome)
+            if(outcome.class=="logical"){
+            outocme.lab <- paste(outcome.name, "yes vs no","\n")
+            }else{
+            if(outcome.class=="numeric" | outcome.class=="integer"){
+            outcome.levels <- levels(factor(outcome))
+            outcome.lab <- paste(outcome.name, ":", outcome.levels[2], "vs", outcome.levels[1],"\n")
+            }else{
+            if(outcome.class=="factor"){
+            outcome.lab <- paste(outcome.name, ":", levels(outcome)[2], "vs", levels(outcome)[1],"\n")
+            }else{
+            outcome.lab <- outcome.name
+            }}}
+            
+            
+    cat(paste("Conditional logistic regression predicting ",outcome.lab, sep=""), "\n")
+    cat("\n")
+    print.noquote(table1)
+    cat("\n")
+    cat("No. of observations = ", length(outcome), "\n")
+    cat("\n")
+    a <- table1
+}
+
+####### Cox's regression display
+
+cox.display <- function (cox.model, alpha = 0.05, crude=TRUE, crude.p.value=FALSE, decimal = 2) 
+{
+    model <- cox.model
+    if(!any(class(model)=="coxph")){stop("Model not from conditional logisitic regression")}
+    var.names <- attr(model$terms, "term.labels") # Independent vars
+    if(length(var.names)==2){crude <- FALSE}
+    if(crude){
+    orci0 <- NULL
+    for(i in 1:(length(var.names))){
+        formula0 <- as.formula(paste( rownames(attr(model$terms,"factor"))[1], "~", 
+            var.names[i]))
+        suppressWarnings(model0 <- coxph(formula0, data=get(as.character(model$call)[3]) ))
+    coeff.matrix <- summary(model0)$coef[,c(1,3:5), drop=FALSE]
+    if(length(grep(":", var.names[i]))>0){
+    var.name.interact <- unlist(strsplit(var.names[i], ":"))
+      if(is.factor(get(as.character(model$call)[3])[,var.name.interact[1]])){
+      level1 <- length(levels(get(as.character(model$call)[3])[,var.name.interact[1]]))-1
+      }else{
+      level1 <- 1
+      }
+      if(is.factor(get(as.character(model$call)[3])[,var.name.interact[2]])){
+      level2 <- length(levels(get(as.character(model$call)[3])[,var.name.interact[2]]))-1
+      }else{
+      level2 <- 1
+      }
+    dim.coeff <- dim((summary(model0))$coef[,c(1,3:5), drop=FALSE])
+    coeff.matrix <- matrix(rep(NA, dim.coeff[1]*dim.coeff[2]), dim.coeff[1], dim.coeff[2])
+    coeff.matrix <- coeff.matrix[1:(level1*level2), ,drop=FALSE] 
+    }
+    orci0 <- rbind(orci0, coeff.matrix)   
+    }
+    colnames(orci0) <- c("crudeOR", paste("lower0", 100 - 100 * alpha, 
+        "ci", sep = ""), paste("upper0", 100 - 100 * alpha, "ci", 
+        sep = ""), "crude P value")
+    orci0[, 3] <- exp(orci0[, 1] + qnorm(1 - alpha/2) * orci0[, 
+        2])
+    orci0[, 2] <- exp(orci0[, 1] - qnorm(1 - alpha/2) * orci0[, 
+        2])                                               
+    orci0[, 1] <- exp(orci0[, 1])
+    }
+    s1 <- summary(model)
+    orci <- s1$coef[, c(1,3:5), drop=FALSE]
+    colnames(orci) <- c("OR", paste("lower", 100 - 100 * alpha, 
+        "ci", sep = ""), paste("upper", 100 - 100 * alpha, "ci", 
+        sep = ""), "Wald's test P value")
+    orci[, 3] <- exp(orci[, 1] + qnorm(1 - alpha/2) * orci[, 
+        2])
+    orci[, 2] <- exp(orci[, 1] - qnorm(1 - alpha/2) * orci[, 
+        2])                                               
+    orci[, 1] <- exp(orci[, 1])
+    cat("\n")
+    decimal1 <- ifelse(abs(orci[,1]-1) < .01,  4, decimal)
+    a <- cbind(paste(round(orci[,1], decimal1),"(",round(orci[,2], decimal1),",",
+          round(orci[,3], decimal1),")", sep=""), ifelse(orci[,4] < .001, "< 0.001",round(orci[,4],decimal+1)))
+    colnames(a) <- c(paste("adj. HR(",100 - 100 * alpha, "%CI)",sep=""),"Wald's test P value")
+    if(length(var.names)==2){
+    colnames(a) <- c(paste("HR(",100 - 100 * alpha, "%CI)",sep=""),"Wald's test P value")
+    }
+    rownames.a <- rownames(a) 
+    if(crude){
+    decimal0 <- ifelse(abs(orci0[,1]-1) < .01,  4, decimal)
+    if(crude.p.value){
+    a0 <- cbind(paste(round(orci0[,1,drop=FALSE], decimal0),"(",round(orci0[,2,drop=FALSE], decimal0),",",
+          round(orci0[,3, drop=FALSE], decimal0),")", sep=""), 
+          ifelse(orci0[,4, drop=FALSE] < .001, "< 0.001",round(orci0[,4, drop=FALSE],decimal+1)))
+    a <- cbind(a0,a)
+    rownames(a) <- rownames.a
+    colnames(a) <- c(paste("crude HR(",100 - 100 * alpha, "%CI)",sep="") ,"crude P value", 
+        paste("adj. HR(",100 - 100 * alpha, "%CI)",sep=""),"Wald's test P value")
+    a[grep(":",rownames(a)) ,1:2] <- "-"
+    }else{
+    a <- cbind(paste(round(orci0[,1, drop=FALSE], decimal1),"(",round(orci0[,2, drop=FALSE], decimal1),",",
+          round(orci0[,3, drop=FALSE], decimal1),")", sep=""), a)
+    colnames(a) <- c(paste("crude HR(",100 - 100 * alpha, "%CI)",sep="") , 
+          paste("adj. HR(",100 - 100 * alpha, "%CI)",sep=""),"Wald's test P value")
+    a[grep(":",rownames(a)) ,1] <- "-"
+    }
+    }
+    modified.coeff.array <- a
+
+tableGlm(model, modified.coeff.array, decimal) -> table1    
+
+            
+    surv.string <- as.character(model$formula)[2]
+    time.var.name <- substr(unlist(strsplit(surv.string, ","))[1], 6, nchar(unlist(strsplit(surv.string, ","))[1]))
+    status.var.name <-  substr(unlist(strsplit(surv.string, " "))[2], 1, nchar(unlist(strsplit(surv.string, " "))[2])-1)      
+    cat(paste("Hazard ratio on ", time.var.name, "to", status.var.name, "\n"))
+    cat("\n")     
+    print.noquote(table1)
+    cat("\n")
+    cat("No. of observations = ", model$n, "\n")
+    cat("\n")
+    a <- table1
+}
 
 
 
@@ -1251,8 +1492,19 @@ tableGlm <- function (model, modified.coeff.array, decimal)
 ########## Nice row definition starts from here
 ## What we need here is the glm model object and 'modified.coeff.array'
     var.names <- attr(model$terms, "term.labels") # Independent vars    
+    if(any(class(model)=="clogit")){
+    var.names0 <- var.names
+    var.names <- var.names[-grep(pattern="strata", var.names)]
+    }
     table1 <- NULL
+    if(any(class(model)=="glm") | any(class(model)=="lm"))
+    {
     coeff.names <- names(model$coefficients)
+    }else{
+    if(any(class(model)=="coxph")){
+    coeff.names <- names(model$coef)
+    }
+    }
             label.row0 <- rep("", ncol(modified.coeff.array))
             label.row0 <- t(label.row0)
             blank.row <- rep("", ncol(modified.coeff.array))
@@ -1266,14 +1518,31 @@ tableGlm <- function (model, modified.coeff.array, decimal)
       F.p.value <- ifelse(F.p.value < .001, "< 0.001",round(F.p.value,decimal+1))
       }
       }else{
+      if(any(class(model)=="lm")){
       unlist(summary(aov(model))) -> array.summ.aov
       dim(array.summ.aov) <- c(length(array.summ.aov)/5,5)
       F.p.value <- array.summ.aov[-nrow(array.summ.aov),5]
       F.p.value <- ifelse(F.p.value < .001, "< 0.001",round(F.p.value,decimal+1))
-      }
+      }}
     for(i in 1:length(var.names)){ # i is the variable order  in model
+            if(any(class(model)=="lm")){
+            if(length(grep(pattern=":", var.names[i])) < 1){
+            variable <- model$model[,i+1]
+            var.name.class <- attr(model$terms, "dataClasses")[names(attr(model$terms, "dataClasses"))==var.names[i]]
+            if(var.name.class=="factor"){
+            var.name.levels <- unlist(unlist(model$xlevels))[grep(var.names[i],names(unlist(model$xlevels)))]
+            }
+            }
+            }else{
+            if(any(class(model)=="coxph")){
+            if(length(grep(pattern=":", var.names[i])) < 1){
+            variable <- get(as.character(model$call)[3])[,var.names[i]]
+            var.name.class <- class(get(as.character(model$call)[3])[,var.names[i]])
+            if(var.name.class=="factor"){
+            var.name.levels <- levels(get(as.character(model$call)[3])[,var.names[i]]) 
+            }}}}
     if(any(class(model)=="glm")){
-    if(any(model$family=="binomial") |any(model$family=="poisson")){
+    if(any(model$family=="binomial") |any(model$family=="poisson") ){
         if(length(var.names)==1){
         formula1 <- as.formula(paste(names(model$model)[1], "~", "1"))
         }else{   
@@ -1282,28 +1551,63 @@ tableGlm <- function (model, modified.coeff.array, decimal)
         model1 <- glm(formula1, family=model$family, weights=model$prior.weights, data=model$model)
         lr.p.value <- suppressWarnings(lrtest(model1, model, print=FALSE)$p.value)
         lr.p.value <- ifelse(lr.p.value < .001, "< 0.001",round(lr.p.value,decimal+1))
-      }}
+      }
+      }else{
+      if(any(class(model)=="coxph")){
+      if(length(var.names)==1){
+      lr.p.value <- summary(model)$logtest[3]
+      }else{
+      b <- as.character(model$formula)  
+      if(any(class(model)=="clogit")){
+      formula.full.coxph <- as.formula(paste(b[2], "~", paste(var.names0, collapse="+")))
+      }else{
+      formula.full.coxph <- as.formula(paste(b[2], "~", paste(var.names, collapse="+")))      
+      }
+      model.full.coxph <- coxph(formula.full.coxph, data=get(as.character(model$call)[3]))
+      if(any(class(model)=="clogit")){
+      formula.coxph.i <- as.formula(paste(b[2], "~", 
+        paste(c(var.names[-i], var.names0[grep("strata", var.names0)]), collapse="+")))
+      }else{
+      formula.coxph.i <- as.formula(paste(b[2], "~", paste(var.names[-i], collapse="+")))
+      }
+      model.coxph.i <- coxph(formula.coxph.i, data=get(as.character(model$call[3])))
+      lr.p.value <- suppressWarnings(lrtest(model.full.coxph, model.coxph.i, print=FALSE)$p.value)
+      }
+      lr.p.value <- ifelse(lr.p.value < .001, "< 0.001",round(lr.p.value,decimal+1))
+      }
+      }
+      if(length(var.names)==1){
+      table0 <- modified.coeff.array
+      }else{
       if(length(grep(":", var.names[i])) > 0){
       table0 <- modified.coeff.array[grep(":", rownames(modified.coeff.array)),]
       }else{
       table0 <- modified.coeff.array[setdiff(which(substr(rownames(modified.coeff.array),1, nchar(var.names[i]))==var.names[i]), grep(":", rownames(modified.coeff.array))) ,]
-      }
-      if(is.null(nrow(table0))) table0 <- t(table0)
+      }}
+      if(is.null(nrow(table0))) table0 <- t(table0)           
       if(nrow(table0)==1){
-        if(any(class(model)=="glm")){
-        if(any(model$family=="binomial") |any(model$family=="poisson")){
+        if(any(class(model)=="glm" | any(class(model)=="coxph"))){
+        if(any(model$family=="binomial") |any(model$family=="poisson") |any(class(model)=="coxph")){
             table0 <- cbind(table0, lr.p.value)
             colnames(table0) <- c(colnames(modified.coeff.array),"LR-test P value")
         }
         if(any(model$family=="gaussian")){
             table0 <- cbind(table0, F.p.value[i])
             colnames(table0) <- c(colnames(modified.coeff.array),"F-test P value")
-        }}else{
+        }
+        }else{
             table0 <- cbind(table0, F.p.value[i])
             colnames(table0) <- c(colnames(modified.coeff.array),"F-test P value")
         }
-            if(!is.null(attr(model$data, "var.labels"))){
-            rownames(table0) <- attr(model$data, "var.labels")[attr(model$data, "names")==var.names[i]]
+            if(any(class(model)=="lm")){
+            var.labels <- attr(model$data, "var.labels")[attr(model$data, "names")==var.names[i]]
+            }else{
+            if(any(class(model)=="coxph")){
+            var.labels <- attributes(get(as.character(model$call)[3]))$var.labels[names(get(as.character(model$call)[3]))==var.names[i]]
+            }
+            }
+            if(!is.null(var.labels)){
+            rownames(table0) <- var.labels
             }else{
             rownames(table0) <- var.names[i]
             }
@@ -1311,15 +1615,14 @@ tableGlm <- function (model, modified.coeff.array, decimal)
                 "", var.names[i], rownames(table0))
             if(length(grep(":", var.names[i]))==0)
             {
-            if(attr(model$terms, "dataClasses")[names(attr(model$terms, "dataClasses"))==var.names[i]]=="factor"){
-            chosen.level <- unlist(unlist(model$xlevels))[grep(var.names[i],names(unlist(model$xlevels)))][2]
-            ref.level <- unlist(unlist(model$xlevels))[grep(var.names[i],names(unlist(model$xlevels)))][1]
+            if(var.name.class=="factor"){
+            chosen.level <- var.name.levels[2]
+            ref.level <- var.name.levels[1]
             rownames(table0) <- paste(rownames(table0),": ",chosen.level," vs ", ref.level, sep="")
             }else{
-            if((attr(model$term, "dataClasses")[names(attr(model$term, "dataClasses"))==var.names[i]]=="numeric")|
-            (attr(model$term, "dataClasses")[names(attr(model$term, "dataClasses"))==var.names[i]]=="integer")){
-            if(length(table(model$model[,i+1]))==2){
-            if(names(table(model$model[,i+1]))[1]=="0" & names(table(model$model[,i]))[2]=="1"){
+            if((var.name.class=="numeric")| (var.name.class=="integer")){
+            if(length(table(variable))==2){
+            if(table(variable)[1]=="0" & table(variable)[2]=="1"){
             chosen.level <- "1"
             ref.level <- "0 "
             rownames(table0) <- paste(rownames(table0),": ",chosen.level," vs ", ref.level, sep="")
@@ -1335,8 +1638,8 @@ tableGlm <- function (model, modified.coeff.array, decimal)
             }
         table1 <- rbind(table1, cbind(table0), cbind(blank.row,""))
       }else{
-            if(any(class(model)=="glm")){
-            if(any(model$family=="binomial") |any(model$family=="poisson")){
+            if(any(class(model)=="glm") | any(class(model)=="coxph")){
+            if(any(model$family=="binomial") |any(model$family=="poisson") | any(class(model)=="coxph")){
             label.row <- cbind(label.row0, lr.p.value)
             colnames(label.row) <- c(colnames(modified.coeff.array),"LR-test P value")
             }
@@ -1359,7 +1662,6 @@ tableGlm <- function (model, modified.coeff.array, decimal)
             rownames(label.row) <- var.names[i]
             }
             
-            
             if(length(grep(":", var.names[i])) > 0){
             first.var <- unlist(strsplit(var.names[i],":"))[1]
             second.var <- unlist(strsplit(var.names[i],":"))[2]
@@ -1369,8 +1671,13 @@ tableGlm <- function (model, modified.coeff.array, decimal)
             new.rownames1 <- gsub(first.var, replacement="",splited.old.rownames[,1])
             new.rownames2 <- gsub(second.var, replacement="",splited.old.rownames[,2])
             rownames(table0) <- paste(new.rownames1,":",new.rownames2,sep="") 
+            if(any(class(model)=="lm")){
             all.level1 <- unlist(model$xlevels[names(model$xlevels)==first.var])
             all.level2 <- unlist(model$xlevels[names(model$xlevels)==second.var])
+            }else{
+            all.level1 <- levels(get(as.character(model$call)[3])[,first.var])
+            all.level2 <- levels(get(as.character(model$call)[3])[,second.var])
+            }
             non.interact <- rownames(modified.coeff.array)[-grep(":", rownames(modified.coeff.array))]
             non.interact1 <- non.interact[substr(non.interact, 1, nchar(first.var))== first.var]
             used.levels1 <- gsub(pattern=first.var, replacement="", non.interact1)
@@ -1381,7 +1688,13 @@ tableGlm <- function (model, modified.coeff.array, decimal)
             ref.level <- paste(ref.level1,":",ref.level2,sep="")
             }else{
             rownames(table0) <- gsub(var.names[i], replacement="", rownames(table0))
+            if(any(class(model)=="lm")){
             all.levels <- unlist(unlist(model$xlevels))[grep(var.names[i],names(unlist(model$xlevels)))]
+            }else{
+            if(any(class(model)=="coxph")){
+            all.levels <-levels(get(as.character(model$call)[3])[,var.names[i]])
+            }
+            }
             ref.level <- setdiff(all.levels, rownames(table0))
             }
             rownames(label.row) <- paste(rownames(label.row), ": ref.=", ref.level, sep="")
@@ -1390,7 +1703,6 @@ tableGlm <- function (model, modified.coeff.array, decimal)
       }
     }
 }
-
 #### Likelihood ratio test
 lrtest <- function (model1, model2, print=TRUE) 
 {
@@ -3561,7 +3873,8 @@ as.Date(paste(AD,"-",month,"-",day, sep=""))
 
 ## Cronbach's alpha
 alpha <- function (vars, dataFrame = .data, casewise = FALSE, reverse = TRUE, 
-    decimal = 4, vars.to.reverse = NULL, var.labels = TRUE) 
+    decimal = 4, vars.to.reverse = NULL, var.labels = TRUE, var.labels.trunc=150,
+    print.results=TRUE) 
 {
     if (casewise) {
         usage <- "complete.obs"
@@ -3589,18 +3902,6 @@ alpha <- function (vars, dataFrame = .data, casewise = FALSE, reverse = TRUE,
         sign1 <- rep(1, ncol(selected.matrix))
         sign1[which.neg] <- -1
     }
-    if (reverse) {
-        score <- factanal(na.omit(selected.matrix), factor = 1, 
-            score = "regression")$score
-        sign1 <- NULL
-        for (i in 1:length(selected)) {
-            sign1 <- c(sign1, sign(cor(score, na.omit(selected.matrix)[, 
-                i], use = usage)))
-        }
-        which.neg <- which(sign1 < 0)
-        selected.matrix[, which.neg] <- -1 * selected.matrix[, 
-            which.neg]
-    }
     reliability <- function(matrixC, matrixR, matrixN) {
         k1 <- ncol(matrixC)
         if (casewise) {
@@ -3624,6 +3925,25 @@ alpha <- function (vars, dataFrame = .data, casewise = FALSE, reverse = TRUE,
     k <- ncol(selected.matrix)
     matC <- cov(selected.matrix, use = usage)
     matR <- cor(selected.matrix, use = usage)
+    matR1 <- matR
+    diag(matR1) <- 0
+    if(any(matR1==1)){
+    reverse <- FALSE
+    which(matR1 > .97, arr.ind =TRUE) -> temp.mat
+    warning(paste(paste(rownames(temp.mat), collapse= " and "))," are extremely correlated.","\n", "  Remove one of them from 'vars' if 'reverse' is required.")
+    }
+    if (reverse) {
+        score <- factanal(na.omit(selected.matrix), factor = 1, 
+            score = "regression")$score
+        sign1 <- NULL
+        for (i in 1:length(selected)) {
+            sign1 <- c(sign1, sign(cor(score, na.omit(selected.matrix)[, 
+                i], use = usage)))
+        }
+        which.neg <- which(sign1 < 0)
+        selected.matrix[, which.neg] <- -1 * selected.matrix[, 
+            which.neg]
+    }
     if (casewise) {
         samp.size <- nrow(na.omit(selected.matrix))
         matN <- matrix(nrow(na.omit(selected.matrix)), k, k)
@@ -3639,6 +3959,7 @@ alpha <- function (vars, dataFrame = .data, casewise = FALSE, reverse = TRUE,
             }
         }
     }
+    if(print.results){
     cat("Number of items in the scale =", k, "\n")
     cat(paste("Method used for covaiance computing =", usage, "\n"))
     cat("Sample size =", samp.size, "\n")
@@ -3650,6 +3971,7 @@ alpha <- function (vars, dataFrame = .data, casewise = FALSE, reverse = TRUE,
         matR, matN)$alpha, digits = decimal), "\n"))
     cat(paste("        standardized value =", format(reliability(matC, 
         matR, matN)$std.alpha, digits = decimal), "\n", "\n"))
+    }
     rel <- matrix(0, k, 3)
     colnames(rel) <- c("Alpha", "Std.Alpha", "r(item, rest)")
     for (i in 1:k) {
@@ -3672,41 +3994,77 @@ alpha <- function (vars, dataFrame = .data, casewise = FALSE, reverse = TRUE,
                 use = "complete.obs")
         }
     }
+    rownames(rel) <- names(selected.dataFrame)
     if (reverse || (!is.null(vars.to.reverse))) {
+        if(print.results){
         cat(paste("Item(s) reversed and new alpha if the item omitted:", 
             "\n"))
+        }
         Reversed <- ifelse(sign1 < 0, "    x   ", "    .   ")
         result <- cbind(Reversed, format(rel, digits = decimal))
     }
     else {
+        if(print.results){
         cat(paste("Note: no attempt to reverse any item.", "\n"))
         cat(paste("New alpha if item omitted:", "\n"))
+        }
         result <- cbind(format(rel, digits = decimal))
     }
     rownames(result) <- names(dataFrame)[selected]
     if (var.labels) {
         if (!is.null(attributes(dataFrame)$var.labels)) {
-            result <- cbind(result, attributes(dataFrame)$var.labels[selected])
+            result <- cbind(result, substr(attributes(dataFrame)$var.labels[selected],1,var.labels.trunc))
             colnames(result)[ncol(result)] <- "description"
         }
     }
-    print.noquote(result)
+    if(print.results){print.noquote(result)}
 results <- list(alpha = reliability(matC, matR, matN)$alpha, 
     std.alpha = reliability(matC, matR, matN)$std.alpha, 
     sample.size=samp.size,
     use.method = usage,
     rbar=reliability(matC, matR, matN)$rbar,
-    items.selected = names(dataFrame)[selected])
+    items.selected = names(dataFrame)[selected], alpha.if.removed = rel)
 if(reverse||suppressWarnings(!is.null(vars.to.reverse))) results <- c(results, list(items.reversed = names(selected.dataFrame)[sign1 < 0]))
 if(var.labels && !is.null(attributes(dataFrame)$var.labels)){
     results <- c(results, list(item.labels=attributes(dataFrame)$var.labels[selected]))
 }
 }
 
+# The best Cronbach alpha
+alphaBest <- function(vars, standardized=FALSE, dataFrame=.data)
+{
+    nl <- as.list(1:ncol(dataFrame))
+    names(nl) <- names(dataFrame)
+    selected <- eval(substitute(vars), nl, parent.frame())
+a <- alpha(vars=selected, dataFrame=dataFrame, print.results=FALSE)
+sorted.alpha.if.removed <- a$alpha.if.removed[order(a$alpha.if.removed[,1+standardized], decreasing=TRUE),1 + standardized]
+removed.names <- NULL
+removed.orders <- NULL
+count <- 0
+while(a[1+standardized] < sorted.alpha.if.removed[1]){
+removed.name0 <-  names(sorted.alpha.if.removed)[1]
+removed.names <- c(removed.names, removed.name0)
+removed.orders <- c(removed.orders, which(names(dataFrame) %in% removed.name0))
+count <- count +1
+a <- alpha(vars=setdiff(selected, removed.orders), print.results=FALSE, dataFrame=dataFrame)
+sorted.alpha.if.removed <- a$alpha.if.removed[order(a$alpha.if.removed[,1+standardized], decreasing=TRUE),1 + standardized]
+}
+names(removed.orders) <- removed.names
+remaining.names <- a$items.selected
+remaining.orders <- which(names(dataFrame) %in% remaining.names)
+names(remaining.orders) <- remaining.names
+if(standardized){
+list(best.std.alpha = a$alpha, removed.items = removed.orders, remaining.items = remaining.orders)
+}else{
+list(best.alpha = a$alpha, removed = removed.orders, remaining = remaining.orders, items.reversed = a$items.reversed)
+}
+}
+
+
 ## Table stack
 tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, 
     means = TRUE, medians = FALSE, sds = TRUE, decimal = 1, dataFrame = .data, 
-    total = TRUE, vars.to.reverse = NULL, var.labels = TRUE, 
+    total = TRUE, vars.to.reverse = NULL, var.labels = TRUE, var.labels.trunc =150,
     reverse = FALSE, by = NULL, vars.to.factor = NULL, iqr = "auto", 
     prevalence = TRUE, percent = c("column", "row", "none"), 
     test = TRUE, name.test = TRUE) 
@@ -3714,6 +4072,10 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
     nl <- as.list(1:ncol(dataFrame))
     names(nl) <- names(dataFrame)
     selected <- eval(substitute(vars), nl, parent.frame())
+    by.var <- eval(substitute(by), nl, parent.frame())
+    if (is.numeric(by.var)) {
+        by <- dataFrame[, by.var]
+    }
     if (is.null(by)) {
         selected.class <- NULL
         for (i in selected) {
@@ -3757,7 +4119,7 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
         is.factor(dataFrame[, selected][, 1])) {
         stop("Variables must be in 'integer' class before reversing. \n        Try 'unclassDataframe' first'")
     }
-    selected.dataFrame <- dataFrame[, selected]
+    selected.dataFrame <- dataFrame[, selected, drop=FALSE]
     if (is.null(by)) {
         selected.matrix <- NULL
         for (i in selected) {
@@ -3859,7 +4221,7 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
         result0 <- results
         if (var.labels) {
             if (!is.null(attributes(dataFrame)$var.labels)) {
-                results <- as.table(cbind(results, attributes(dataFrame)$var.labels[selected]))
+                results <- as.table(cbind(results, substr(attributes(dataFrame)$var.labels[selected],1,var.labels.trunc)))
             }
             if (!is.null(attributes(dataFrame)$var.labels)) 
                 colnames(results)[ncol(results)] <- "description"
@@ -3932,7 +4294,7 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
         results <- results
     }
     else {
-        by1 <- factor(by)
+        by1 <- factor(dataFrame[, by.var])
         name.test <- ifelse(test, name.test, FALSE)
         if (is.character(iqr)) {
             if (iqr == "auto") {
@@ -3940,19 +4302,21 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
                 for (i in 1:length(selected)) {
                   if (is.integer(dataFrame[, selected[i]]) | 
                     is.numeric(dataFrame[, selected[i]])) {
-                    if(nrow(dataFrame) < 5000){
-                    if (shapiro.test(lm(dataFrame[, selected[i]] ~ 
-                      by1)$residuals)$p.value < 0.01 | bartlett.test(dataFrame[, 
-                      selected[i]] ~ by1)$p.value < 0.01) {
-                      selected.iqr <- c(selected.iqr, selected[i])
+                    if (nrow(dataFrame) < 5000) {
+                      if (shapiro.test(lm(dataFrame[, selected[i]] ~ 
+                        by1)$residuals)$p.value < 0.01 | bartlett.test(dataFrame[, 
+                        selected[i]] ~ by1)$p.value < 0.01) {
+                        selected.iqr <- c(selected.iqr, selected[i])
+                      }
                     }
-                    }else{
-                    sampled.shapiro <- sample(lm(dataFrame[, selected[i]] ~ 
-                      by1)$residuals, 250)
-                    if (shapiro.test(sampled.shapiro)$p.value < 0.01 | bartlett.test(dataFrame[, 
-                      selected[i]] ~ by1)$p.value < 0.01) {
-                      selected.iqr <- c(selected.iqr, selected[i])
-                    }
+                    else {
+                      sampled.shapiro <- sample(lm(dataFrame[, 
+                        selected[i]] ~ by1)$residuals, 250)
+                      if (shapiro.test(sampled.shapiro)$p.value < 
+                        0.01 | bartlett.test(dataFrame[, selected[i]] ~ 
+                        by1)$p.value < 0.01) {
+                        selected.iqr <- c(selected.iqr, selected[i])
+                      }
                     }
                   }
                 }
@@ -4011,7 +4375,7 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
                   dim(E) <- NULL
                   if ((sum(E < 5))/length(E) > 0.2) {
                     test.method <- "Fisher's exact test"
-                    p.value <- fisher.test(x)$p.value
+                    p.value <- fisher.test(x, simulate.p.value = TRUE)$p.value
                   }
                   else {
                     test.method <- paste("Chisq. (", suppressWarnings(chisq.test(x)$parameter), 
@@ -4122,6 +4486,13 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
                 names(dataFrame)[selected][i])
             rownames(label.row) <- ifelse(rownames(label.row) == 
                 "", names(dataFrame[selected[i]]), rownames(label.row))
+            if (!is.logical(dataFrame[, selected[i]])) {
+                if (prevalence & length(levels(dataFrame[, selected[i]])) == 
+                  2) {
+                  rownames(label.row) <- paste(rownames(label.row), 
+                    "=", levels(dataFrame[, selected[i]])[2])
+                }
+            }
             blank.row <- t(blank.row)
             rownames(blank.row) <- ""
             table2 <- rbind(table2, label.row, table0, blank.row)
