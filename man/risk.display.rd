@@ -25,7 +25,7 @@ tableGlm (model, modified.coeff.array, decimal)
 
 The function 'tableGlm' is not for general use. It is called by 'logistic.display' and 'regress.display' to receive the 'modified.coeff.array' and produce the output table.
 
-The output from 'logistic.display' and 'regress.display' are ready to write (using 'write.csv') to a .csv file which can then be copied to Word document for a manuscript. This approach can substantially reduce time and errors due conventional manual copying.
+The output from 'logistic.display' and 'regress.display' are tables which are ready to write (using 'write.csv') to a .csv file which can then be copied to Word document for a manuscript. This approach can substantially reduce time and errors due conventional manual copying.
 }
 \arguments{
 	\item{logistic.model}{a model from a logistic regression}
@@ -45,7 +45,7 @@ The output from 'logistic.display' and 'regress.display' are ready to write (usi
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
 }
-\value{'logistic.display' and 'regress.display' each produces an output table. See 'details'.}
+\value{'logistic.display', 'regress.display', 'clogit.display' and 'cox.display', each produces an output table. See 'details'.}
 \seealso{'glm', 'confint'}
 \examples{
 model0 <- glm(case ~ induced + spontaneous, family=binomial, data=infert)
@@ -66,7 +66,7 @@ clr1 <- clogit(case ~ alcohol + fsmoke + strata(matset), data=vc1to6)
 clogistic.display(clr1)
  
 
-library(MASS)
+library(MASS)                                                                    
 model1 <- glm(Origin ~ Weight + AirBags + DriveTrain, family=binomial, data=Cars93)
 logistic.display(model1, decimal=3, crude.p.value=TRUE)
 

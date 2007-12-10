@@ -45,6 +45,7 @@ When the 'by' argument is given, 'reverse' and 'vars.to.reverse' do not apply. I
 
 When 'test = TRUE' (default), chi-squared test (or two-sided Fisher's exact test, if sample size is small) will be carried out for a categorical variable or a factor. Two-sample t-test (or ANOVA F-test, when there are more than 2 levels of 'by') will be computed for a numeric variable. If the numeric variable is included in 'iqr' argument, (manually or automatically), Wilcoxson's ranksum test or Kruskal-Wallis test will be performed instead.
 
+By default, Epicalc sets 'var.labels=TRUE' in order to give nice output. However, 'var.labels=FALSE' can sometimes be more useful during data exploration. Variable numbers as well as variable names are displayed instead of variable labels. Names and numbers of abnormally distributed variables, especially factors with too many levels can be quickly picked up for further relevelling or recoding.
 } 
 \value{a list of elements of the output results, when 'by = NULL', otherwise, a table
 }
