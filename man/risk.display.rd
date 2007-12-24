@@ -16,7 +16,8 @@ clogistic.display(clogit.model, alpha = 0.05, crude=TRUE, crude.p.value=FALSE, d
 cox.display (cox.model, alpha = 0.05, crude=TRUE, crude.p.value=FALSE, decimal = 2) 
 regress.display(regress.model, alpha = 0.05, crude = FALSE, crude.p.value = FALSE, 
     decimal = 2) 
-idr.display(count.model, decimal = 3, alpha = 0.05) 
+idr.display(idr.model, alpha = 0.05, crude = TRUE, crude.p.value = FALSE, 
+    decimal = 2) 
 mlogit.display(multinom.model, decimal = 2, alpha = 0.05) 
 ordinal.or.display(ordinal.model, decimal = 3, alpha = 0.05)  
 tableGlm (model, modified.coeff.array, decimal) 
@@ -36,7 +37,7 @@ The output from 'logistic.display' and 'regress.display' are tables which are re
 	\item{crude}{whether crude results and their confidence interval should also be displayed}
 	\item{crude.p.value}{whether crude P value should also be displayed if and only if 'crude=TRUE'}
 	\item{decimal}{number of decimal places displayed}
-	\item{count.model}{a model from a Poisson or negative binomial regression}
+	\item{idr.model}{a model from a Poisson regression or a negative binomial regression}
 	\item{multinom.model}{a model from multinomial or polytomous regression}
 	\item{ordinal.model}{a model from an ordinal logistic regression}
   \item{model}{model passed from logistic.display or regress.display to tableGlm}
@@ -55,6 +56,16 @@ logistic.display(model0)
 data(ANCdata)
 glm1 <- glm(death ~ anc + clinic, family=binomial, data=ANCdata)
 logistic.display(glm1)
+
+library(MASS) # necessary for negative binomial regression
+data(DHF99); use(DHF99)
+model.poisson <- glm(containers ~ education + viltype, 
+    family=poisson, data=.data)
+model.nb <- glm.nb(containers ~ education + viltype, 
+    data=.data)
+idr.display(model.poisson)
+idr.display(model.nb)
+
  
 data(VC1to6)
 use(VC1to6)
@@ -67,7 +78,8 @@ clogistic.display(clr1)
  
 
 library(MASS)                                                                    
-model1 <- glm(Origin ~ Weight + AirBags + DriveTrain, family=binomial, data=Cars93)
+model1 <- glm(Origin ~ Weight + AirBags + DriveTrain, 
+    family=binomial, data=Cars93)
 logistic.display(model1, decimal=3, crude.p.value=TRUE)
 
 reg1 <- lm(Price ~ Weight + AirBags + DriveTrain, data=Cars93)

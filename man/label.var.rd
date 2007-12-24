@@ -5,15 +5,15 @@
 \title{Variable manipulation}
 \description{Label a variable; integrate outside variable(s) into .data; sort the whole dataset.}
 \usage{
-label.var(var, label, pack = TRUE)   
+label.var(var, label, pack = TRUE, dataFrame = .data)   
 pack(dataFrame = .data) 
-sortBy(...)
+sortBy(..., dataFrame = .data)
 }
 \arguments{
 	\item{var}{A variable inside .data or a free vector.}
 	\item{label}{Short description of the variable}
 	\item{pack}{Remove the original free variable?}
-	\item{dataFrame}{Destination data frame where all variables of the same length are packed into}
+	\item{dataFrame}{Destination data frame where all variables of the same length are labeled, packed into or sorted}
 	\item{...}{index variable(s) used for sorting}
 }
 \details{A data frame adopted from Stata or SPSS sometimes has 'variable label', which is adopted as an attribute (but not used) by R. 
@@ -31,16 +31,12 @@ Finally, the whole dataset, and the variables outside, can be sorted by an index
 }
 \seealso{'use','des'}
 \examples{
-data(Oswego)
-use(Oswego)
 
 sbp <- c(120, 100, 110, 120, 140, 120,  NA,  NA) 
 dbp <- c( 80,  80,  70,  80,  70,  NA,  70,  60)
 .data <- data.frame(sbp, dbp)
-attach(.data, warn.conflicts=FALSE)
-
-# The above lines generate a hypothetical data frame. In reality,
-# one just exploits 'use("datafile")', if the "datafile" exists.
+use(.data)
+pack()
 des()
 label.var(sbp, "systolic BP")
 label.var(dbp, "diastolic BP")

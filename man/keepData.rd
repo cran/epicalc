@@ -2,12 +2,12 @@
 \alias{keepData}
 \title{Keep a subset of variables or records}
 \description{Keeping only subset of variables or records in the default data frame '.data'}
-\usage{
-keepData (x = .data, sample=NULL, exclude=NULL, subset, select, 
+\usage{                                       
+keepData (dataFrame = .data, sample=NULL, exclude=NULL, subset, select, 
 		 drop = FALSE, ...)  
 }
 \arguments{
-	\item{x}{.data or the default data frame}
+	\item{dataFrame}{a data frame}
 	\item{sample}{integer indicating size of random sample or value < 1 indicating fraction of records to be extracted}
 	\item{exclude}{expression, indicating columns to remove from '.data'.}
 	\item{subset}{logical expression indicating elements or rows to keep: missing values are taken as false.}
@@ -15,11 +15,11 @@ keepData (x = .data, sample=NULL, exclude=NULL, subset, select,
 	\item{drop}{passed on to [ indexing operator.} 
 	\item{...}{further arguments to be passed to or from other methods.} 
 }
-\details{'keepData' is the Epicalc version of 'subset.data.frame' which is a standard R function. It reduces '.data' to the specified subset and resets the search path accordingly.
+\details{'keepData' is the Epicalc version of 'subset.data.frame' which is a standard R function. It reduces the data frame to the specified subset and resets the search path accordingly.
 
 Using 'keepData' will retain descriptions of the data, and the remaining variables, ready to be used by other Epicalc functions that can exploit them such as 'des', 'codebook', 'summ', 'tab1' etc..
 
-Since this command only affects .data, any new variables created as free vectors will not be changed. The difference in length of variables may occur from the 'subset' argument. To avoid this, 'pack' or 'label.var' should be used to incoporate any relevant free vectors into '.data' so that all variable can be subsetted simultaneously, thus reducing the complications of the difference in variable lengths.
+Since this command only affects the specified data frame (usually '.data'), any new variables created as free vectors will not be changed. The difference in length of variables may occur from the 'subset' argument. To avoid this, 'pack' or 'label.var' should be used to incoporate any relevant free vectors into the default data frame, '.data' so that all variable can be subsetted simultaneously, thus reducing the complications of the difference in variable lengths.
 }
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
@@ -45,7 +45,7 @@ summ()
 use(Compaq)
 every.seventh <- is.element(1:nrow(.data), seq(1, nrow(.data), 7))
 keepData(subset = every.seventh) 
-.data[1:10,]
+head(.data)
 
 ## Records under certain conditions
 data(Familydata)
