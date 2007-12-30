@@ -7,6 +7,7 @@
 \alias{mlogit.display}
 \alias{ordinal.or.display}
 \alias{tableGlm}
+\alias{print.display}
 \title{Tables for multivariate odds ratio, incidence density etc}
 \description{Display of various epidemiological modelling results in a medically understandable format}
 \usage{
@@ -20,13 +21,14 @@ idr.display(idr.model, alpha = 0.05, crude = TRUE, crude.p.value = FALSE,
     decimal = 2) 
 mlogit.display(multinom.model, decimal = 2, alpha = 0.05) 
 ordinal.or.display(ordinal.model, decimal = 3, alpha = 0.05)  
-tableGlm (model, modified.coeff.array, decimal) 
+tableGlm (model, modified.coeff.array, decimal)
+\method{print}{display}(x, ...) 
 }
 \details{R provides several epidemiological modelling techniques. The functions above display these results in a format easier for medical people to understand.
 
 The function 'tableGlm' is not for general use. It is called by 'logistic.display' and 'regress.display' to receive the 'modified.coeff.array' and produce the output table.
 
-The output from 'logistic.display' and 'regress.display' are tables which are ready to write (using 'write.csv') to a .csv file which can then be copied to Word document for a manuscript. This approach can substantially reduce time and errors due conventional manual copying.
+The output from 'logistic.display', 'regress.display' etc. have 'display' and 'list' as their class. Their apparence on R console are controlled by 'print.display'. The 'table' element of these 'display' objects are ready to write (using 'write.csv') to a .csv file which can then be copied to Word document for a manuscript. This approach can substantially reduce time and errors due conventional manual copying.
 }
 \arguments{
 	\item{logistic.model}{a model from a logistic regression}
@@ -42,6 +44,8 @@ The output from 'logistic.display' and 'regress.display' are tables which are re
 	\item{ordinal.model}{a model from an ordinal logistic regression}
   \item{model}{model passed from logistic.display or regress.display to tableGlm}
   \item{modified.coeff.array}{array modified by from coefficient array and sent to the function 'tableGlm' to produce the output}
+  \item{x}{object obtained from these 'display' functions}
+  \item{...}{further arguments passed to or used by methods}
 }
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
@@ -63,9 +67,16 @@ model.poisson <- glm(containers ~ education + viltype,
     family=poisson, data=.data)
 model.nb <- glm.nb(containers ~ education + viltype, 
     data=.data)
-idr.display(model.poisson)
-idr.display(model.nb)
-
+idr.display(model.poisson)  -> poiss
+print(poiss) # or print.display(poiss)
+idr.display(model.nb)  -> nb
+print(nb)  
+nb # same result
+write.csv(nb$table, file="tablenb.csv")
+getwd()
+## You may go to this directory (folder) and have a look
+## at the file using a spreadsheed programme such as Excel 
+file.remove(file = "tablenb.csv") # The file removed
  
 data(VC1to6)
 use(VC1to6)
@@ -81,6 +92,13 @@ library(MASS)
 model1 <- glm(Origin ~ Weight + AirBags + DriveTrain, 
     family=binomial, data=Cars93)
 logistic.display(model1, decimal=3, crude.p.value=TRUE)
+logistic.display(model1, decimal=3, crude.p.value=TRUE) -> table3
+attributes(table3)
+table3
+table3$table
+write.csv(table3$table, file="table3.csv") # Note $table
+## Have a look at this file with Excel
+file.remove(file="table3.csv")
 
 reg1 <- lm(Price ~ Weight + AirBags + DriveTrain, data=Cars93)
 regress.display(reg1)

@@ -6,7 +6,7 @@
 \usage{
 alpha (vars, dataFrame = .data, casewise = FALSE, reverse = TRUE, 
     decimal = 4, vars.to.reverse = NULL, var.labels = TRUE, 
-    var.labels.trunc =150, print.results=TRUE)   
+    var.labels.trunc =150)   
 alphaBest (vars, standardized = FALSE, dataFrame = .data) 
 }
 \arguments{
@@ -18,7 +18,6 @@ alphaBest (vars, standardized = FALSE, dataFrame = .data)
 	\item{var.labels}{presence of descriptions of variables on the last column of output}
 	\item{var.labels.trunc}{number of characters used for variable description}
 	\item{vars.to.reverse}{variable(s) to reverse}
-	\item{print.results}{whether the results should be printed out}
   \item{standardized}{whether choosing the best subset of items is based on standardized alpha coefficient}
 }
 \details{This function is based on the 'reliability' function from package 'Rcmdr', which computes Cronbach's alpha for a composite scale. 
@@ -48,7 +47,7 @@ alpha(qa1:qa18, var.labels.trunc=30)
                  # Fits in with default R console screen
 
 alpha(qa1:qa18, reverse=FALSE)
-alpha(qa1:qa18)
+
 alphaBest(qa1:qa18) -> best.alpha
 best.alpha
 tableStack(best.alpha$remaining, reverse=TRUE)

@@ -1,12 +1,14 @@
 \name{tab1}
 \alias{tab1}
+\alias{print.tab1}
 \title{One-way tabulation}
 \description{One-way tabulation with automatic bar chart}
 \usage{
 tab1 (x0, decimal = 1, sort.group = c(FALSE, "decreasing", 
 "increasing"), cum.percent = !any(is.na(x0)), graph = TRUE, 
 missing = TRUE, bar.values = c("frequency", "percent", "none"),
-horiz=FALSE) 
+horiz=FALSE)
+\method{print}{tab1}(x, ...)
 }
 \arguments{
 	\item{x0}{a variable}
@@ -17,6 +19,8 @@ horiz=FALSE)
 	\item{missing}{include the missing values category or <NA> in the graphic display}
 	\item{bar.values}{include the value of frequeny, percentage or none at the end of each bar}
 	\item{horiz}{set the bar chart to horizontal orientation}
+  \item{x}{object obtained from saving 'tab1' results}
+  \item{...}{further arguments passed to or used by methods}
 }
 \details{'tab1' is an advanced one-way tabulation providing a nice table as well as a bar chart. The description of the variable is also used in the main title of the graph.
 
@@ -45,5 +49,10 @@ agegr <- cut(age, breaks=c(0,20,60,80))
 tab1(agegr)
 tab1(agegr, horiz=TRUE)
 
+tab1(agegr) -> a
+print(a)
+a # same results
+attributes(a)
+a$output.table
 }
 \keyword{aplot}

@@ -769,18 +769,24 @@ chi2 <-abs(a-A)^2/Vara
 
 
 risk.diff  <- risk[2]-risk[1]
-risk.diff.lower <- round(risk.diff*(1-(qnorm(1-.05/2)/sqrt(chi2))),decimal)
-risk.diff.upper <- round(risk.diff*(1+(qnorm(1-.05/2)/sqrt(chi2))),decimal)
+risk.diff.lower <- round(risk.diff*(1-sign(risk.diff)*(qnorm(1-.05/2)/sqrt(chi2))),decimal)
+risk.diff.upper <- round(risk.diff*(1+sign(risk.diff)*(qnorm(1-.05/2)/sqrt(chi2))),decimal)
 risk.ratio <- round(risk[2]/risk[1], decimal)
-risk.ratio.lower <- round(risk.ratio^(1-(qnorm(1-.05/2)/sqrt(suppressWarnings(chisq.test(table)$statistic)))),decimal)
-risk.ratio.upper <- round(risk.ratio^(1+(qnorm(1-.05/2)/sqrt(suppressWarnings(chisq.test(table)$statistic)))),decimal)
+risk.ratio.lower <- round(risk.ratio^(1-sign(risk.diff)*(qnorm(1-.05/2)/sqrt(suppressWarnings(chisq.test(table)$statistic)))),decimal)
+risk.ratio.upper <- round(risk.ratio^(1+sign(risk.diff)*(qnorm(1-.05/2)/sqrt(suppressWarnings(chisq.test(table)$statistic)))),decimal)
 if(risk.ratio < 1) {
 	protective.efficacy <- round(-risk.diff/risk[1]*100, decimal-1)
-	nnt <- round(-1/risk.diff,decimal) 	
-	risk.names <- c("Risk difference (absolute risk changed)","Risk ratio","Protective efficacy (%)", 
+	protective.efficacy.lower <- round(100*(1-(risk.ratio^(1-(qnorm(1-.05/2)/sqrt(suppressWarnings(chisq.test(table)$statistic)))))),decimal)
+	protective.efficacy.upper <- round(100*(1-(risk.ratio^(1+(qnorm(1-.05/2)/sqrt(suppressWarnings(chisq.test(table)$statistic)))))),decimal)
+	nnt <- round(-1/risk.diff,decimal)
+  nnt.lower <- round(-1/(risk.diff*(1+(qnorm(1-.05/2)/sqrt(chi2)))),decimal)
+  nnt.upper <- round(-1/(risk.diff*(1-(qnorm(1-.05/2)/sqrt(chi2)))),decimal) 	
+	risk.names <- c("Risk difference (Re - Rne)","Risk ratio","Protective efficacy =(Rne-Re)/Rne*100  ", "  or percent of risk reduced", 
 		"Number needed to treat (NNT)"  )
-	risk.table <- cbind(risk.names, c(round(risk.diff,decimal), risk.ratio, protective.efficacy, nnt),
-		c(risk.diff.lower,risk.ratio.lower,"",""),c(risk.diff.upper,risk.ratio.upper,"",""))
+	risk.table <- cbind(risk.names, 
+      c(round(risk.diff,decimal), risk.ratio,      protective.efficacy,       " ", nnt),
+  		c(risk.diff.lower,          risk.ratio.lower,protective.efficacy.lower, " ", nnt.lower),
+      c(risk.diff.upper,          risk.ratio.upper,protective.efficacy.upper, " ", nnt.upper))
 }else{
 	attributable.frac.exp <- round(risk.diff/risk[2], decimal) 
 	pop.risk.diff <- risk[3] - risk[1]
@@ -791,7 +797,7 @@ if(risk.ratio < 1) {
 	risk.table <- cbind(risk.names, c(round(risk.diff,decimal), risk.ratio, attributable.frac.exp,
 	attributable.frac.pop), c(risk.diff.lower,risk.ratio.lower,"",""),c(risk.diff.upper,risk.ratio.upper,"",""))
 }
-	row.names(risk.table) <- rep("",4)
+	row.names(risk.table) <- rep("",nrow(risk.table))
 	colnames(risk.table) <- c("","Estimate","Lower95ci","Upper95ci")
 	print.noquote(risk.table)
 	cat("\n")
@@ -823,12 +829,10 @@ idr.display <- function (idr.model, alpha = 0.05, crude = TRUE, crude.p.value = 
             formula0 <- as.formula(paste(names(model$model)[1], 
                 "~", var.names[i], "- 1"))
             }
-            if(length(grep("cbind", names(model$model)[1])) > 0){
-            model0 <- glm(formula0, offset=model$offset, 
-                family = poisson, data = get(as.character(model$call)[4]))
-            }else{
             model0 <- glm(formula0, weights = model$prior.weights,  offset=model$offset,
                 family = poisson, data = model$model)
+            if(any(class(model)=="negbin")){
+            model0 <- glm.nb (as.formula(paste(names(model$model)[1], "~", var.names[i])))
             }
             coeff.matrix <- (summary(model0))$coefficients[-1, 
                 , drop = FALSE]
@@ -925,8 +929,13 @@ idr.display <- function (idr.model, alpha = 0.05, crude = TRUE, crude.p.value = 
     modified.coeff.array <- a
     table1 <- tableGlm(model, modified.coeff.array, decimal)
     outcome.name <- names(model$model)[1]
-    if (!is.null(attr(model$data, "var.labels"))) {
-        outcome.name <- attr(model$data, "var.labels")[attr(model$data, 
+    if(any(class(model)=="negbin")){
+    modelData <- get(as.character(model$call)[3])
+    }else{
+    modelData <- model$data
+    }
+    if (!is.null(attr(modelData, "var.labels"))) {
+        outcome.name <- attr(modelData, "var.labels")[attr(modelData, 
             "names") == names(model$model)[1]]
     }
     else {
@@ -939,15 +948,13 @@ idr.display <- function (idr.model, alpha = 0.05, crude = TRUE, crude.p.value = 
     }else{
         outcome.lab <- paste(outcome.name, "\n")
     }
-    cat(paste("Poisson regression predicting ", outcome.lab, 
-        sep = ""), "\n")
-    print.noquote(table1)
-    cat(c("Log-likelihood = ", round(logLik(model), decimal + 
-        2)), "\n")
-    cat("No. of observations = ", length(model$y), "\n")
-    cat("AIC value =", s1$aic, "\n")
-    cat("\n")
-    a <- table1
+    first.line <- paste("\n", ifelse(any(class(model)=="negbin"),"Negative binomial", "Poisson"), " regression predicting ", outcome.lab, sep = "")
+    last.lines <- paste("Log-likelihood = ", round(logLik(model), decimal + 2), "\n",
+                   "No. of observations = ", length(model$y), "\n",
+                   "AIC value = ", round(s1$aic, decimal + 2), "\n","\n", sep = "")
+    results <- list(first.line=first.line, table=table1, last.lines=last.lines)
+    class(results) <- c("display", "list")
+    results
 }
 
 
@@ -1247,7 +1254,7 @@ logistic.display <- function (logistic.model, alpha = 0.05, crude = TRUE, crude.
     orci[, 2] <- exp(orci[, 1] - qnorm(1 - alpha/2) * orci[, 
         2])
     orci[, 1] <- exp(orci[, 1])
-    cat("\n")
+
     decimal1 <- ifelse(abs(orci[, 1] - 1) < 0.01, 4, decimal)
     a <- cbind(paste(round(orci[, 1], decimal1), " (", round(orci[, 
         2], decimal1), ",", round(orci[, 3], decimal1), ") ", 
@@ -1318,16 +1325,23 @@ logistic.display <- function (logistic.model, alpha = 0.05, crude = TRUE, crude.
     else {
         outcome.lab <- paste(outcome.name, "\n")
     }
-    cat(paste("Logistic regression predicting ", outcome.lab, 
-        sep = ""), "\n")
-    print.noquote(table1)
-    cat(c("Log-likelihood = ", round(logLik(model), decimal + 
-        2)), "\n")
-    cat("No. of observations = ", length(model$y), "\n")
-    cat("AIC value =", s1$aic, "\n")
-    cat("\n")
-    a <- table1
+    first.line <-paste("\n", "Logistic regression predicting ", outcome.lab, 
+        sep = "")
+    last.lines <- paste("Log-likelihood = ", round(logLik(model), decimal + 2), "\n",
+                   "No. of observations = ", length(model$y), "\n",
+                   "AIC value = ", round(s1$aic, decimal + 2), "\n","\n", sep = "")
+    results <- list(first.line=first.line, table=table1, last.lines=last.lines)
+    class(results) <- c("display", "list")
+    results
 }
+
+print.display <- function(x, ...)
+{
+    cat(x$first.line, "\n")
+    print.noquote(x$table)
+    cat(x$last.lines)
+}
+
 
 
 ###### Linear regression display
@@ -1395,7 +1409,6 @@ regress.display <- function (regress.model, alpha = 0.05, crude=FALSE, crude.p.v
         2])
     reg.ci[, 2] <- (reg.ci[, 1] - qt((1 - alpha/2), summary(model)$df[2]) * reg.ci[, 
         2])                                        
-    cat("\n")
     decimal1 <- ifelse(abs(reg.ci[,1]-1) < .01,  4, decimal)
     a <- cbind(paste(round(reg.ci[,1], decimal1)," (",round(reg.ci[,2], decimal1),",",
           round(reg.ci[,3], decimal1),") ", sep=""), ifelse(reg.ci[,4] < .001, "< 0.001",round(reg.ci[,4],decimal+1)))
@@ -1438,17 +1451,17 @@ tableGlm(model, modified.coeff.array, decimal) -> table1
     }}
             outcome.name <- ifelse(outcome.name == 
                 "", names(model$model)[1], outcome.name)
-    cat(paste("Linear regression predicting ",outcome.name, sep=""), "\n")
-    cat("\n")
-
-    print.noquote(table1)
-    cat("No. of observations = ", nrow(model$model), "\n")
-    if(any(class(model)=="glm")){cat(c("Log-likelihood = ", round(logLik(model), decimal + 
-        2)), "\n")
-    cat("AIC value =", s1$aic, "\n")
+    first.line <- paste("Linear regression predicting ",outcome.name, sep="", "\n")
+    if(any(class(model)=="glm")){
+    last.lines <- paste("Log-likelihood = ", round(logLik(model), decimal + 2), "\n",
+                   "No. of observations = ", length(model$y), "\n",
+                   "AIC value = ", round(s1$aic, decimal + 2), "\n","\n", sep = "")
+    }else{
+    last.lines <- paste("No. of observations = ", nrow(model$model), "\n","\n", sep = "")
     }
-    cat("\n")
-    a <- table1
+    results <- list(first.line=first.line, table=table1, last.lines=last.lines)
+    class(results) <- c("display", "list")
+    results
 }
 
 
@@ -1556,11 +1569,11 @@ tableGlm(model, modified.coeff.array, decimal) -> table1
             }}}
             
             
-    cat(paste("Conditional logistic regression predicting ",outcome.lab, sep=""), "\n")
-    print.noquote(table1)
-    cat("No. of observations = ", length(outcome), "\n")
-    cat("\n")
-    a <- table1
+    first.line <- paste("Conditional logistic regression predicting ",outcome.lab, sep="", "\n")
+    last.lines <- paste("No. of observations = ", length(outcome), "\n")
+    results <- list(first.line=first.line, table=table1, last.lines=last.lines)
+    class(results) <- c("display", "list")
+    results
 }
 
 ####### Cox's regression display
@@ -1651,8 +1664,6 @@ cox.display <- function (cox.model, alpha = 0.05, crude=TRUE, crude.p.value=FALS
     modified.coeff.array <- a
 
 tableGlm(model, modified.coeff.array, decimal) -> table1    
-
-            
     surv.string <- as.character(model$formula)[2]
     if(length(grep(",", surv.string)) > 0){
     time.var.name <- substr(unlist(strsplit(surv.string, ","))[1], 6, nchar(unlist(strsplit(surv.string, ","))[1]))
@@ -1663,12 +1674,12 @@ tableGlm(model, modified.coeff.array, decimal) -> table1
     }
     var.names0 <- attr(model$terms, "term.labels")
     if(length(grep("strata", var.names0))>0) {intro <- paste(intro, " with '", var.names0[grep("strata", var.names0)], "'", sep="" )}
-    cat(intro, "\n", "\n")
-    print.noquote(table1)
-    cat("\n")
-    cat("No. of observations = ", model$n, "\n")
-    cat("\n")
-    a <- table1
+
+    first.line <- paste(intro, "\n")
+    last.lines <- paste("No. of observations = ", model$n, "\n")
+    results <- list(first.line=first.line, table=table1, last.lines=last.lines)
+    class(results) <- c("display", "list")
+    results
 }
 
 
@@ -1716,6 +1727,7 @@ tableGlm <- function (model, modified.coeff.array, decimal)
       F.p.value <- ifelse(F.p.value < .001, "< 0.001",round(F.p.value,decimal+1))
       }}
     for(i in 1:length(var.names)){ # i is the variable order  in model
+        # Define variable class and levels
             if(any(class(model)=="lm")){
             if(length(grep(pattern=":", var.names[i])) < 1){
             variable <- model$model[,i+1]
@@ -1732,6 +1744,22 @@ tableGlm <- function (model, modified.coeff.array, decimal)
             if(var.name.class=="factor"){
             var.name.levels <- levels(get(as.character(model$call)[3])[,var.names[i]]) 
             }}}}
+
+        # Define variable labels
+            if(any(class(model)=="glm")){
+            var.labels <- attr(model$data, "var.labels")[attr(model$data, "names")==var.names[i]]
+              if(any(class(model)=="negbin")){
+              var.labels <- attributes(get(as.character(model$call)[3]))$var.labels[names(get(as.character(model$call)[3]))==var.names[i]]
+              } 
+            }else{
+            if(any(class(model)=="coxph")){
+            var.labels <- attributes(get(as.character(model$call)[3]))$var.labels[names(get(as.character(model$call)[3]))==var.names[i]]
+            }
+            if(any(class(model)=="lm")){
+            var.labels <- attributes(get(as.character(model$call)[3]))$var.labels[names(get(as.character(model$call)[3]))==var.names[i]]
+            }
+            }
+        # Define model1 for lr test            
     if(any(class(model)=="glm")){
     if(any(model$family=="binomial") |any(model$family=="poisson") | any(class(model)=="negbin")){
         if(length(var.names)==1){
@@ -1781,6 +1809,8 @@ tableGlm <- function (model, modified.coeff.array, decimal)
       lr.p.value <- ifelse(lr.p.value < .001, "< 0.001",round(lr.p.value,decimal+1))
       }
       }
+      
+        # Define table0      
       if(length(var.names)==1){
       if((any(class(model)=="glm") | any(class(model)=="lm")) & names(model$coefficients)[1]=="(Intercept)"){
       table0 <- modified.coeff.array[-1,]
@@ -1797,8 +1827,11 @@ tableGlm <- function (model, modified.coeff.array, decimal)
       table0 <- modified.coeff.array[rownames(modified.coeff.array)==var.names[i],]
       }
       }}
-      if(is.null(nrow(table0))) table0 <- t(table0)           
-      if(nrow(table0)==1){
+      if(is.null(nrow(table0))) table0 <- t(table0) 
+      
+        # Define column names
+      if(nrow(table0)==1){ 
+      # table0 with only a single row
         if(any(class(model)=="glm" | any(class(model)=="coxph"))){
         if(any(model$family=="binomial") |any(model$family=="poisson") |any(class(model)=="coxph")){
             table0 <- cbind(table0, lr.p.value)
@@ -1812,17 +1845,6 @@ tableGlm <- function (model, modified.coeff.array, decimal)
             table0 <- cbind(table0, F.p.value[i])
             colnames(table0) <- c(colnames(modified.coeff.array),"P(F-test)")
         }
-            if(any(class(model)=="glm")){
-            var.labels <- attr(model$data, "var.labels")[attr(model$data, "names")==var.names[i]]
-            }else{
-            if(any(class(model)=="coxph")){
-            var.labels <- attributes(get(as.character(model$call)[3]))$var.labels[names(get(as.character(model$call)[3]))==var.names[i]]
-            }
-            if(any(class(model)=="lm")){
-            var.labels <- attributes(get(as.character(model$call)[3]))$var.labels[names(get(as.character(model$call)[3]))==var.names[i]]
-            
-            }
-            }
             if(!is.null(var.labels)){
             rownames(table0) <- var.labels
             }else{
@@ -1861,7 +1883,8 @@ tableGlm <- function (model, modified.coeff.array, decimal)
             rownames(table0) <- rownames(modified.coeff.array)[grep(":", rownames(modified.coeff.array))]                                                                                                      
             }
         table1 <- rbind(table1, cbind(table0), cbind(blank.row,""))
-      }else{
+      }else{ 
+      # table0 with multiple rows
             if(any(class(model)=="glm") | any(class(model)=="coxph")){
             if(any(model$family=="binomial") |any(model$family=="poisson") | any(class(model)=="coxph") | any(class(model)=="negbin")){
             label.row <- cbind(label.row0, lr.p.value)
@@ -1875,8 +1898,8 @@ tableGlm <- function (model, modified.coeff.array, decimal)
             label.row <- cbind(label.row0, F.p.value[i])
             colnames(label.row) <- c(colnames(modified.coeff.array),"P(F-test)")
             }
-            if(!is.null(attr(model$data, "var.labels"))){
-            rownames(label.row) <- attr(model$data, "var.labels")[attr(model$data, "names")==var.names[i]]
+            if(!is.null(var.labels)){
+            rownames(label.row) <- var.labels
             }else{
             rownames(label.row) <- var.names[i]
             }
@@ -2668,7 +2691,7 @@ list(Each.category=each.category, Overall=Overall)
  
 ### Make 2 x 2 table
 make2x2 <- function(caseexp, controlex, casenonex, controlnonex) {
-table <- c(controlnonex, controlex, casenonex, caseexp)
+table <- c(controlnonex, casenonex, controlex, caseexp)
 dim(table) <- c(2,2)
 rownames(table) <- c("Non-diseased", "Diseased")
 colnames(table) <- c("Non-exposed","Exposed")
@@ -3104,20 +3127,27 @@ if(cum.percent){
   }
 	rownames(output)[length(rownames(output))] <- "  Total"
 }
-cat("\n")
 if(substring(search()[2], first=1, last=8)!="package:"){
 options(warn=-1)
-	cat(c(as.character(substitute(x0)),":"),(attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==substitute(x0)]), "\n","\n")
+	first.line <- paste(as.character(substitute(x0)),":", attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==substitute(x0)], "\n","\n")
 options(warn=TRUE)
-	print(output, justify="right")
-	cat("\n")
+}else{
+  first.line <- paste(as.character(substitute(x0)),":", "\n") 
 }
-else{
-	print(output, justify="right")
-	cat("\n")
+returns <- list(first.line=first.line, output.table=output)
+class(returns) <- c("tab1", "list")
+returns
 }
-returns <- list(output.table=output)
+
+### Print tab1 results
+print.tab1 <- function(x, ...)
+{
+cat(x$first.line, "\n")
+print(x$output.table, justify="right")
 }
+
+
+
 ### recode values of a vector from a lookup array  
 
 lookup <- function (x, lookup.array) 
@@ -3397,6 +3427,9 @@ if(any(names(data1)==as.character(substitute(var)))){
 	}
 	attributes(data1)$var.labels[names(data1)==as.character(substitute(var))] <- label
 }else{
+  if(length(var) != nrow(dataFrame)){
+  stop(paste("The length of", as.character(substitute(var)), "is not equal to number of rows of", as.character(substitute(dataFrame))))
+  }
 	old.labels <-attributes(data1)$var.labels
 	data1[,ncol(data1)+1]<- var
 	names(data1)[length(names(data1))] <- as.character(substitute(var))
@@ -3406,7 +3439,13 @@ if(any(names(data1)==as.character(substitute(var)))){
 	attributes(data1)$var.labels <- c(old.labels,label)
 	}
 }
+if(exists(as.character(substitute(var)))){
+  if(length(var)==nrow(dataFrame)){
 	data1[,names(data1)==as.character(substitute(var))] <- var
+  }else{
+  stop(paste("The length of", as.character(substitute(var)), "is not equal to number of rows of", as.character(substitute(dataFrame))))
+  }
+}
 if(pack){
 	suppressWarnings(rm(list=as.character(substitute(var)), pos=1))
 }
@@ -4167,8 +4206,7 @@ as.Date(paste(AD,"-",month,"-",day, sep=""))
 
 ## Cronbach's alpha
 alpha <- function (vars, dataFrame = .data, casewise = FALSE, reverse = TRUE, 
-    decimal = 4, vars.to.reverse = NULL, var.labels = TRUE, var.labels.trunc=150,
-    print.results=TRUE) 
+    decimal = 4, vars.to.reverse = NULL, var.labels = TRUE, var.labels.trunc=150) 
 {
     if (casewise) {
         usage <- "complete.obs"
@@ -4186,10 +4224,11 @@ alpha <- function (vars, dataFrame = .data, casewise = FALSE, reverse = TRUE,
             i]))
     }
     colnames(selected.matrix) <- names(selected.dataFrame)
-    if (suppressWarnings(!is.null(vars.to.reverse))) {
-        nl1 <- as.list(1:ncol(dataFrame))
+
+        nl1 <- as.list(1:ncol(dataFrame[, selected]))
         names(nl1) <- names(dataFrame[, selected])
         which.neg <- eval(substitute(vars.to.reverse), nl1, parent.frame())
+    if (suppressWarnings(!is.null(which.neg))) {
         selected.matrix[, which.neg] <- -1 * selected.matrix[, 
             which.neg]
         reverse <- FALSE
@@ -4254,18 +4293,6 @@ alpha <- function (vars, dataFrame = .data, casewise = FALSE, reverse = TRUE,
             }
         }
     }
-    if(print.results){
-    cat("Number of items in the scale =", k, "\n")
-    cat("Sample size =", samp.size, "\n")
-    cat(paste("Average inter-item correlation =", format(reliability(matC, 
-        matR, matN)$rbar, digits = decimal), "\n", "\n"))
-    cat(paste("Cronbach's alpha: ", "cov/cor computed with ", 
-        "'", usage, "'", "\n", sep = ""))
-    cat(paste("      unstandardized value =", format(reliability(matC, 
-        matR, matN)$alpha, digits = decimal), "\n"))
-    cat(paste("        standardized value =", format(reliability(matC, 
-        matR, matN)$std.alpha, digits = decimal), "\n", "\n"))
-    }
     rel <- matrix(0, k, 3)
     colnames(rel) <- c("Alpha", "Std.Alpha", "r(item, rest)")
     rownames(rel) <- names(dataFrame)[selected]
@@ -4289,20 +4316,11 @@ alpha <- function (vars, dataFrame = .data, casewise = FALSE, reverse = TRUE,
                 use = "complete.obs")
         }
     }
-    if (reverse || (!is.null(vars.to.reverse))) {
-        if(print.results){
-                cat(paste("Item(s) reversed and new alpha if the item omitted:", 
-            "\n"))
-        }
+    if (!is.null(which.neg)) {
         Reversed <- ifelse(sign1 < 0, "    x   ", "    .   ")
-        result <- cbind(Reversed, format(rel, digits = decimal))
-    }
-    else {
-        if(print.results){
-        cat(paste("Note: no attempt to reverse any item.", "\n"))
-        cat(paste("New alpha if item omitted:", "\n"))
-        }
-        result <- cbind(format(rel, digits = decimal))
+        result <- cbind(Reversed, round(rel, digits = decimal))
+    }else{
+    result <- round(rel, digits=decimal)
     }
     rownames(result) <- names(dataFrame)[selected]
     if (var.labels) {
@@ -4311,19 +4329,39 @@ alpha <- function (vars, dataFrame = .data, casewise = FALSE, reverse = TRUE,
                         colnames(result)[ncol(result)] <- "description"
         }
     }
-    if(print.results){print.noquote(result)}
 results <- list(alpha = reliability(matC, matR, matN)$alpha, 
     std.alpha = reliability(matC, matR, matN)$std.alpha, 
     sample.size=samp.size,
     use.method = usage,
     rbar=reliability(matC, matR, matN)$rbar,
-    items.selected = names(dataFrame)[selected], alpha.if.removed = rel)
-if(reverse||suppressWarnings(!is.null(vars.to.reverse))) results <- c(results, list(items.reversed = names(selected.dataFrame)[sign1 < 0]))
+    items.selected = names(dataFrame)[selected], alpha.if.removed = rel,
+    result=result, decimal=decimal)
+if(!is.null(which.neg)) results <- c(results, list(items.reversed = names(selected.dataFrame)[sign1 < 0]))
 if(var.labels && !is.null(attributes(dataFrame)$var.labels)){
     results <- c(results, list(item.labels=attributes(dataFrame)$var.labels[selected]))
 }
+class(results) <- "alpha"
+results
 }
 
+print.alpha <- function(x, ...)
+{
+cat("Number of items in the scale =", length(x$items.selected), "\n")
+cat("Sample size =", x$sample.size, "\n")
+cat(paste("Average inter-item correlation =", round(x$rbar,
+    digits = x$decimal), "\n", "\n"))
+cat(paste("Cronbach's alpha: ", "cov/cor computed with ", 
+     "'", x$use.method, "'", "\n", sep = ""))
+cat(paste("      unstandardized value =", round(x$alpha, digits = x$decimal), "\n"))
+cat(paste("        standardized value =", round(x$std.alpha, digits = x$decimal), "\n", "\n"))
+if(!is.null(x$items.reversed)){
+  cat(paste("Item(s) reversed:", paste(x$items.reversed, collapse= ", "), "\n", "\n"))
+}else{
+  cat(paste("Note: no attempt to reverse any item.", "\n", "\n"))
+}
+  cat(paste("New alpha if item omitted:", "\n"))
+print.noquote(x$result)
+}
 
 
 # The best Cronbach alpha
@@ -4332,7 +4370,7 @@ alphaBest <- function(vars, standardized=FALSE, dataFrame=.data)
     nl <- as.list(1:ncol(dataFrame))
     names(nl) <- names(dataFrame)
     selected <- eval(substitute(vars), nl, parent.frame())
-a <- alpha(vars=selected, dataFrame=dataFrame, print.results=FALSE)
+a <- alpha(vars=selected, dataFrame=dataFrame)
 sorted.alpha.if.removed <- a$alpha.if.removed[order(a$alpha.if.removed[,1+standardized], decreasing=TRUE),1 + standardized]
 removed.names <- NULL
 removed.orders <- NULL
@@ -4342,7 +4380,7 @@ removed.name0 <-  names(sorted.alpha.if.removed)[count + 1]
 removed.names <- c(removed.names, removed.name0)
 removed.orders <- c(removed.orders, which(names(dataFrame) %in% removed.name0))
 count <- count +1
-a <- alpha(vars=setdiff(selected, removed.orders), print.results=FALSE, dataFrame=dataFrame)
+a <- alpha(vars=setdiff(selected, removed.orders), dataFrame=dataFrame)
 sorted.alpha.if.removed <- a$alpha.if.removed[order(a$alpha.if.removed[,1+standardized], decreasing=TRUE),1 + standardized]
 }
 names(removed.orders) <- removed.names
@@ -4357,12 +4395,13 @@ list(best.alpha = a$alpha, removed = removed.orders, remaining = remaining.order
 }
 
 ## Table stack
-tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, 
+tableStack <-
+function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, 
     means = TRUE, medians = FALSE, sds = TRUE, decimal = 1, dataFrame = .data, 
-    total = TRUE, vars.to.reverse = NULL, var.labels = TRUE, var.labels.trunc =150,
-    reverse = FALSE, by = NULL, vars.to.factor = NULL, iqr = "auto", 
-    prevalence = TRUE, percent = c("column", "row", "none"), 
-    test = TRUE, name.test = TRUE) 
+    total = TRUE, vars.to.reverse = NULL, var.labels = TRUE, 
+    var.labels.trunc = 150, reverse = FALSE, by = NULL, vars.to.factor = NULL, 
+    iqr = "auto", prevalence = FALSE, percent = c("column", "row", 
+        "none"), test = TRUE, name.test = TRUE, total.column = FALSE) 
 {
     nl <- as.list(1:ncol(dataFrame))
     names(nl) <- names(dataFrame)
@@ -4370,6 +4409,9 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
     by.var <- eval(substitute(by), nl, parent.frame())
     if (is.numeric(by.var)) {
         by <- dataFrame[, by.var]
+    }
+    if (is.character(by.var)) {
+        by1 <- as.factor(rep("Total", nrow(dataFrame)))
     }
     if (is.null(by)) {
         selected.class <- NULL
@@ -4414,7 +4456,7 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
         is.factor(dataFrame[, selected][, 1])) {
         stop("Variables must be in 'integer' class before reversing. \n        Try 'unclassDataframe' first'")
     }
-    selected.dataFrame <- dataFrame[, selected, drop=FALSE]
+    selected.dataFrame <- dataFrame[, selected, drop = FALSE]
     if (is.null(by)) {
         selected.matrix <- NULL
         for (i in selected) {
@@ -4447,30 +4489,32 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
             sign1[which.neg] <- -1
         }
         if (reverse) {
-    matR1 <- cor(selected.matrix, use = "pairwise.complete.obs")
-    diag(matR1) <- 0
-    if(any(matR1 > .98)){
-    reverse <- FALSE
-    which(matR1 > .98, arr.ind =TRUE) -> temp.mat
-    warning(paste(paste(rownames(temp.mat), collapse= " and "))," are extremely correlated.","\n", 
-        "  The command has been excuted without 'reverse'.", "\n",
-        "  Remove one of them from 'vars' if 'reverse' is required.")
-    }else{
-            score <- factanal(na.omit(selected.matrix), factor = 1, 
-                score = "regression")$score
-            sign1 <- NULL
-            for (i in 1:length(selected)) {
-                sign1 <- c(sign1, sign(cor(score, na.omit(selected.matrix)[, 
-                  i], use = "pairwise")))
+            matR1 <- cor(selected.matrix, use = "pairwise.complete.obs")
+            diag(matR1) <- 0
+            if (any(matR1 > 0.98)) {
+                reverse <- FALSE
+                temp.mat <- which(matR1 > 0.98, arr.ind = TRUE)
+                warning(paste(paste(rownames(temp.mat), collapse = " and ")), 
+                  " are extremely correlated.", "\n", "  The command has been excuted without 'reverse'.", 
+                  "\n", "  Remove one of them from 'vars' if 'reverse' is required.")
             }
-            which.neg <- which(sign1 < 0)
-            for (i in which.neg) {
-                dataFrame[, selected][, i] <- maxlevel + 1 - 
-                  dataFrame[, selected][, i]
-                selected.matrix[, i] <- maxlevel + 1 - selected.matrix[, 
-                  i]
+            else {
+                score <- factanal(na.omit(selected.matrix), factor = 1, 
+                  score = "regression")$score
+                sign1 <- NULL
+                for (i in 1:length(selected)) {
+                  sign1 <- c(sign1, sign(cor(score, na.omit(selected.matrix)[, 
+                    i], use = "pairwise")))
+                }
+                which.neg <- which(sign1 < 0)
+                for (i in which.neg) {
+                  dataFrame[, selected][, i] <- maxlevel + 1 - 
+                    dataFrame[, selected][, i]
+                  selected.matrix[, i] <- maxlevel + 1 - selected.matrix[, 
+                    i]
+                }
             }
-        }}
+        }
         table1 <- NULL
         for (i in as.integer(selected)) {
             if (!is.factor(dataFrame[, i])) {
@@ -4509,10 +4553,11 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
             table1 <- rbind(table1, tablei)
         }
         results <- as.table(table1)
-        if(var.labels){
-        rownames(results) <- names(selected.dataFrame)
-        }else{
-        rownames(results) <- paste(selected, ":",names(selected.dataFrame))
+        if (var.labels) {
+            rownames(results) <- names(selected.dataFrame)
+        }
+        else {
+            rownames(results) <- paste(selected, ":", names(selected.dataFrame))
         }
         if (is.integer(selected.dataFrame[, 1])) {
             rownames(results) <- names(nl)[selected]
@@ -4529,7 +4574,8 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
         result0 <- results
         if (var.labels) {
             if (!is.null(attributes(dataFrame)$var.labels)) {
-                results <- as.table(cbind(results, substr(attributes(dataFrame)$var.labels[selected],1,var.labels.trunc)))
+                results <- as.table(cbind(results, substr(attributes(dataFrame)$var.labels[selected], 
+                  1, var.labels.trunc)))
             }
             if (!is.null(attributes(dataFrame)$var.labels)) 
                 colnames(results)[ncol(results)] <- "description"
@@ -4581,8 +4627,7 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
                 rownames(results)[nrow(results)] <- " Average score"
             }
         }
-        print.noquote(results)
-        results <- list(table = result0)
+        results <- list(results = noquote(results))
         if (reverse || suppressWarnings(!is.null(vars.to.reverse))) 
             results <- c(results, list(items.reversed = names(selected.dataFrame)[sign1 < 
                 0]))
@@ -4599,10 +4644,18 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
                     sd.of.average.scores = sd.of.average.scores))
             }
         }
-        results <- results
+        class(results) <- "tableStack"
+        results
     }
     else {
-        by1 <- factor(dataFrame[, by.var])
+        if (is.character(by.var)) {
+            by1 <- as.factor(rep("Total", nrow(dataFrame)))
+        }
+        else {
+            by1 <- factor(dataFrame[, by.var])
+        }
+        if (length(table(by1)) == 1) 
+            test <- FALSE
         name.test <- ifelse(test, name.test, FALSE)
         if (is.character(iqr)) {
             if (iqr == "auto") {
@@ -4610,20 +4663,22 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
                 for (i in 1:length(selected)) {
                   if (is.integer(dataFrame[, selected[i]]) | 
                     is.numeric(dataFrame[, selected[i]])) {
-                    if (nrow(dataFrame) < 5000) {
-                      if (shapiro.test(lm(dataFrame[, selected[i]] ~ 
-                        by1)$residuals)$p.value < 0.01 | bartlett.test(dataFrame[, 
-                        selected[i]] ~ by1)$p.value < 0.01) {
-                        selected.iqr <- c(selected.iqr, selected[i])
+                    if (length(table(by1)) > 1) {
+                      if (nrow(dataFrame) < 5000) {
+                        if (shapiro.test(lm(dataFrame[, selected[i]] ~ 
+                          by1)$residuals)$p.value < 0.01 | bartlett.test(dataFrame[, 
+                          selected[i]] ~ by1)$p.value < 0.01) {
+                          selected.iqr <- c(selected.iqr, selected[i])
+                        }
                       }
-                    }
-                    else {
-                      sampled.shapiro <- sample(lm(dataFrame[, 
-                        selected[i]] ~ by1)$residuals, 250)
-                      if (shapiro.test(sampled.shapiro)$p.value < 
-                        0.01 | bartlett.test(dataFrame[, selected[i]] ~ 
-                        by1)$p.value < 0.01) {
-                        selected.iqr <- c(selected.iqr, selected[i])
+                      else {
+                        sampled.shapiro <- sample(lm(dataFrame[, 
+                          selected[i]] ~ by1)$residuals, 250)
+                        if (shapiro.test(sampled.shapiro)$p.value < 
+                          0.01 | bartlett.test(dataFrame[, selected[i]] ~ 
+                          by1)$p.value < 0.01) {
+                          selected.iqr <- c(selected.iqr, selected[i])
+                        }
                       }
                     }
                   }
@@ -4636,18 +4691,24 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
         table2 <- NULL
         for (i in 1:length(selected)) {
             if (is.factor(dataFrame[, selected[i]])) {
-                x <- table(dataFrame[, selected[i]], by1)
+                x0 <- table(dataFrame[, selected[i]], by1)
+                if (total.column) {
+                  x <- addmargins(x0, margin = 2)
+                }
+                else {
+                  x <- x0
+                }
                 nr <- nrow(x)
-                nc <- ncol(x)
-                sr <- rowSums(x)
+                nc <- ncol(x0)
+                sr <- rowSums(x0)
                 if (any(sr) == 0) {
                   stop(paste(names(dataFrame)[selected[i]], " has zero count in at least one row"))
                 }
-                sc <- colSums(x)
+                sc <- colSums(x0)
                 if (any(sc) == 0) {
                   stop(paste(names(dataFrame)[selected[i]], " has zero count in at least one column"))
                 }
-                x.row.percent <- round(x/rowSums(x) * 100, decimal)
+                x.row.percent <- round(x/rowSums(x0) * 100, decimal)
                 table0 <- x
                 if (nrow(x) == 2 & prevalence) {
                   table00 <- addmargins(x, margin = 1)
@@ -4667,8 +4728,8 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
                   }
                   else {
                     if (any(percent == "row")) {
-                      x.row.percent <- round(x/rowSums(x) * 100, 
-                        decimal)
+                      x.row.percent <- round(x/rowSums(x0) * 
+                        100, decimal)
                       x.row.percent1 <- matrix(paste(x, "(", 
                         x.row.percent, ")", sep = ""), nrow(x), 
                         ncol(x))
@@ -4679,17 +4740,17 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
                   colnames(table0) <- colnames(x)
                 }
                 if (test) {
-                  E <- outer(sr, sc, "*")/sum(x)
+                  E <- outer(sr, sc, "*")/sum(x0)
                   dim(E) <- NULL
                   if ((sum(E < 5))/length(E) > 0.2) {
                     test.method <- "Fisher's exact test"
-                    p.value <- fisher.test(x, simulate.p.value = TRUE)$p.value
+                    p.value <- fisher.test(x0, simulate.p.value = TRUE)$p.value
                   }
                   else {
-                    test.method <- paste("Chisq. (", suppressWarnings(chisq.test(x)$parameter), 
-                      " df) = ", suppressWarnings(round(chisq.test(x)$statistic, 
+                    test.method <- paste("Chisq. (", suppressWarnings(chisq.test(x0)$parameter), 
+                      " df) = ", suppressWarnings(round(chisq.test(x0)$statistic, 
                         decimal + 1)), sep = "")
-                    p.value <- suppressWarnings(chisq.test(x)$p.value)
+                    p.value <- suppressWarnings(chisq.test(x0)$p.value)
                   }
                 }
             }
@@ -4698,25 +4759,41 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
                   term1 <- NULL
                   term2 <- NULL
                   term3 <- NULL
-                  for (j in 1:length(levels(by1))) {
+                  for (j in 1:(length(levels(by1)))) {
                     term1 <- c(term1, quantile(dataFrame[by1 == 
                       levels(by1)[j], selected[i]], na.rm = TRUE)[3])
                     term2 <- c(term2, quantile(dataFrame[by1 == 
                       levels(by1)[j], selected[i]], na.rm = TRUE)[2])
                     term3 <- c(term3, quantile(dataFrame[by1 == 
                       levels(by1)[j], selected[i]], na.rm = TRUE)[4])
-                    term.numeric <- paste(round(term1, decimal), 
-                      "(", round(term2, decimal), ",", round(term3, 
-                        decimal), ")", sep = "")
-                    term.numeric <- t(term.numeric)
                   }
+                  if (total.column) {
+                    term1 <- c(term1, quantile(dataFrame[, selected[i]], 
+                      na.rm = TRUE)[3])
+                    term2 <- c(term2, quantile(dataFrame[, selected[i]], 
+                      na.rm = TRUE)[2])
+                    term3 <- c(term3, quantile(dataFrame[, selected[i]], 
+                      na.rm = TRUE)[4])
+                  }
+                  term.numeric <- paste(round(term1, decimal), 
+                    "(", round(term2, decimal), ",", round(term3, 
+                      decimal), ")", sep = "")
+                  term.numeric <- t(term.numeric)
                   rownames(term.numeric) <- "  median(IQR)"
                 }
                 else {
                   term1 <- as.vector(tapply(X = dataFrame[, selected[i]], 
                     INDEX = list(by1), FUN = "mean", na.rm = TRUE))
+                  if (total.column) {
+                    term1 <- c(term1, mean(dataFrame[, selected[i]], 
+                      na.rm = TRUE))
+                  }
                   term2 <- as.vector(tapply(X = dataFrame[, selected[i]], 
                     INDEX = list(by1), FUN = "sd", na.rm = TRUE))
+                  if (total.column) {
+                    term2 <- c(term2, sd(dataFrame[, selected[i]], 
+                      na.rm = TRUE))
+                  }
                   term.numeric <- paste(round(term1, decimal), 
                     "(", round(term2, decimal), ")", sep = "")
                   term.numeric <- t(term.numeric)
@@ -4762,42 +4839,63 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
             }
             if (test) {
                 if (name.test) {
-                  label.row <- c(rep("", length(levels(by1))), 
-                    test.method, ifelse(p.value < 0.001, "< 0.001", 
-                      round(p.value, decimal + 2)))
+                  label.row <- c(rep("", length(levels(by1)) + 
+                    total.column), test.method, ifelse(p.value < 
+                    0.001, "< 0.001", round(p.value, decimal + 
+                    2)))
                   label.row <- t(label.row)
-                  colnames(label.row) <- c(levels(by1), "Test stat.", 
-                    "  P value")
+                  if (total.column) {
+                    colnames(label.row) <- c(levels(by1), "Total", 
+                      "Test stat.", "  P value")
+                  }
+                  else {
+                    colnames(label.row) <- c(levels(by1), "Test stat.", 
+                      "  P value")
+                  }
                   table0 <- cbind(table0, "", "")
                   blank.row <- rep("", length(levels(by1)) + 
-                    2)
+                    total.column + 2)
                 }
                 else {
-                  label.row <- c(rep("", length(levels(by1))), 
-                    ifelse(p.value < 0.001, "< 0.001", round(p.value, 
-                      decimal + 2)))
+                  label.row <- c(rep("", length(levels(by1)) + 
+                    total.column), ifelse(p.value < 0.001, "< 0.001", 
+                    round(p.value, decimal + 2)))
                   label.row <- t(label.row)
-                  colnames(label.row) <- c(levels(by1), "  P value")
+                  if (total.column) {
+                    colnames(label.row) <- c(levels(by1), "Total", 
+                      "  P value")
+                  }
+                  else {
+                    colnames(label.row) <- c(levels(by1), "  P value")
+                  }
                   table0 <- cbind(table0, "")
                   blank.row <- rep("", length(levels(by1)) + 
-                    1)
+                    total.column + 1)
                 }
             }
             else {
-                label.row <- c(rep("", length(levels(by1))))
+                label.row <- c(rep("", length(levels(by1)) + 
+                  total.column))
                 label.row <- t(label.row)
-                colnames(label.row) <- c(levels(by1))
-                blank.row <- rep("", length(levels(by1)))
+                if (total.column) {
+                  colnames(label.row) <- c(levels(by1), "Total")
+                }
+                else {
+                  colnames(label.row) <- c(levels(by1))
+                }
+                blank.row <- rep("", length(levels(by1)) + total.column)
             }
-            if(var.labels){
-            rownames(label.row) <- ifelse(!is.null(attributes(dataFrame)$var.labels[selected][i]), 
-                attributes(dataFrame)$var.labels[selected[i]], 
-                names(dataFrame)[selected][i])
-            rownames(label.row) <- ifelse(rownames(label.row) == 
-                "", names(dataFrame[selected[i]]), rownames(label.row))
-            }else{
-            rownames(label.row) <- paste(selected[i], ":", names(dataFrame[selected[i]]))
-            }    
+            if (var.labels) {
+                rownames(label.row) <- ifelse(!is.null(attributes(dataFrame)$var.labels[selected][i]), 
+                  attributes(dataFrame)$var.labels[selected[i]], 
+                  names(dataFrame)[selected][i])
+                rownames(label.row) <- ifelse(rownames(label.row) == 
+                  "", names(dataFrame[selected[i]]), rownames(label.row))
+            }
+            else {
+                rownames(label.row) <- paste(selected[i], ":", 
+                  names(dataFrame[selected[i]]))
+            }
             if (!is.logical(dataFrame[, selected[i]])) {
                 if (prevalence & length(levels(dataFrame[, selected[i]])) == 
                   2) {
@@ -4809,11 +4907,22 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
             rownames(blank.row) <- ""
             table2 <- rbind(table2, label.row, table0, blank.row)
         }
-        print.noquote(table2, right = TRUE)
-        results <- table2
+        class(table2) <- "tableStack"
+        table2
     }
+
 }
 
+# Print tableStack 
+
+print.tableStack <- function (x, ...)
+{
+if(!is.atomic(x)){
+print(x$results)
+}else{
+print(noquote(as.table(x)))
+}
+}
 
 # Unclass data frame
 unclassDataframe <- function(vars, dataFrame = .data){
