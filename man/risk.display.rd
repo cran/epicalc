@@ -28,7 +28,7 @@ tableGlm (model, modified.coeff.array, decimal)
 
 The function 'tableGlm' is not for general use. It is called by 'logistic.display' and 'regress.display' to receive the 'modified.coeff.array' and produce the output table.
 
-The output from 'logistic.display', 'regress.display' etc. have 'display' and 'list' as their class. Their apparence on R console are controlled by 'print.display'. The 'table' element of these 'display' objects are ready to write (using 'write.csv') to a .csv file which can then be copied to Word document for a manuscript. This approach can substantially reduce time and errors due conventional manual copying.
+The output from 'logistic.display', 'regress.display' etc. have 'display' and 'list' as their class. Their apparence on R console are controlled by 'print.display'. The 'table' element of these 'display' objects are ready to write (using 'write.csv') to a .csv file which can then be copied to a manuscript document. This approach can substantially reduce time and errors due to conventional manual copying.
 }
 \arguments{
 	\item{logistic.model}{a model from a logistic regression}
@@ -36,17 +36,26 @@ The output from 'logistic.display', 'regress.display' etc. have 'display' and 'l
 	\item{regress.model}{a model from linear regression}
 	\item{cox.model}{a model from cox regression}
 	\item{alpha}{significance level}
-	\item{crude}{whether crude results and their confidence interval should also be displayed}
-	\item{crude.p.value}{whether crude P value should also be displayed if and only if 'crude=TRUE'}
+	\item{crude}{whether crude results and their confidence intervals should also be displayed}
+	\item{crude.p.value}{whether crude P values should also be displayed if and only if 'crude=TRUE'}
 	\item{decimal}{number of decimal places displayed}
 	\item{idr.model}{a model from a Poisson regression or a negative binomial regression}
-	\item{multinom.model}{a model from multinomial or polytomous regression}
+	\item{multinom.model}{a model from a multinomial or polytomous regression}
 	\item{ordinal.model}{a model from an ordinal logistic regression}
   \item{model}{model passed from logistic.display or regress.display to tableGlm}
-  \item{modified.coeff.array}{array modified by from coefficient array and sent to the function 'tableGlm' to produce the output}
+  \item{modified.coeff.array}{array of model coefficients sent to the function 'tableGlm' to produce the final output}
   \item{x}{object obtained from these 'display' functions}
   \item{...}{further arguments passed to or used by methods}
 }
+\note{Before using these 'display' functions, please note the following limitations. 
+
+1) Users \bold{should} define the 'data' argument of the model.
+
+2) The names of the independent variables \bold{must} be  a subset of the names of the variables in the 'data' argument. 
+
+2) The names of the independent variables \bold{must neither} contain a function such as 'factor()' \bold{nor} any '\bold{\$}' sign. 
+
+2) The levels of the factor variables \bold{must not} contain any '\bold{:}'.}
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
 }
@@ -75,7 +84,7 @@ nb # same result
 write.csv(nb$table, file="tablenb.csv")
 getwd()
 ## You may go to this directory (folder) and have a look
-## at the file using a spreadsheed programme such as Excel 
+## at the file using a spreadsheed programme. 
 file.remove(file = "tablenb.csv") # The file removed
  
 data(VC1to6)
