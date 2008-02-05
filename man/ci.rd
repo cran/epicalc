@@ -5,7 +5,7 @@
 \alias{ci.numeric}
 \alias{ci.poisson}
 \title{Confidence interval of probabilty, mean and incidence}
-\description{Compute confidence interval of variables or values input from keyboard.}
+\description{Compute confidence interval(s) of variables or values input from keyboard.}
 \usage{
 ci(x, ...)
 
@@ -18,20 +18,20 @@ ci(x, ...)
 \method{ci}{poisson}(x, person.time, precision, alpha = 0.05, ...) 
 }
 \arguments{
-       \item{x}{a variable for 'ci', number of success for 'ci.binomial', mean(s) for 'ci.numeric', and counts for 'ci.poisson'.}
-       \item{size}{denominator for success.}
-       \item{precision}{level of precision used during computation for the confidence limits.}
-       \item{alpha}{significance level.}
-       \item{n}{sample size.}
-       \item{sds}{sd(s).}
-       \item{person.time}{denominator for count.}
-       \item{...}{further arguments passed to or used by methods.}
+       \item{x}{a variable for 'ci', number of success for 'ci.binomial', mean(s) for 'ci.numeric', and counts for 'ci.poisson'}
+       \item{size}{denominator for success}
+       \item{precision}{level of precision used during computation for the confidence limits}
+       \item{alpha}{significance level}
+       \item{n}{sample size}
+       \item{sds}{standard deviation}
+       \item{person.time}{denominator for count}
+       \item{...}{further arguments passed to or used by other methods}
 }
 \details{These functions compute confidence intervals of probability, mean and incidence from variables in a dataset or values from keyboard input.
 
 'ci' will try to identify the nature of the variable 'x' and determine the appropriate method (between 'ci.binomial' and 'ci.numeric') for computation. 'ci' without a specified method will never call 'ci.poisson'.
 
-The specific method ie. 'ci.binomial', 'ci.numeric' and 'ci.poisson' should be used when the values are input from the keyboard or from an aggregate data frame with columns of variables for the arguments.
+The specific method, ie. 'ci.binomial', 'ci.numeric' or 'ci.poisson', should be used when the values are input from the keyboard or from an aggregated data frame with columns of variables for the arguments.
 
 'ci.binomial' and 'ci.numeric' employ exact probability computation while 'ci.numeric' is based on the t-distribution assumption.
 }

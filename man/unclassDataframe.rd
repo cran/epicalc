@@ -34,7 +34,7 @@ for (i in 1:4) {
    .data[,i] <- factor(.data[,i])
    levels(.data[,i]) <- level.lab
 }
-des() # All variables are factors
+des() # All variables are now factors
 unclassDataframe(vars=c(1,4))
 des() # Only variables #1 and #4 are 'unclass'ed
 }

@@ -1,14 +1,14 @@
 \name{matchTab}
 \alias{matchTab}
 \title{Matched tabulation}
-\description{Tabulation of a matched case control study}
+\description{Tabulation of outcome vs exposure from a matched case control study}
 \usage{
 matchTab (case, exposed, strata)
 }
 \arguments{
 	\item{case}{Outcome variables where 0 = control and 1 = case}
 	\item{exposed}{Exposure variable where 0 = non-exposed and 1 = exposed}
-	\item{strata}{Number identification for each matched set}
+	\item{strata}{Identification number for each matched set}
 }
 \details{Tabulation for an unmatched case control study is based on individual records classified by outcome and exposure variables.
 
@@ -19,7 +19,7 @@ Matched tabulation is tallying based on each matched set. The simplest form is M
 }
 \seealso{'table', 'cc' and 'clogit'}
 \examples{
-attach(infert)
+use(infert)
 
 ## Not run:
 
@@ -31,7 +31,6 @@ attach(infert)
 
 ia <- induced > 0
 matchTab(case, ia, stratum)
-detach(infert)
 
 # See also
 library(survival)

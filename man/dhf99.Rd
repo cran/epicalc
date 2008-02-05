@@ -17,7 +17,7 @@
   }
 }
 \references{
-  Thammapalo, S., Chongsuwiwatwong, V., Geater, A., Lim, A., Choomalee, K. 2005. Related Articles, Links  
+  Thammapalo, S., Chongsuwiwatwong, V., Geater, A., Lim, A., Choomalee, K. 2005. 
  Socio-demographic and environmental factors associated with Aedes breeding places in Phuket, Thailand.
 \emph{Southeast Asian J Trop Med Pub Hlth} \bold{36(2)}: 426-33.}
 \keyword{datasets}

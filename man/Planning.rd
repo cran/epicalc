@@ -5,7 +5,7 @@
 \description{
 The data come from clients of a family planning clinic.
 
-For all variables except id: 9, 99, 99.9, 888, 999 are missing values
+For all variables except id: 9, 99, 99.9, 888, 999 represent missing values
 }
 \format{
   A data frame with 251 observations on the following 11 variables.
@@ -52,13 +52,22 @@ For all variables except id: 9, 99, 99.9, 888, 999 are missing values
 \examples{
 data(Planning)
 des(Planning)
+
 # Change var. name to lowercase
 names(Planning) <- tolower(names(Planning)) 
 use(Planning)
 des()
+
 # Check for duplication of 'id'
-table(id)
-names(table(id))[table(id) > 1]
+any(duplicated(id))
+duplicated(id)
+id[duplicated(id)] #215
+
+# Which one(s) are missing?
+setdiff(min(id):max(id), id) # 216
+
+# Correct the wrong one
+id[duplicated(id)] <- 216
 }
 \keyword{datasets}
     

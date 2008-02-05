@@ -9,18 +9,18 @@
 'expand' replicates the row using the value in 'index.var' as the number of replications.
 
 'retain.freq' indicates whether the 'index.var', which is the frequency, should be retained. }
-\note{The aggregated data frame is not changed. Remember to assign the result}
+\note{The aggregated data frame is not changed. Remember to assign the result.}
 \arguments{
 	\item{aggregate.data}{an aggregate data frame having a variable indicating the replication of subjects having that combination of characteristics, which are indicated by other variables}
 	\item{index.var}{name of a variable indicating frequency of replication}
-	\item{retain.freq}{whether the index variable or frequency variable should be retained in the return data frame}
+	\item{retain.freq}{whether the index variable or frequency variable should be retained in the returned data frame}
 }
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
 }
 \seealso{'table', 'xtabs', 'aggregate'}
 \examples{
-## Expanding an aggregate data frame
+## Expanding an aggregated data frame
 data(ANCtable)
 des(ANCtable)
 a <- expand(ANCtable)

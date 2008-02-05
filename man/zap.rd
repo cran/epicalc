@@ -1,7 +1,7 @@
 \name{zap}
 \alias{zap}
 \title{Remove and detach all}
-\description{Detach and remove all objects and data frames}
+\description{Detach and remove all objects and data frames from the global environment}
 \usage{
 zap()
 }

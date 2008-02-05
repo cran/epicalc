@@ -10,7 +10,7 @@ shapiro.qqnorm (x, ...)
 	\item{...}{Graphical parameters passed to 'par'}
 }
 \details{
-To test a variable 'x' against the normal distribution, a qqnorm plot is integrated with the Shapiro-Wilk test for easy diplay.
+To test a variable 'x' against the normal distribution, a qqnorm plot is integrated with the Shapiro-Wilk test to enhance interpretation.
 }
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}

@@ -18,8 +18,8 @@ infection}
   }
 }
 \examples{
-data(HW93)
 library(MASS)
+data(HW93)
 use(HW93)
 intense.ord <- ordered(intense)
 ord.hw <- polr(intense.ord ~ agegr + shoes)

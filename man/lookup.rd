@@ -13,7 +13,7 @@ lookup(x, lookup.array)
 
 If either the variable or the look-up table is character, the result vector will be character.
 
-For changing groups of factor variable, please use 'levels(var) <- ' instead.
+For changing the levels of a factor variable, 'recode(vars, "old level", "new level")' or 'levels(var) <- ' instead.
 }
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}

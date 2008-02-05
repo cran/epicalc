@@ -39,7 +39,7 @@ Codes for the answers qa1 to qa18 are
 	\item{\code{qa15}}{Clients like this place due to good service}
 	\item{\code{qa16}}{Clients who expect our smiling faces create pressure on us}
 	\item{\code{qa17}}{Clients are often self-centered}
-	\item{\code{qa18}}{Client should be better served}
+	\item{\code{qa18}}{Clients should be better served}
   }
 }
 \keyword{datasets}

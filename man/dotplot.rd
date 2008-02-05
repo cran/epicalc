@@ -4,7 +4,8 @@
 \description{Plot of frequency in dots}
 \usage{
 dotplot(x, bin = "auto", by = NULL, xmin = NULL, xmax = NULL, 
-    time.format = NULL, time.step = NULL, pch=18, ...) 
+    time.format = NULL, time.step = NULL, pch=18, 
+    dot.col="auto", ...) 
 }
 \arguments{
 	\item{x}{a numeric vector. Allowed types also include "Date" and "POSIXct"}
@@ -14,7 +15,8 @@ dotplot(x, bin = "auto", by = NULL, xmin = NULL, xmax = NULL,
 	\item{xmax}{upper bound of x in the graph}
 	\item{time.format}{format for time or date at the tick marks}
 	\item{time.step}{a character string indicating increment of the sequence of tick marks}
-	\item{pch}{Either an integer specifying a symbol or a single character to be used as the default in plotting points}
+	\item{pch}{either an integer specifying a symbol or a single character to be used as the default in plotting points}
+  \item{dot.col}{a character or a numeric vector indicating the colour of each category of 'by'}
 	\item{...}{graphical parameters for the dots when there is no stratification}
 }
 \details{'dotplot' in Epicalc is similar to a histogram. Each dot represents one record. Attributes of the dots can be further specified in '...' when there is no strafication. Otherwise, the dots are plotted as a diamond shape and the colours are automatically chosen based on the current palette and the number of strata.
@@ -23,7 +25,7 @@ When 'bin="auto"' (by default), and the class of the vector is 'integer', 'bin' 
 
 The argument 'xmin' and 'xmax' indicate the range of x to be displayed on the graph. These two arguments are independent from the value of 'bin', which controls only the number of columns for the original data range. 
 
-Dotplot usually starts the first tick mark on the X-axis at 'xmin' (or min(x) if the 'xmin' is not specified). The argument 'time.step' is typically a character string, containing one of '"sec"', '"min"', '"hour"', '"day"', '"DSTday"', '"week"', '"month"' or '"year"'.  This can optionally be preceded by an integer and a space, or followed by '"s"', such as '"2 weeks"'.
+Dotplot usually starts the first tick mark on the X-axis at 'xmin' (or min(x) if the 'xmin' is not specified). The argument 'time.step' is typically a character string, containing one of 'sec', 'min', 'hour', 'day', 'DSTday', 'week', 'month' or 'year'.  This can optionally be preceded by an integer and a space, or followed by "s", such as "2 weeks".
 
 Setting proper 'xmin', 'xmax' and 'time.step' can improve the location of tick marks on the X-axis. The 'time.format' argument can then be given to further improve the graph. See the last two examples for a better understanding.}
 \author{Virasakdi Chongsuvivatwong
@@ -57,6 +59,14 @@ dotplot(age.as.integer)
 # of the dots inside the data range.
 dotplot(age.as.integer, xmin=0, xmax=150) # Just for demonstration.
 dotplot(age.as.integer, xmin=0, xmax=70) # the "99"s are now out of the plot.
+dotplot(age.as.integer, xmin=0, xmax=70, by=sex) 
+
+# Controlling colours of the dots
+dotplot(age.as.integer, xmin=0, xmax=70, dot.col="chocolate") 
+dotplot(age.as.integer, xmin=0, xmax=70, by=sex, dot.col=c(2,5)) 
+dotplot(age.as.integer, xmin=0, xmax=70, by=sex, 
+  dot.col=c("brown","blue")) 
+
 
 # Dotplot of a time variable
 timeExposed <- ISOdatetime(year=1990, month=8, day=25,
@@ -92,7 +102,7 @@ dotplot(birthdate)
 range(birthdate) #  "1930-11-14" and "1975-12-08"
 
 # There are too many days between these two points of time.
-# Users may want to reduce the number of bin, say to 40
+# Users may want to reduce the number of bins, say, to 40
 dotplot(birthdate, bin=40)
 
 # Setting 'xmin', 'xmax', 'time.step and 'time.format'

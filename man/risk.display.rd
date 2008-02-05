@@ -11,12 +11,14 @@
 \title{Tables for multivariate odds ratio, incidence density etc}
 \description{Display of various epidemiological modelling results in a medically understandable format}
 \usage{
-logistic.display(logistic.model, alpha = 0.05, crude = TRUE, crude.p.value = FALSE, 
+logistic.display(logistic.model, alpha = 0.05, crude = TRUE, 
+    crude.p.value = FALSE, decimal = 2) 
+clogistic.display(clogit.model, alpha = 0.05, crude=TRUE, 
+    crude.p.value=FALSE, decimal = 2)
+cox.display (cox.model, alpha = 0.05, crude=TRUE, crude.p.value=FALSE, 
     decimal = 2) 
-clogistic.display(clogit.model, alpha = 0.05, crude=TRUE, crude.p.value=FALSE, decimal = 2)
-cox.display (cox.model, alpha = 0.05, crude=TRUE, crude.p.value=FALSE, decimal = 2) 
-regress.display(regress.model, alpha = 0.05, crude = FALSE, crude.p.value = FALSE, 
-    decimal = 2) 
+regress.display(regress.model, alpha = 0.05, crude = FALSE, 
+    crude.p.value = FALSE, decimal = 2) 
 idr.display(idr.model, alpha = 0.05, crude = TRUE, crude.p.value = FALSE, 
     decimal = 2) 
 mlogit.display(multinom.model, decimal = 2, alpha = 0.05) 
@@ -33,8 +35,8 @@ The output from 'logistic.display', 'regress.display' etc. have 'display' and 'l
 \arguments{
 	\item{logistic.model}{a model from a logistic regression}
 	\item{clogit.model}{a model from a conditional logistic regression}
-	\item{regress.model}{a model from linear regression}
-	\item{cox.model}{a model from cox regression}
+	\item{regress.model}{a model from a linear regression}
+	\item{cox.model}{a model from a cox regression}
 	\item{alpha}{significance level}
 	\item{crude}{whether crude results and their confidence intervals should also be displayed}
 	\item{crude.p.value}{whether crude P values should also be displayed if and only if 'crude=TRUE'}
@@ -77,14 +79,14 @@ model.poisson <- glm(containers ~ education + viltype,
 model.nb <- glm.nb(containers ~ education + viltype, 
     data=.data)
 idr.display(model.poisson)  -> poiss
-print(poiss) # or print.display(poiss)
+print(poiss) # or print.display(poiss) or poiss
 idr.display(model.nb)  -> nb
 print(nb)  
 nb # same result
 write.csv(nb$table, file="tablenb.csv")
 getwd()
 ## You may go to this directory (folder) and have a look
-## at the file using a spreadsheed programme. 
+## at the file using a spreadsheet programme. 
 file.remove(file = "tablenb.csv") # The file removed
  
 data(VC1to6)
@@ -92,27 +94,28 @@ use(VC1to6)
 fsmoke <- factor(smoking)
 levels(fsmoke) <- list("no"=0, "yes"=1)
 pack()
-.data -> vc1to6
-clr1 <- clogit(case ~ alcohol + fsmoke + strata(matset), data=vc1to6)
+clr1 <- clogit(case ~ alcohol + fsmoke + strata(matset), data=.data)
 clogistic.display(clr1)
  
-
-library(MASS)                                                                    
-model1 <- glm(Origin ~ Weight + AirBags + DriveTrain, 
-    family=binomial, data=Cars93)
-logistic.display(model1, decimal=3, crude.p.value=TRUE)
-logistic.display(model1, decimal=3, crude.p.value=TRUE) -> table3
+data(BP)
+use(BP)
+age <- as.numeric(as.Date("2000-01-01") - birthdate)/365.25
+agegr <- pyramid(age,sex, bin=20)$ageGroup
+hypertension <- sbp >= 140 | dbp >=90
+pack()
+model1 <- glm(hypertension ~ sex + agegr + saltadd, family=binomial, data=.data)
+logistic.display(model1) -> table3
 attributes(table3)
 table3
 table3$table
 write.csv(table3$table, file="table3.csv") # Note $table
-## Have a look at this file with Excel
+## Have a look at this file with Excel, or similar spreadsheet program
 file.remove(file="table3.csv")
 
-reg1 <- lm(Price ~ Weight + AirBags + DriveTrain, data=Cars93)
+reg1 <- lm(sbp ~ sex + agegr + saltadd, data=.data)
 regress.display(reg1)
 
-reg2 <- glm(Price ~ Weight + AirBags + DriveTrain, data=Cars93)
+reg2 <- glm(sbp ~ sex + agegr + saltadd, family=gaussian, data=.data)
 regress.display(reg2)
 
 data(Compaq)

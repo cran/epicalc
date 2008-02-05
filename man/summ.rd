@@ -1,7 +1,7 @@
 \name{summ}
 \alias{summ}
 \title{Summary with graph}
-\description{Summary data as table. Summary a variable with statistics and graph}
+\description{Summary of data frame in a convenient table. Summary of a variable with statistics and graph}
 \usage{
 summ(x=.data, by=NULL, graph=TRUE, box=FALSE)
 }
@@ -11,7 +11,7 @@ For single vectors, a sorted dot chart is also provided, if graph=TRUE (default)
 \arguments{
 	\item{x}{'x' can be a data frame or a vector. 'summ()' is the same as 'summ(.data)'}
 	\item{by}{a stratification variable, valid only when x is a vector}
-	\item{graph}{automatic plot of a sorted dot chart if 'x' is a vector}
+	\item{graph}{automatic plot (sorted dot chart) if 'x' is a vector}
 	\item{box}{add a boxplot to the graph (by=NULL)}
 }
 \author{Virasakdi Chongsuvivatwong
@@ -20,11 +20,7 @@ For single vectors, a sorted dot chart is also provided, if graph=TRUE (default)
 \seealso{'summary', 'use', 'des'}
 \examples{
 data(Oswego)
-.data <- Oswego
-attach(.data)
-
-# The above lines generate a hypothetical data frame. 
-# In reality, one just exploits 'use("Oswego.rec")', if the file is available.
+use(Oswego)
 summ()
 summ(age)
 summ(age, box=TRUE)

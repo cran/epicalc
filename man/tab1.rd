@@ -4,27 +4,28 @@
 \title{One-way tabulation}
 \description{One-way tabulation with automatic bar chart}
 \usage{
-tab1 (x0, decimal = 1, sort.group = c(FALSE, "decreasing", 
+tab1(x0, decimal = 1, sort.group = c(FALSE, "decreasing", 
 "increasing"), cum.percent = !any(is.na(x0)), graph = TRUE, 
 missing = TRUE, bar.values = c("frequency", "percent", "none"),
 horiz=FALSE)
+
 \method{print}{tab1}(x, ...)
 }
 \arguments{
 	\item{x0}{a variable}
-	\item{decimal}{number of decimals for the percentage in the table}
-	\item{sort.group}{pattern for sorting of categories in the table as in the chart. Default is no sorting.}
-	\item{cum.percent}{presence of cumulative percentage on the output table. Default is TRUE for a variable without any missing value.}
-	\item{graph}{automatic graphing}
+	\item{decimal}{number of decimals for the percentages in the table}
+	\item{sort.group}{pattern for sorting categories in the table and in the chart. Default is no sorting.}
+	\item{cum.percent}{presence of cumulative percentage in the output table. Default is TRUE for a variable without any missing values.}
+	\item{graph}{whether a graph should be shown}
 	\item{missing}{include the missing values category or <NA> in the graphic display}
-	\item{bar.values}{include the value of frequeny, percentage or none at the end of each bar}
+	\item{bar.values}{include the value of frequency, percentage or none at the end of each bar}
 	\item{horiz}{set the bar chart to horizontal orientation}
-  \item{x}{object obtained from saving 'tab1' results}
-  \item{...}{further arguments passed to or used by methods}
+  \item{x}{object of class 'tab1' obtained from saving 'tab1' results}
+  \item{...}{further arguments passed to or used by other methods}
 }
-\details{'tab1' is an advanced one-way tabulation providing a nice table as well as a bar chart. The description of the variable is also used in the main title of the graph.
+\details{'tab1' is an advanced one-way tabulation providing a nice frequency table as well as a bar chart. The description of the variable is also used in the main title of the graph.
 
-The bar chart is vertical unless the number of categories is more than six \strong{and} any of the labels of the levels consists of more than 8 characters \strong{or} 'horiz' is set as TRUE.
+The bar chart is vertical unless the number of categories is more than six \strong{and} any of the labels of the levels consists of more than 8 characters \strong{or} 'horiz' is set to TRUE.
 
 }
 \value{Output table}
@@ -40,9 +41,10 @@ tab1(state.division, sort.group ="increasing")
 
 data(Oswego)
 use(Oswego)
-tab1(ill) # Note the presence of cumulative percentage on the table.
+tab1(ill) # Note the column of cumulative percentages in the table.
 tab1(ill, cum.percent=FALSE)
-tab1(chocolate) # Cumulative percentage is automatically off.
+tab1(chocolate) 
+# Due to missing values, cumulative percentages are now automatically turned off.
 tab1(chocolate, cum.percent=TRUE) # Slightly too many columns!
 tab1(chocolate, missing=FALSE, bar.values="percent")
 agegr <- cut(age, breaks=c(0,20,60,80))

@@ -1,30 +1,30 @@
 \name{Keep data}
 \alias{keepData}
 \title{Keep a subset of variables or records}
-\description{Keeping only subset of variables or records in the default data frame '.data'}
+\description{Keep only subset of variables or records in the default data frame '.data'}
 \usage{                                       
 keepData (dataFrame = .data, sample=NULL, exclude=NULL, subset, select, 
 		 drop = FALSE, ...)  
 }
 \arguments{
 	\item{dataFrame}{a data frame}
-	\item{sample}{integer indicating size of random sample or value < 1 indicating fraction of records to be extracted}
-	\item{exclude}{expression, indicating columns to remove from '.data'.}
-	\item{subset}{logical expression indicating elements or rows to keep: missing values are taken as false.}
-	\item{select}{expression, indicating columns to select from a data frame.} 
+	\item{sample}{an integer indicating the size of random sample or a value < 1 indicating fraction of records to be extracted}
+	\item{exclude}{an expression, indicating columns to remove from '.data'.}
+	\item{subset}{a logical expression indicating elements or rows to keep: missing values are taken as false.}
+	\item{select}{an expression indicating columns to select from a data frame.} 
 	\item{drop}{passed on to [ indexing operator.} 
 	\item{...}{further arguments to be passed to or from other methods.} 
 }
-\details{'keepData' is the Epicalc version of 'subset.data.frame' which is a standard R function. It reduces the data frame to the specified subset and resets the search path accordingly.
+\details{'keepData' is the Epicalc version of 'subset.data.frame' which is a standard R function. It reduces the data frame to the specified subset and updates the search path accordingly.
 
-Using 'keepData' will retain descriptions of the data, and the remaining variables, ready to be used by other Epicalc functions that can exploit them such as 'des', 'codebook', 'summ', 'tab1' etc..
+Using 'keepData' will retain descriptions of the data, and the remaining variables, ready to be used by other Epicalc functions that can exploit them such as 'des', 'codebook', 'summ', 'tab1' etc ...
 
-Since this command only affects the specified data frame (usually '.data'), any new variables created as free vectors will not be changed. The difference in length of variables may occur from the 'subset' argument. To avoid this, 'pack' or 'label.var' should be used to incoporate any relevant free vectors into the default data frame, '.data' so that all variable can be subsetted simultaneously, thus reducing the complications of the difference in variable lengths.
+Since this command only affects the specified data frame (usually '.data'), any new variables created as free vectors will not be changed. The difference in length of variables may occur from the 'subset' argument. To avoid this, 'pack' or 'label.var' should be used to incoporate any relevant free vectors into the default data frame, '.data' so that all variables can be subsetted simultaneously, thus reducing the complications of the difference in variable lengths.
 }
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
 }
-\seealso{des, 'subset', 'sample'}
+\seealso{'des', 'subset', 'sample'}
 \examples{
 
 ## Record sampling
@@ -34,10 +34,10 @@ des()
 keepData(sample=500)
 des() # Note reduction of sample size to 500
 use(ANCdata)
-keepData(sample=.1) # Only 10% kept
+keepData(sample=.1) # Select 10% or 75 records
 des()
 
-## Specific record numbers
+## Selecting specific record numbers
 data(Compaq)
 use(Compaq)
 keepData(subset = 1:nrow(.data) <= 50) #First 50 records
@@ -47,7 +47,7 @@ every.seventh <- is.element(1:nrow(.data), seq(1, nrow(.data), 7))
 keepData(subset = every.seventh) 
 head(.data)
 
-## Records under certain conditions
+## Selecting records under certain conditions
 data(Familydata)
 use(Familydata)
 des()
@@ -58,7 +58,7 @@ keepData(subset = ht > 120)
 .data # Which record is missing?
 
 ## Reduction of variables
-## Removal consecutive variables
+## Removal of consecutive variables
 use(Familydata)
 keepData(select = -(age:ht)) # Variables from 'age' to 'ht' removed
 des() 
@@ -79,20 +79,20 @@ des()
 keepData(select = c(1,2,5:7)) # Retain all variables except the third 
 	                          #the the fourth
 des()
-# Note the number of brackets '(subset)'
+# Note the repetition of '(subset)'
 
 
 
 ## Wildcard
 use(Oswego)
 des()
-keepData(select = "c*") # The wildcard must be embraced by quotes
+keepData(select = "c*") # The wildcard must be enclosed in quotes
 des()
 
 use(Oswego)
 des()
 keepData(exclude = "on*") # Variables having names starting with "on" removed
-keepData(exclude = "???") # Variables having names in 3 characters removed
+keepData(exclude = "???") # Variables having names with 3 characters removed
 des() # Which are missing?
 
 }

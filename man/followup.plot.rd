@@ -3,22 +3,23 @@
 \title{Longitudinal followup plot}
 \description{Plot longitudinal values of individuals with or without stratification}
 \usage{
-followup.plot(id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, 
-    line.col = "blue", stress = NULL, stress.labels = FALSE, label.col = 1, stress.col = NULL, 
-    stress.width = NULL, stress.type=NULL, ...)
+followup.plot(id, time, outcome, by = NULL, n.of.lines = NULL, 
+legend = TRUE, line.col = "blue", stress = NULL, 
+stress.labels = FALSE, label.col = 1, stress.col = NULL, 
+stress.width = NULL, stress.type = NULL, ...)
 }
 \arguments{
 	\item{id}{idenfication variable of the same subject being followed up}
 	\item{time}{time at each measurement}
 	\item{outcome}{continuous outcome variable}
-	\item{by}{stratification factor if any}
+	\item{by}{stratification factor (if any)}
 	\item{n.of.lines}{number of lines (or number of subjects in the data frame) randomly chosen for drawing}
 	\item{legend}{whether a legend will be automatically included in the graph}
-	\item{line.col}{line color(s) for non-stratified plot}
+	\item{line.col}{line colour(s) for non-stratified plot}
   \item{stress}{subset of ids to draw stressed lines}
-  \item{stress.labels}{whether the stressed lines would be labelled}
-  \item{label.col}{single integer indicating color of the stressed line labels}
-  \item{stress.col}{color values used for the stressed line. Default value is '1' or black}
+  \item{stress.labels}{whether the stressed lines should be labelled}
+  \item{label.col}{single integer indicating colour of the stressed line labels}
+  \item{stress.col}{colour values used for the stressed line. Default value is '1' or black}
   \item{stress.width}{relative width of the stressed line}
   \item{stress.type}{line type code for the stressed line}
   \item{...}{other graphic parameters}
@@ -31,7 +32,7 @@ If a stratification variable 'by' is specified, the levels of this variable will
 
 'legend' is omitted if 'n.of.lines' is not NULL or the number of subjects exceeds 7 without stratification.
 
-'line.col' works only for non-stratified plot. It can be a single standard color or "multicolor". 
+'line.col' works only for a non-stratified plot. It can be a single standard colour or "multicolor". 
 
 Values for 'stress.col', 'stress.width' and 'stress.type', if not NULL, should follow those for 'col', 'lwd' and 'lty', respectively  
 }
@@ -55,7 +56,7 @@ followup.plot(tree, Time, size, n.of.lines=20, line.col = "multicolor")
 # Breakdown of color by treatment group
 followup.plot(tree, Time, size, by=treat)
 
-# The number lines reduced to 40
+# The number of lines reduced to 40
 followup.plot(tree, Time, size, by=treat, n.of.lines=40)
 
 # Stress some lines

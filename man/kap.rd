@@ -31,13 +31,13 @@ kap(x, ...)
        }}
 	\item{wttable}{cross tabulation of weights of agreement among categories. Applicable only for 'kap.table' and 'kap.2.raters'}
 	\item{print.wttable}{whether the weights table will be printed out}
-	\item{rater2}{a vector or factor containing opinions of the second among two raters.}
+	\item{rater2}{a vector or factor containing opinions of the second rater among two raters.}
 	\item{raters}{a data frame or a matrix containing opinions of two or more raters}
 	\item{category.counts}{a data frame or a matrix containing columns of frequencies of rating categories.}
-	\item{...}{further arguments passed to or used by methods.}
+	\item{...}{further arguments passed to or used by other methods.}
 }
 \details{
-There are two different principles of calculation for kappa statistic. 'kap.table' and 'kap.2.raters' use two fixed raters whereas 'kap.m.raters' and 'kap.ByCategory' are based on frequency of category of rating an individual received without a requirement that the raters must be fixed.
+There are two different principles for the calculation of the kappa statistic. 'kap.table' and 'kap.2.raters' use two fixed raters whereas 'kap.m.raters' and 'kap.ByCategory' are based on frequency of category of rating an individual received without a requirement that the raters must be fixed.
 
 'kap.table' analyses kappa statistics from a predefined table of agreement of two raters.
  

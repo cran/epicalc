@@ -4,7 +4,7 @@
 \alias{n.for.2p}
 \alias{n.for.lqas}
 \title{Sample size calculation}
-\description{Sample size calculation for epidemiological studies}
+\description{Sample size calculations for epidemiological studies}
 \usage{
 n.for.survey(p, delta = 0.5 * min(c(p, 1 - p)), popsize = FALSE, 
     deff = 1, alpha = 0.05) 
@@ -14,7 +14,7 @@ n.for.lqas (p0, q = 0, N = 10000, alpha = 0.05, exact = FALSE)
 }
 \arguments{
 	\item{p}{estimated prevalence}
-	\item{delta}{difference between the estimated prevalence and one side of the 95 percent confidence limit}
+	\item{delta}{difference between the estimated prevalence and one side of the 95 percent confidence limit (precision)}
 	\item{popsize}{size of the finite population}
 	\item{deff}{design effect for cluster sampling}
 	\item{alpha}{significance level}
@@ -31,9 +31,9 @@ n.for.lqas (p0, q = 0, N = 10000, alpha = 0.05, exact = FALSE)
 \details{'n.for.survey' is used to compute the sample size required to conduct a survey. 
 When cluster sampling is employed, the design effect (deff) has to be taken into account.
 
-'n.for.2means' is used to compute the sample size for testing a hypothesis of difference of two population means.
+'n.for.2means' is used to compute the sample size needed for testing the hypothesis that the difference of two population means is zero.
 
-'n.for.2p'  is used to the compute the sample size for testing a hypothesis of difference of two population proportions.
+'n.for.2p'  is used to the compute the sample size needed for testing the hypothesis that the difference of two population proportions is zero.
 
 For a case control study, p1 and p2 are the proportions of exposure among cases and controls.
 
@@ -49,22 +49,22 @@ processes in health care.
 }
 \seealso{'power.for.2means', 'power.for.2p'}
 \examples{
-# In a standard survey to determine the coverage of immunization using 
-# a cluster sampling technique on the population of approximately 500000,
-# the estimated prevalence is 70 percent, design effect is assumed to be 2.
+# In a standard survey to determine the coverage of immunization needed using 
+# a cluster sampling technique on a population of approximately 500000, and
+# an estimated prevalence of 70 percent, design effect is assumed to be 2.
 
-n.for.survey( p = .8, delta = .1, popsize = 500000, deff =2) # 123
+n.for.survey( p = .8, delta = .1, popsize = 500000, deff =2) # 123 needed
 
-# In a case control study testing the efficacy of measles vaccine. 
+# Testing the efficacy of measles vaccine in a case control study . 
 # The coverage in the non-diseased population is estimated at 80 percent. 
 # That in the diseased is 60 percent.
 
-n.for.2p(p1=.8, p2=.6) # n1=n2=91
+n.for.2p(p1=.8, p2=.6) # n1=n2=91 needed
 
 # A randomized controlled trial testing cure rate of a disease of
 # 90 percent by new drugs  and 80 percent by the old one.
 
-n.for.2p(p1=.9, p2=.8) # 219 subjects in each arm.
+n.for.2p(p1=.9, p2=.8) # 219 subjects needed in each arm.
 
 # A quality assurance to check whether the coding of ICD-10 is faulty 
 # by no more than 2 percent.The minimum sample is required. 

@@ -14,7 +14,7 @@ des(x=.data, select, exclude)
 
 If 'x' is a variable, the environment and attached data frame containing 'x' will be described.
 
-For a data frame containing too many variables, 'select' and 'exclude' can be specified to display fewer variable descriptions at a time. Unlike 'keepVar', these two arguments do not have any permanent effect on the data frame.}
+For a data frame containing too many variables, 'select' and 'exclude' can be specified to display fewer variable descriptions at a time. Unlike 'keepData', these two arguments do not have any permanent effect on the data frame.}
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
 }

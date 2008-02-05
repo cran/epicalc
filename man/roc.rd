@@ -16,7 +16,7 @@ roc.from.table(table, graph = TRUE, add = FALSE, title = FALSE,
 	\item{add}{Whether the line is drawn on the existing ROC curve}
 	\item{title}{If true, the model will be displayed as main title}
 	\item{line.col}{Color of the line}
-	\item{auc.coords}{Coordinates for label of 'auc'}
+	\item{auc.coords}{Coordinates for label of 'auc' (area under curve)}
 	\item{...}{Additional graphic parameters}
 }
 \details{

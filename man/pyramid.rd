@@ -11,14 +11,14 @@ pyramid (age, sex, binwidth=5, inputTable=NULL, printTable=FALSE,
 	\item{sex}{a variable of two levels for sexes, can be numeric but preferrably factor with labelled levels or characters}
 	\item{binwidth}{bin width of age for each bar}
 	\item{inputTable}{a table to read in with two columns of sexes and rows of age groups}
-	\item{printTable}{whether the output table would be displayed on the console}
+	\item{printTable}{whether the output table should be displayed on the console}
 	\item{percent}{whether the lengths of the bars should be calculated from freqencies (default), percentages of each sex or total percentages}
 	\item{decimal}{number of decimals displayed in the percent output table}
-	\item{...}{graph options for the bars e.g. col}
+	\item{...}{graph options for the bars, e.g. col}
 }
 \details{'pyramid' draws a horizontal bar graph of age by sex. 
 
-Parameters of graph (par) options can be applied to 'font.lab' and those of the bars e.g. 'col' but not of others.
+The parameters of graph (par) options can be applied to 'font.lab' and those of the bars, e.g. 'col' but not of others.
 
 Other lower level graph commands should be only for adding a 'title'.
 }
@@ -26,15 +26,10 @@ Other lower level graph commands should be only for adding a 'title'.
 	\email{ <cvirasak@medicine.psu.ac.th>}
 }
 \seealso{'barplot', 'levels', 'table'}
-\value{When the variables age and sex are input arguments, the return objects include age group variable and the output table. The argument 'decimal' controls only decimals of the output displayed on the console but not the returned table.}
+\value{When the variables age and sex are input arguments, the return object includes age group variable and the output table. The argument 'decimal' controls only decimals of the output displayed on the console but not the returned table.}
 \examples{
 data(Oswego)
-.data <- Oswego
-attach(.data)
-
-# The above lines generate a hypothetical data frame. 
-# In reality, one just exploits 'use("Oswego.rec"), if the file is available.
-
+use(Oswego)
 pyramid(age, sex)
 pyramid(age, sex, printTable=TRUE)
 pyramid(age, sex, col="red")

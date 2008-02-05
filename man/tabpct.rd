@@ -1,18 +1,18 @@
 \name{tabpct}
 \alias{tabpct}
-\title{Two-way tabulation}
+\title{Two-way tabulation with mosaic plot}
 \description{Two-way tabulation with automatic mosaic plot}
 \usage{
-tabpct (row, col, ..., decimal = 1, percent = c("both", "col", "row"), 
-graph = TRUE, las = 0)  
+tabpct(row, col, decimal = 1, percent = c("both", "col", "row"), 
+graph = TRUE, las = 0, ...)  
 }
 \arguments{
 	\item{row, col}{variables}
-	\item{...}{additional arguments for 'table'}
 	\item{decimal}{number of decimals for the percentage in the table}
 	\item{percent}{orientation of the percentage in the table}
 	\item{graph}{automatic graphing}
-	\item{las}{orientation of group labelling, 
+	\item{las}{orientation of group labelling} 
+	\item{...}{additional arguments for 'table'}
 
 0: always parallel to axis
 

@@ -14,7 +14,7 @@ While 'summ' produces summary statistics of both numeric and factor variables, '
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
 }
-\seealso{'use', 'summ' and 'tab1'}
+\seealso{'use', 'summ', 'tab1' and 'tableStack'}
 \examples{
 data(Familydata)
 use(Familydata)

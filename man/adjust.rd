@@ -1,6 +1,6 @@
 \name{adjust}
 \alias{adjust}
-\title{Adjusted and standardize mean, proportion and rate}
+\title{Adjusted and standardized mean, proportion and rate}
 \description{Computation of adjusted or standardized mean, proportion and rate after generalized linear modelling}
 \usage{adjust(adjust = NULL, by, model, standard=NULL, offset=FALSE, 
 	type = c("response", "link"), se.fit=TRUE, alpha=.05, 
@@ -16,9 +16,9 @@
 	\item{se.fit}{whether standard errors to the linear predictors should be returned}
 	\item{alpha}{significance level}
 	\item{ci}{whether the confidence intervals should be computed}
-	\item{...}{additional arguments}
+	\item{...}{additional arguments passed on to other methods}
 }
-\details{Crude means, proportions and rates among different groups are not readily suitable for comparison among subgroups due to potential confounders. Generalized linear modelling (glm) solves the problem of confounders and provides coefficients indicating the level of difference between the specific group and the referent group after adjustment for other independent variables in the model. 
+\details{Crude means, proportions and rates among different groups are not readily suitable for comparison among subgroups due to potential confounding. Generalized linear modelling (glm) handles potential confounding and provides coefficients indicating the level of difference between the specific group and the referent group after adjustment for other independent variables in the model. 
 
 The current function 'adjust' adds on information to an existing 'glm' model. It gives predicted values of subgroups specified in 'by' list. The returned predicted values, if type="response", reflect the magnitude (of mean, proportion and rate) of each subgroup after adjustment for the variable(s) specified in the 'adjust' argument. 
 
@@ -56,7 +56,7 @@ adjust(Horsepower, by=list(Origin, DriveTrain), model = model2)
 b <- adjust(Horsepower, list(Origin, DriveTrain), model = model2)
 Table.adjusted.probabilities <- xtabs(probability ~ Origin + DriveTrain, data=b)
 # What is the breakdown of probability of having manual transmission 
-# if all cars in each subgroup  have 180 horse power.
+# if all cars in each subgroup  have 180 horse power?
 model2$coefficients # 'Horsepower' is the second variable.
 c <- adjust(by=list(Origin, DriveTrain), model=model2, standard=c(NA,180,NA,NA))
 Table.standardized.probabilities <- xtabs(probability ~ Origin + DriveTrain, data=c)
@@ -76,7 +76,7 @@ tabpct(sex, ill, percent="row")
 agegr <- pyramid(age, sex, bin=30)$ageGroup
 lr1 <- glm(ill ~ sex * agegr, family=binomial)
 # Assuming a standard population have equal number of male and female
-# and uniform distribution of agegr thus the 
+# and uniform distribution of agegr thus the probability is 
 # .5 in each sex, 1/2 in each agegr and 1/6  in each age-sex group.
 lr1$coefficients # Coefficients of 'agegr' are 3 to 6
 adjust(by=list(sex=sex), model=lr1, standard=c(.5,rep(1/3,2),rep(1/6,2)))

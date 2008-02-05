@@ -5,7 +5,7 @@
 \description{
 This dataset contains records of high risk pregnant women 
 under a trial on new and old methods of antenatal care 
-in two clinics. Outcome was perinatal mortality.
+in two clinics. The outcome was perinatal mortality.
 }
 \usage{data(ANCdata)}
 \format{

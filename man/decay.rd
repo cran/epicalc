@@ -9,8 +9,9 @@ Relationship between bacteria and presence of any decayed tooth.
 \format{
   A data frame with 436 observations on the following 2 variables.
   \describe{
-    \item{\code{decay}}{a numeric vector}
-    \item{\code{strep}}{a numeric vector}
+    \item{\code{decay}}{a numeric vector indicating presence of tooth decay}
+    \item{\code{strep}}{a numeric vector indicating number of colony-forming-units
+    (CFUs) of \emph{Streptococcus mutan} in the saliva}
   }
 }
 \source{Teanpaisan, R., Kintarak, S., Chuncharoen, C., Akkayanont, P. 1995

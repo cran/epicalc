@@ -3,9 +3,9 @@
 \alias{Outbreak}
 \title{Dataset from an outbreak of food poisoning on a sportsday, Thailand 1990.}
 \description{
-A dataset from an outbreak investigation concerning food poisoning in a sportsday, Thailand 1990.
+This dataset contains information from an outbreak investigation concerning food poisoning on a sportsday in Thailand 1990.
 
-Dichotomous variables for exposures and symptoms were coded as the following:
+Dichotomous variables for exposures and symptoms were coded as follow:
 		\tabular{lll}{
         	\tab 0 \tab = no\cr
          	\tab 1 \tab = yes\cr
@@ -26,16 +26,16 @@ Dichotomous variables for exposures and symptoms were coded as the following:
 		\tabular{lll}{
         	\tab 99 \tab = missing\cr
        }
-    \item{\code{exptime}}{a AsIs or character: exposure time}
+    \item{\code{exptime}}{an AsIs or character vector of exposure times}
     \item{\code{beefcurry}}{a numeric vector: whether the subject had eaten beefcurry}
-    \item{\code{saltegg}}{a numeric vector: whether the subject had eaten saltegg}
+    \item{\code{saltegg}}{a numeric vector: whether the subject had eaten salted eggs}
     \item{\code{eclair}}{a numeric vector: pieces of eclair eaten}
 		\tabular{lll}{
-        	\tab 80 \tab = ate but not remember how much\cr
+        	\tab 80 \tab = ate but could not remember how much\cr
          	\tab 90 \tab = totally missing information\cr
        }
-    \item{\code{water}}{a numeric vector: whether the subject had drunken water}
-    \item{\code{onset}}{a AsIs or character: onset time}
+    \item{\code{water}}{a numeric vector: whether the subject had drunk water}
+    \item{\code{onset}}{an AsIs or character vector of onset times}
     \item{\code{nausea}}{a numeric vector}
     \item{\code{vomiting}}{a numeric vector}
     \item{\code{abdpain}}{a numeric vector: abdominal pain}

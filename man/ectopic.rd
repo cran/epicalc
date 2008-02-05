@@ -5,7 +5,7 @@
 abortion as a risk factor for ectopic pregnancy}
 \description{
 This case-control study has one case series and two control groups.\cr
-The subjects were recruited based on three types of pregnancy outcome (outc)
+The subjects were recruited based on three types of pregnancy outcome
 }
 \usage{data(Ectopic)}
 \format{
@@ -23,19 +23,17 @@ The subjects were recruited based on three types of pregnancy outcome (outc)
   }
 }
 
-\examples{
-data(Ectopic)
+\examples{data(Ectopic)
 library(nnet)
 use(Ectopic)
-multi1 <- multinom(outc ~ hia + gravi)
+multi1 <- multinom(outc ~ hia + gravi, data=.data)
 summary(multi1)
 mlogit.display(multi1)
 
 # Changing referent group of outcome
-ep <- outc == "EP"
-ia <- outc == "IA"
-deli <- outc == "Deli"
-multi2 <- multinom(cbind(ia, ep, deli) ~ hia + gravi)
+outcIA <- relevel(outc, ref="IA")
+pack()
+multi2 <- multinom(outcIA ~ hia + gravi, data=.data)
 summary(multi2)
 mlogit.display(multi2)
 }

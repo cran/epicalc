@@ -40,13 +40,18 @@ codebook <- function (dataFrame = .data)
                 " have a missing value", "\n"))
         }
         else {
-            if (any(class(x1[, i]) == "character") | any(class(x1[, 
-                i]) == "AsIs")) {
+            if (class(x1) == "data.frame") {
+                x2 <- x1[, i]
+                }
+                else{
+                    x2 <- x1
+                }
+            if (any(class(x2) == "character") | any(class(x2) == "AsIs")) {
                 cat("A character vector", "\n")
             }
             else {
-                if(is.logical(x1[,i])) x1[,i] <- as.factor(x1[,i])
-                if (any(class(x1[, i]) == "factor")) {
+                if(is.logical(x2)) x2 <- as.factor(x2)
+                if (any(class(x2) == "factor")) {
                   table1 <- (t(t(table(dataFrame[, i]))))
                   table1 <- cbind(table1, format(table1/sum(table1) * 
                     100, digits = 3))
@@ -62,7 +67,7 @@ codebook <- function (dataFrame = .data)
                     index <- attr(attr(dataFrame, "label.table"), "names") ==
                       attr(dataFrame, "val.labels")[i]
                     index <- na.omit(index)                                              
-                    if(suppressWarnings(!all(rownames(as.data.frame(attr(dataFrame, "label.table")[index]))==levels(x1[,i])))){
+                    if(suppressWarnings(!all(rownames(as.data.frame(attr(dataFrame, "label.table")[index]))==levels(x2)))){
                       print.noquote(table1, right = TRUE)
                     }else{
                       table2 <- data.frame(attr(dataFrame, "label.table")[index], table1)
@@ -83,7 +88,7 @@ codebook <- function (dataFrame = .data)
 }
 
 
-
+###################
 setTitle <- function(locale){
   Sys.setlocale("LC_ALL",locale)
   print(Sys.getlocale())
@@ -325,8 +330,8 @@ for(i in 1:length(pos.to.detach)){
 }
 }
 ### Getting percentage from the tabulation
-tabpct <- function(row, col, ..., decimal=1, percent=c("both","col","row"), graph=TRUE, las=0) {
-tab <- table(row, col,..., deparse.level=1, dnn=list(substitute(row),substitute(col)))
+tabpct <- function(row, col, decimal=1, percent=c("both","col","row"), graph=TRUE, las=0, ...) {
+tab <- table(row, col, deparse.level=1, dnn=list(substitute(row),substitute(col)), ...)
 # column percent
 cpercent <-tab
 for(i in 1:ncol(tab)) { cpercent[,i] <-paste("(",format(round(tab[,i]/colSums(tab)[i]*100, digits=decimal),trim=TRUE),")", sep="")}
@@ -3223,7 +3228,11 @@ attach(data1, name=as.character(substitute(dataFrame)), warn.conflicts = FALSE)
 }
 
 ### Dot plot
-dotplot <- function(x, bin="auto", by=NULL, xmin=NULL, xmax=NULL, time.format=NULL, time.step=NULL, pch=18, ...){
+dotplot <- function(x, bin="auto", by=NULL, xmin=NULL, xmax=NULL, time.format=NULL, time.step=NULL, pch=18, dot.col="auto", ...){
+if(!is.null(by)){
+if(length(dot.col)>1 & length(table(by))!=length(dot.col)){
+stop(paste("The argument 'dot.col' must either be \"auto\"","\n"," or number of colours equals to number of categories of 'by'."))
+}}
 if (bin=="auto"){
 if(!is.null(attr(max(x, na.rm=TRUE)-min(x, na.rm=TRUE), "units")) & !any(class(x)=="difftime")){
   unit1 <- "weeks"
@@ -3358,7 +3367,7 @@ if(any(class(x)=="POSIXt")){
 	glm(xlim~value.lim)->model1
 	xgr.pretty <- model1$coefficient[1] + model1$coefficient[2]*value.pretty
 if(is.null(by)){
-	
+if(dot.col=="auto") dot.col <- "black"	
 	xgr <- sort(xgr)
 	freq <- rep(1, length(value))
 	for(i in 1:max(xgr)){
@@ -3366,10 +3375,10 @@ if(is.null(by)){
 	}
 	if(max(freq)<20){
 		plot(xgr,freq, xaxt="n", xlab=" ",main=string3,	ylab=titleString()$frequency,
-      ylim=c(0,20), xlim = xlim, pch=pch, ...)
+      ylim=c(0,20), xlim = xlim, pch=pch, col=dot.col[1], ...)
 	}else{
   plot(xgr,freq, xaxt="n", xlab=" ",main=string3,	ylab=titleString()$frequency, 
-       xlim = xlim, pch=pch, ...)
+       xlim = xlim, pch=pch, col=dot.col[1], ...)
 	}
 }else{ 
 	order1 <- order(by0,value)
@@ -3395,14 +3404,23 @@ if(is.factor(by0)){
 	}
 	main.lab <- paste(string3,titleString()$by,byname)
 	if(nchar(main.lab)>45){main.lab <- paste(string3,"\n",titleString()$by,byname)}
+  if(any(dot.col=="auto")){
+  dot.col1 <- as.numeric(by1)
+  }else{
+  dot.col1 <- rep(dot.col[1], length(by1))
+  if(length(dot.col) > 1){
+  for(i in length(table(by1))){
+  dot.col1[by1==as.numeric(names(table(by1)))[i]] <- dot.col[i] 
+  }
+  }}
   if(max(y)<20){
 	plot(xgr,y, xaxt="n", yaxt="n",
 		xlab=" ",main=main.lab, ylim=c(-1,20),
-		ylab=" ", col=as.numeric(by1), pch=pch, xlim=xlim, ...)
+		ylab=" ", col=dot.col1, pch=pch, xlim=xlim, ...)
 	}else{
 	plot(xgr,y, xaxt="n", yaxt="n",
 		xlab=" ",main=main.lab, ylim=c(-1,max(y)),
-		ylab=" ", col=as.numeric(by1), pch=pch, xlim=xlim, ...)
+		ylab=" ", col=dot.col1, pch=pch, xlim=xlim, ...)
 	}
 	abline(h=yline, col="blue")
 	axis(2,at=yline, labels=levels(by1), padj=0, las=1, ...)
@@ -3423,6 +3441,7 @@ if(is.factor(by0)){
 		axis(side=1,at=xgr.pretty, labels=value.pretty)
 	}
 }
+
 ### Labeling variables
 label.var <-function(var, label, pack=TRUE, dataFrame = .data){
 # Store list of variable labels, 
@@ -3618,7 +3637,7 @@ if(is.null(inputTable)){
 ## Followup plot
 followup.plot <- function (id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, 
     line.col = "blue", stress = NULL, stress.labels = FALSE, label.col = 1, stress.col = NULL, 
-    stress.width = NULL, stress.type=NULL, ...) 
+    stress.width = NULL, stress.type = NULL, ...) 
 {
 
     plot(time, outcome, xlab = " ", ylab = " ", type = "n", ...)
@@ -3926,19 +3945,27 @@ result
 aggregate.numeric <- function (x, by, FUN = c("count", "sum", "mean", "median", "sd", "min", 
     "max"), na.rm = TRUE, length.warning = TRUE, ...) 
 {
+
 count <- function(x1) {length(na.omit(x1))}
     if (length(FUN) == 1 & class(FUN) == "function") {
         FUN <- as.character(substitute(FUN))
     }
     else {
-        if (any(is.na(x)) & length.warning) {
+
+if(any(is.na(x)) & na.rm==FALSE & (is.element("var", FUN) | is.element("sd", FUN))){
+cat(paste("\n","   'FUN = \"var\"' and 'FUN = \"sd\" not computable when 'na.rm=FALSE'","\n","   and therefore omitted"), "\n", "\n")
+FUN <- setdiff(FUN, c("sd", "var"))
+}
+if(length(FUN)==0)
+{stop("Too few FUN's")}
+
+        if (any(is.na(x)) & length.warning & na.rm) {
             if (any(FUN == "var") | any(FUN == "sd") | any(FUN=="mean") |any(FUN=="sum")) {
-                na.rm <- TRUE
-                cat("\n", "Note: missing values removed.", 
-                  "\n")
+                #na.rm <- TRUE
+                cat("\n", "Note:","\n","     Missing values removed.","\n")
             }
             if (any(FUN == "length")) {
-                cat("\n", "      'length' is computed with missing records included.", 
+                cat("     'length' computed with missing records included.", 
                   "\n")
             }
             cat("\n")
@@ -3952,7 +3979,7 @@ count <- function(x1) {length(na.omit(x1))}
         }else{
             if(FUN[1]=="sum"|FUN[1]=="mean"|FUN[1]=="median"|FUN[1]=="var"|
                   FUN[1]=="sd"|FUN[1]=="min"|FUN[1]=="max"){
-              y <- aggregate.data.frame(x, by, FUN = FUN[1], na.rm = TRUE)
+              y <- aggregate.data.frame(x, by, FUN = FUN[1], na.rm = na.rm)
             }else{
             y <- aggregate.data.frame(x, by, FUN = FUN[1])
             }
@@ -3974,7 +4001,7 @@ count <- function(x1) {length(na.omit(x1))}
                 if(FUN[i]=="sum"|FUN[i]=="mean"|FUN[i]=="median"|FUN[i]=="var"|
                   FUN[i]=="sd"|FUN[i]=="min"|FUN[i]=="max"){
                   y1 <- aggregate.data.frame(x, by, FUN = FUN[i], 
-                  na.rm = TRUE)
+                  na.rm = na.rm)
                   }else{
                 y1 <- aggregate.data.frame(x, by, FUN = FUN[i])
                 }
@@ -4408,8 +4435,8 @@ list(best.alpha = a$alpha, removed = removed.orders, remaining = remaining.order
 tableStack <-
 function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, 
     means = TRUE, medians = FALSE, sds = TRUE, decimal = 1, dataFrame = .data, 
-    total = TRUE, vars.to.reverse = NULL, var.labels = TRUE, 
-    var.labels.trunc = 150, reverse = FALSE, by = NULL, vars.to.factor = NULL, 
+    total = TRUE, var.labels = TRUE, var.labels.trunc = 150, reverse = FALSE, 
+    vars.to.reverse = NULL, by = NULL, vars.to.factor = NULL, 
     iqr = "auto", prevalence = FALSE, percent = c("column", "row", 
         "none"), test = TRUE, name.test = TRUE, total.column = FALSE) 
 {
@@ -4439,7 +4466,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
         intersect.selected <- intersect(selected.iqr, selected.to.factor)
         if (length(intersect.selected) != 0) {
             stop(paste(names(dataFrame)[intersect.selected], 
-                "must cannot simultaneously describe IQR and be coerced factor"))
+                "cannot simultaneously describe IQR and be coerced factor"))
         }
         for (i in selected.iqr) {
             if (!is.integer(dataFrame[, i]) & !is.numeric(dataFrame[, 
@@ -4449,10 +4476,6 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
         }
     }
     for (i in selected) {
-        if (is.logical(dataFrame[, i])) {
-            dataFrame[, i] <- as.factor(dataFrame[, i])
-            levels(dataFrame[, i]) <- c("No", "Yes")
-        }
         if (class(dataFrame[, i]) == "integer" & !is.null(by)) {
             if (any(selected.to.factor == i)) {
                 dataFrame[, i] <- factor(dataFrame[, i])
@@ -4518,9 +4541,9 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                 }
                 which.neg <- which(sign1 < 0)
                 for (i in which.neg) {
-                  dataFrame[, selected][, i] <- maxlevel + 1 - 
+                  dataFrame[, selected][, i] <- maxlevel + minlevel - 
                     dataFrame[, selected][, i]
-                  selected.matrix[, i] <- maxlevel + 1 - selected.matrix[, 
+                  selected.matrix[, i] <- maxlevel + minlevel - selected.matrix[, 
                     i]
                 }
             }
@@ -4528,8 +4551,11 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
         table1 <- NULL
         for (i in as.integer(selected)) {
             if (!is.factor(dataFrame[, i])) {
-                x <- factor(dataFrame[, i])
-                levels(x) <- nlevel
+                            x <- factor(dataFrame[, i])
+                if(!is.logical(dataFrame[, i, drop = TRUE]))
+                {
+                  levels(x) <- nlevel
+                }
                 tablei <- table(x)
             }
             else {
@@ -4540,10 +4566,10 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                   i])))
                 names(tablei)[length(tablei)] <- "count"
             }
-            if (is.integer(selected.dataFrame[, 1])) {
-                if (total) {
-                  means <- TRUE
-                }
+            if (is.numeric(selected.dataFrame[, 1, drop = TRUE]) | is.logical(selected.dataFrame[, 1, drop = TRUE])) {
+#                if (total) {
+#                  means <- TRUE
+#                }
                 if (means) {
                   tablei <- c(tablei, round(mean(as.numeric(dataFrame[, 
                     i]), na.rm = TRUE), digits = decimal))
@@ -4590,7 +4616,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
             if (!is.null(attributes(dataFrame)$var.labels)) 
                 colnames(results)[ncol(results)] <- "description"
         }
-        if (is.integer(selected.dataFrame[, 1])) {
+        if (is.integer(selected.dataFrame[, 1]) | is.numeric(selected.dataFrame[, 1]) | is.logical(selected.dataFrame[, 1])) {
             if (reverse || (!is.null(vars.to.reverse))) {
                 Reversed <- ifelse(sign1 < 0, "    x   ", "    .   ")
                 results <- cbind(Reversed, results)
@@ -4645,7 +4671,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
             results <- c(results, list(item.labels = attributes(dataFrame)$var.labels[selected]))
         }
         if (total) {
-            if (is.integer(selected.dataFrame[, 1])) {
+            if (is.integer(selected.dataFrame[, 1]) | is.numeric(selected.dataFrame[, 1])) {
                 results <- c(results, list(total.score = rowSums(selected.matrix)), 
                   list(mean.score = rowMeans(selected.matrix)), 
                   list(mean.of.total.scores = mean.of.total.scores, 
@@ -4664,7 +4690,11 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
         else {
             by1 <- factor(dataFrame[, by.var])
         }
-        if (length(table(by1)) == 1) 
+        if (is.logical(dataFrame[, i])) {
+            dataFrame[, i] <- as.factor(dataFrame[, i])
+            levels(dataFrame[, i]) <- c("No", "Yes")
+        }
+        if (length(table(by1)) == 1 & !is.logical(dataFrame[, by.var, drop = TRUE])) 
             test <- FALSE
         name.test <- ifelse(test, name.test, FALSE)
         if (is.character(iqr)) {
@@ -4700,7 +4730,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
         }
         table2 <- NULL
         for (i in 1:length(selected)) {
-            if (is.factor(dataFrame[, selected[i]])) {
+            if (is.factor(dataFrame[, selected[i]]) | is.logical(dataFrame[, selected[i]])) {
                 x0 <- table(dataFrame[, selected[i]], by1)
                 if (total.column) {
                   x <- addmargins(x0, margin = 2)
@@ -4921,6 +4951,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
         table2
     }
 }
+
 
 # Print tableStack 
 

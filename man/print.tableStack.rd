@@ -1,12 +1,12 @@
 \name{print tableStack}
 \alias{print.tableStack}
 \title{Print tableStack object}
-\description{To print a tableStack object}
+\description{Print a tableStack object}
 \usage{
 \method{print}{tableStack}(x, ...)
 }
 \arguments{
-       \item{x}{object of 'tableStack' class}
+       \item{x}{object of class 'tableStack' }
        \item{...}{further arguments passed to or used by methods.}
 }
 \author{Virasakdi Chongsuvivatwong

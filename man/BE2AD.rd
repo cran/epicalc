@@ -1,12 +1,12 @@
 \name{BE to AD}
 \alias{be2ad}
 \title{Change year in B.E. to A.D.}
-\description{Subtracting 543 from year of a Date vector. }
+\description{Convert Buddhist era date to Christian era date}
 \usage{be2ad(Date.in.BE)
 }
 \details{This function may be useful in countries where dates are (wrongly) commonly entered in the Buddhist Era (BE). The function subtracts 543 from the year component of the argument 'Date.in.BE'. See 'note' below.}
 \arguments{
-	\item{Date.in.BE}{an object of 'Date' class}
+	\item{Date.in.BE}{an object of class Date}
 }
 \note{
 Although this function is useful in converting dates in BE to AD, there is still a serious limitation. 

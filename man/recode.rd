@@ -3,7 +3,7 @@
 \title{Recode variable(s)}
 \description{Change value(s) of variable(s) in the default data frame}
 \usage{
-recode (vars, old.value, new.value, dataFrame = .data)  
+recode(vars, old.value, new.value, dataFrame = .data)  
 }
 \arguments{
 	\item{vars}{a variable or variables with the same recoding scheme}
