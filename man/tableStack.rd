@@ -7,7 +7,7 @@ tableStack (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
     means = TRUE, medians = FALSE, sds = TRUE, decimal = 1, dataFrame = .data, 
     total = TRUE, var.labels = TRUE, var.labels.trunc =150, reverse = FALSE, 
     vars.to.reverse = NULL, by = NULL, vars.to.factor = NULL, iqr = "auto", 
-    prevalence = FALSE, percent = c("column", "row", "none"), 
+    prevalence = FALSE, percent = c("column", "row", "none"), frequency=TRUE, 
     test = TRUE, name.test = TRUE, total.column = FALSE) 
 }
 \arguments{
@@ -30,6 +30,7 @@ tableStack (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
   \item{iqr}{variable(s) to display median and inter-quartile range}
   \item{prevalence}{for logical variable, whether prevalence of the dichotomous row variable in each column subgroup will be displayed}
   \item{percent}{type of percentage displayed when the variable is categorical. Default is column}
+  \item{frequency}{whether to display frequency in the cells when the variable is categorical}
   \item{test}{whether statistical test(s) will be computed}
   \item{name.test}{display name of the test and relevant degrees of freedom}
   \item{total.column}{whether to add 'total column' to the output or not}

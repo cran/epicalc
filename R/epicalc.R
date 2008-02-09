@@ -1745,7 +1745,7 @@ tableGlm <- function (model, modified.coeff.array, decimal)
             variable <- model$model[,i+1]
             var.name.class <- attr(model$terms, "dataClasses")[names(attr(model$terms, "dataClasses"))==var.names[i]]
             if(var.name.class=="factor"){
-            var.name.levels <- unlist(unlist(model$xlevels))[grep(var.names[i],names(unlist(model$xlevels)))]
+            var.name.levels <- unlist(unlist(model$xlevels))[substr(names(unlist(model$xlevels)),1,nchar(var.names[i]))==var.names[i]]
             }
             }
             }else{
@@ -1948,7 +1948,7 @@ tableGlm <- function (model, modified.coeff.array, decimal)
             }else{
             rownames(table0) <- gsub(var.names[i], replacement="", rownames(table0))
             if(any(class(model)=="lm")){
-            all.levels <- unlist(unlist(model$xlevels))[grep(var.names[i],names(unlist(model$xlevels)))]
+            all.levels <- unlist(unlist(model$xlevels))[substr(names(unlist(model$xlevels)),1,nchar(var.names[i]))==var.names[i]]
             }else{
             if(any(class(model)=="coxph")){
             all.levels <-levels(get(as.character(model$call)[3])[,var.names[i]])
@@ -4438,7 +4438,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
     total = TRUE, var.labels = TRUE, var.labels.trunc = 150, reverse = FALSE, 
     vars.to.reverse = NULL, by = NULL, vars.to.factor = NULL, 
     iqr = "auto", prevalence = FALSE, percent = c("column", "row", 
-        "none"), test = TRUE, name.test = TRUE, total.column = FALSE) 
+        "none"), frequency=TRUE, test = TRUE, name.test = TRUE, total.column = FALSE) 
 {
     nl <- as.list(1:ncol(dataFrame))
     names(nl) <- names(dataFrame)
@@ -4753,7 +4753,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                 if (nrow(x) == 2 & prevalence) {
                   table00 <- addmargins(x, margin = 1)
                   table0 <- paste(table00[2, ], "/", table00[3, 
-                    ], "(", round(table00[2, ]/table00[3, ] * 
+                    ], " (", round(table00[2, ]/table00[3, ] * 
                     100, decimal), "%)", sep = "")
                   table0 <- t(table0)
                   rownames(table0) <- "  prevalence"
@@ -4762,17 +4762,23 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                   if (any(percent == "column")) {
                     x.col.percent <- round(t(t(x)/colSums(x)) * 
                       100, decimal)
-                    x.col.percent1 <- matrix(paste(x, "(", x.col.percent, 
+                    x.col.percent1 <- matrix(paste(x, " (", x.col.percent, 
                       ")", sep = ""), nrow(x), ncol(x))
+                    if(!frequency){
+                        x.col.percent1 <- x.col.percent 
+                    }
                     table0 <- x.col.percent1
                   }
                   else {
                     if (any(percent == "row")) {
                       x.row.percent <- round(x/rowSums(x0) * 
                         100, decimal)
-                      x.row.percent1 <- matrix(paste(x, "(", 
+                      x.row.percent1 <- matrix(paste(x, " (", 
                         x.row.percent, ")", sep = ""), nrow(x), 
                         ncol(x))
+                    if(!frequency){
+                        x.row.percent1 <- x.row.percent 
+                    }
                       table0 <- x.row.percent1
                     }
                   }
@@ -4816,7 +4822,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                       na.rm = TRUE)[4])
                   }
                   term.numeric <- paste(round(term1, decimal), 
-                    "(", round(term2, decimal), ",", round(term3, 
+                    " (", round(term2, decimal), ",", round(term3, 
                       decimal), ")", sep = "")
                   term.numeric <- t(term.numeric)
                   rownames(term.numeric) <- "  median(IQR)"
@@ -4835,7 +4841,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                       na.rm = TRUE))
                   }
                   term.numeric <- paste(round(term1, decimal), 
-                    "(", round(term2, decimal), ")", sep = "")
+                    " (", round(term2, decimal), ")", sep = "")
                   term.numeric <- t(term.numeric)
                   rownames(term.numeric) <- "  mean(SD)"
                 }
@@ -4865,7 +4871,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                         by1))[1, 5]
                     }
                     else {
-                      test.method <- paste("t-test", paste("(", 
+                      test.method <- paste("t-test", paste(" (", 
                         t.test(dataFrame[, selected[i]] ~ by1, 
                           var.equal = TRUE)$parameter, " df)", 
                         sep = ""), "=", round(abs(t.test(dataFrame[, 
@@ -4951,6 +4957,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
         table2
     }
 }
+
 
 
 # Print tableStack 
