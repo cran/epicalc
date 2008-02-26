@@ -818,9 +818,30 @@ suppressWarnings(rm(cctable,caseexp, controlex, casenonex, controlnonex, pos=1))
 
 ### IDR display for poisson  and negative binomial regression
 idr.display <- function (idr.model, alpha = 0.05, crude = TRUE, crude.p.value = FALSE, 
-    decimal = 2) 
+    decimal = 2, simplified = FALSE) 
 {
     model <- idr.model
+    if(length(grep("[$]", attr(model$term, "term.labels"))) > 0 | length(grep(")", attr(model$term, "term.labels"))) > 0  | length(model$call) < 3){
+      simplified <- TRUE; crude <- TRUE
+    }else{
+    factor.with.colon <- NULL
+    for(i in 1:(length(attr(model$term, "term.labels"))-1)){
+    factor.with.colon <- c(factor.with.colon, any(grep(pattern=":",model$xlevels[i])))
+    }
+    factor.with.colon <- any(factor.with.colon)
+    if(length(grep(":", attr(model$terms, "term.labels")))> 1 | factor.with.colon){
+      simplified <- TRUE; crude <- TRUE
+    }}
+if(simplified){
+coeff <- summary(model)$coefficients[-1,]
+table1 <- cbind(exp(coeff[, 1]), 
+                exp(coeff[, 1] - qnorm(1 - alpha/2) * coeff[, 2]), 
+                exp(coeff[, 1] + qnorm(1 - alpha/2) * coeff[, 2]),
+                coeff[,4] )
+    colnames(table1) <- c("Adj. IDR", paste("lower", 100 - 100 * alpha, 
+        "ci", sep = ""), paste("upper", 100 - 100 * alpha, "ci", 
+        sep = ""), "Pr(>|Z|)")
+}else{
     if (length(class(model)) == 1) {
         stop("Model not from logistic regression")
     }
@@ -940,6 +961,11 @@ idr.display <- function (idr.model, alpha = 0.05, crude = TRUE, crude.p.value = 
     }
     modified.coeff.array <- a
     table1 <- tableGlm(model, modified.coeff.array, decimal)
+}
+if(simplified) {
+first.line <- NULL
+last.lines <- NULL
+}else{
     outcome.name <- names(model$model)[1]
     if(any(class(model)=="negbin")){
     modelData <- get(as.character(model$call)[3])
@@ -959,6 +985,7 @@ idr.display <- function (idr.model, alpha = 0.05, crude = TRUE, crude.p.value = 
     outcome.lab <- paste(outcome.name,  "with offset =", deparse(as.list(model$call)$offset), "\n")
     }else{
         outcome.lab <- paste(outcome.name, "\n")
+    }
     }
     first.line <- paste("\n", ifelse(any(class(model)=="negbin"),"Negative binomial", "Poisson"), " regression predicting ", outcome.lab, sep = "")
     last.lines <- paste("Log-likelihood = ", round(logLik(model), decimal + 2), "\n",
@@ -1182,9 +1209,32 @@ if (graph==TRUE){
 #### Logistic regression display
 
 logistic.display <- function (logistic.model, alpha = 0.05, crude = TRUE, crude.p.value = FALSE, 
-    decimal = 2) 
+    decimal = 2, simplified = FALSE) 
 {
     model <- logistic.model
+    if(length(grep("[$]", attr(model$term, "term.labels"))) > 0 
+      | length(grep(")", attr(model$term, "term.labels"))) > 0  
+      | length(model$call) < 3){
+      simplified <- TRUE; crude <- TRUE
+    }else{
+    factor.with.colon <- NULL
+    for(i in 1:(length(attr(model$term, "term.labels")))){
+    factor.with.colon <- c(factor.with.colon, any(grep(":",model$xlevels[i])))
+    }
+    factor.with.colon <- any(factor.with.colon)
+    if((length(grep(":", attr(model$terms, "term.labels"))) > 1) | factor.with.colon){
+      simplified <- TRUE; crude <- TRUE
+    }}
+if(simplified){
+coeff <- summary(model)$coefficients[-1,]
+table1 <- cbind(exp(coeff[, 1]), 
+                exp(coeff[, 1] - qnorm(1 - alpha/2) * coeff[, 2]), 
+                exp(coeff[, 1] + qnorm(1 - alpha/2) * coeff[, 2]),
+                coeff[,4] )
+    colnames(table1) <- c("OR", paste("lower", 100 - 100 * alpha, 
+        "ci", sep = ""), paste("upper", 100 - 100 * alpha, "ci", 
+        sep = ""), "Pr(>|Z|)")
+}else{
     if (length(class(model)) == 1) {
         stop("Model not from logistic regression")
     }
@@ -1192,6 +1242,7 @@ logistic.display <- function (logistic.model, alpha = 0.05, crude = TRUE, crude.
         model$family$family != "binomial") {
         stop("Model not from logistic regression")
     }
+
     var.names <- attr(model$terms, "term.labels")
     if (length(var.names) == 1) {
         crude <- FALSE
@@ -1306,6 +1357,11 @@ logistic.display <- function (logistic.model, alpha = 0.05, crude = TRUE, crude.
     }
     modified.coeff.array <- a
     table1 <- tableGlm(model, modified.coeff.array, decimal)
+}
+if(simplified) {
+first.line <- NULL
+last.lines <- NULL
+}else{
     outcome.name <- names(model$model)[1]
     if (!is.null(attr(model$data, "var.labels"))) {
         outcome.name <- attr(model$data, "var.labels")[attr(model$data, 
@@ -1342,6 +1398,7 @@ logistic.display <- function (logistic.model, alpha = 0.05, crude = TRUE, crude.
     last.lines <- paste("Log-likelihood = ", round(logLik(model), decimal + 2), "\n",
                    "No. of observations = ", length(model$y), "\n",
                    "AIC value = ", round(s1$aic, decimal + 2), "\n","\n", sep = "")
+}
     results <- list(first.line=first.line, table=table1, last.lines=last.lines)
     class(results) <- c("display", "list")
     results
@@ -1358,9 +1415,30 @@ print.display <- function(x, ...)
 
 ###### Linear regression display
 
-regress.display <- function (regress.model, alpha = 0.05, crude=FALSE, crude.p.value=FALSE, decimal = 2) 
+regress.display <- function (regress.model, alpha = 0.05, crude=FALSE, crude.p.value=FALSE, decimal = 2, simplified=FALSE) 
 {
     model <- regress.model
+    if(length(grep("[$]", attr(model$term, "term.labels"))) > 0 
+      | length(grep(")", attr(model$term, "term.labels"))) > 0  
+      | length(model$call) < 3){
+      simplified <- TRUE; crude <- TRUE
+    }else{
+    factor.with.colon <- NULL
+    for(i in 1:(length(attr(model$term, "term.labels"))-1)){
+    factor.with.colon <- c(factor.with.colon, any(grep(":",model$xlevels[i])))
+    }
+    factor.with.colon <- any(factor.with.colon)
+    if((length(grep(":", attr(model$terms, "term.labels"))) > 1) | factor.with.colon){
+      simplified <- TRUE; crude <- TRUE
+    }}
+if(simplified){
+coeff <- summary(model)$coefficients
+table1 <- cbind(coeff[,1], (coeff[,1] - qt((1 - alpha/2), summary(model)$df[2]) * coeff[,2]),
+          (coeff[,1] + qt((1 - alpha/2), summary(model)$df[2]) * coeff[,2]), coeff[,4]) 
+colnames(table1) <- c("Coeff", paste("lower0", 100 - 100 * alpha, 
+        "ci", sep = ""), paste("upper0", 100 - 100 * alpha, "ci", 
+        sep = ""), "Pr>|t|")
+}else{
     if(length(class(model))==2){
     if (class(model)[1] != "glm" | class(model)[2] != "lm" | 
         model$family$family != "gaussian") {
@@ -1370,7 +1448,6 @@ regress.display <- function (regress.model, alpha = 0.05, crude=FALSE, crude.p.v
     if (class(model) != "lm" ) {
         stop("Model not from linear regression")
     }}}
-#    if(any(rowSums(attr(model$terms, "factors"))>1)) {crude=FALSE}
     var.names <- attr(model$terms, "term.labels") # Independent vars
     if(length(var.names)==1){crude <- FALSE}
     if(crude){
@@ -1388,7 +1465,7 @@ regress.display <- function (regress.model, alpha = 0.05, crude=FALSE, crude.p.v
     if(length(grep(":", var.names[i]))>0){
     var.name.interact <- unlist(strsplit(var.names[i], ":"))
       if(any(names(model$xlevels)==var.name.interact[1])){
-      level1 <- length(unlist(model$xlevels[var.name.interact[1]]))-1
+      level1 <- length(unlist(model$xlev>els[var.name.interact[1]]))-1
       }else{
       level1 <- 1
       }
@@ -1448,8 +1525,12 @@ regress.display <- function (regress.model, alpha = 0.05, crude=FALSE, crude.p.v
     }
     }
     modified.coeff.array <- a
-
 tableGlm(model, modified.coeff.array, decimal) -> table1    
+}
+if(simplified) {
+first.line <- NULL
+last.lines <- NULL
+}else{
     outcome.name <- names(model$model)[1]
     if(!is.null(attr(model$data, "var.labels"))){
     outcome.name <- attr(model$data, "var.labels")[attr(model$data, "names")==names(model$model)[1]]
@@ -1471,6 +1552,7 @@ tableGlm(model, modified.coeff.array, decimal) -> table1
     }else{
     last.lines <- paste("No. of observations = ", nrow(model$model), "\n","\n", sep = "")
     }
+    }
     results <- list(first.line=first.line, table=table1, last.lines=last.lines)
     class(results) <- c("display", "list")
     results
@@ -1479,16 +1561,33 @@ tableGlm(model, modified.coeff.array, decimal) -> table1
 
 #### Conditional logistic regression display
 
-clogistic.display <- function (clogit.model, alpha = 0.05, crude=TRUE, crude.p.value=FALSE, decimal = 2) 
+clogistic.display <- function (clogit.model, alpha = 0.05, crude=TRUE, crude.p.value=FALSE, decimal = 2, simplified = FALSE) 
 {
     model <- clogit.model
     if(!any(class(model)=="clogit")){stop("Model not from conditional logisitic regression")}
+    if(length(grep("[$]", attr(model$term, "term.labels")[-length(attr(model$term, "term.labels"))])) > 0 
+      | length(grep(")", attr(model$term, "term.labels")[-length(attr(model$term, "term.labels"))])) > 0  
+      | length(model$userCall) < 3){
+      simplified <- TRUE; crude <- TRUE
+    }else{
+    factor.with.colon <- NULL
+    for(i in 1:(length(attr(model$term, "term.labels"))-1)){
+    factor.with.colon <- c(factor.with.colon, any(grep(pattern=":",levels(get(as.character(model$call)[3])[,attr(model$term,"term.labels")[i]]))))
+    }
+    factor.with.colon <- any(factor.with.colon)
+    if(length(grep(":", attr(model$terms, "term.labels")))> 1 | factor.with.colon){
+      simplified <- TRUE; crude <- TRUE
+    }}
+if(simplified){
+table1 <- summary(model)$conf.int[,-2]
+colnames(table1)[1] <- "Adj. OR"
+}else{
     var.names0 <- attr(model$terms, "term.labels") # Independent vars
     var.names <- var.names0[-grep(pattern="strata", var.names0)]                                                    
     if(length(var.names)==1){crude <- FALSE}
     if(crude){
     orci0 <- NULL
-    for(i in 1:(length(var.names))){
+    for(i in 1:(length(var.names))){                                        
         formula0 <- as.formula(paste( rownames(attr(model$terms,"factor"))[1], "~", 
             paste(c(var.names[i], var.names0[grep(pattern="strata", var.names0)]), collapse="+")))
         model0 <- coxph(formula0, data=get(as.character(model$call)[3]) )
@@ -1563,7 +1662,11 @@ clogistic.display <- function (clogit.model, alpha = 0.05, crude=TRUE, crude.p.v
     modified.coeff.array <- a
 
 tableGlm(model, modified.coeff.array, decimal) -> table1    
-
+}
+if(simplified) {
+first.line <- NULL
+last.lines <- NULL
+}else{
             outcome.name <- substr(as.character(model$userCall)[2], 1,  regexpr(" ", as.character(model$userCall)[2])-1)
             outcome <- get(as.character(model$userCall)[3])[,outcome.name]
             outcome.class <- class(outcome)
@@ -1579,21 +1682,38 @@ tableGlm(model, modified.coeff.array, decimal) -> table1
             }else{
             outcome.lab <- outcome.name
             }}}
-            
-            
     first.line <- paste("Conditional logistic regression predicting ",outcome.lab, sep="", "\n")
     last.lines <- paste("No. of observations = ", length(outcome), "\n")
+}
     results <- list(first.line=first.line, table=table1, last.lines=last.lines)
     class(results) <- c("display", "list")
     results
 }
 
+
 ####### Cox's regression display
 
-cox.display <- function (cox.model, alpha = 0.05, crude=TRUE, crude.p.value=FALSE, decimal = 2) 
+cox.display <- function (cox.model, alpha = 0.05, crude=TRUE, crude.p.value=FALSE, decimal = 2, simplified = FALSE) 
 {
     model <- cox.model
     if(!any(class(model)=="coxph")){stop("Model not from conditional logisitic regression")}
+    if(length(grep("[$]", attr(model$term, "term.labels"))) > 0 
+      | length(grep(")", attr(model$term, "term.labels"))) > 0  
+      | length(model$call) < 3){
+      simplified <- TRUE; crude <- TRUE
+    }else{
+    factor.with.colon <- NULL
+    for(i in 1:(length(attr(model$term, "term.labels"))-1)){
+    factor.with.colon <- c(factor.with.colon, any(grep(pattern=":",levels(get(as.character(model$call)[3])[,attr(model$term,"term.labels")[i]]))))
+    }
+    factor.with.colon <- any(factor.with.colon)
+    if(length(grep(":", attr(model$terms, "term.labels")))> 1 | factor.with.colon){
+      simplified <- TRUE; crude <- TRUE
+    }}
+if(simplified){
+table1 <- summary(model)$conf.int[,-2]
+colnames(table1)[1] <- "Adj. OR"
+}else{
     var.names <- attr(model$terms, "term.labels") # Independent vars
     if(length(grep("strata", var.names)) > 0){
     var.names <- var.names[-grep("strata",var.names)]
@@ -1674,8 +1794,12 @@ cox.display <- function (cox.model, alpha = 0.05, crude=TRUE, crude.p.value=FALS
     }
     }
     modified.coeff.array <- a
-
 tableGlm(model, modified.coeff.array, decimal) -> table1    
+}
+if(simplified) {
+first.line <- NULL
+last.lines <- NULL
+}else{
     surv.string <- as.character(model$formula)[2]
     if(length(grep(",", surv.string)) > 0){
     time.var.name <- substr(unlist(strsplit(surv.string, ","))[1], 6, nchar(unlist(strsplit(surv.string, ","))[1]))
@@ -1686,9 +1810,9 @@ tableGlm(model, modified.coeff.array, decimal) -> table1
     }
     var.names0 <- attr(model$terms, "term.labels")
     if(length(grep("strata", var.names0))>0) {intro <- paste(intro, " with '", var.names0[grep("strata", var.names0)], "'", sep="" )}
-
     first.line <- paste(intro, "\n")
     last.lines <- paste("No. of observations = ", model$n, "\n")
+}
     results <- list(first.line=first.line, table=table1, last.lines=last.lines)
     class(results) <- c("display", "list")
     results
@@ -3466,6 +3590,16 @@ if(any(names(data1)==as.character(substitute(var)))){
 	}
 }
 if(exists(as.character(substitute(var)))){
+  if(!is.atomic(var)){
+  stop(paste("A non-variable object", as.character(substitute( var)),"exists in the environment and cannot be labelled.","\n", 
+  " If this variable in the data frame is to be labelled,","\n",
+  " either the non-variable object of this name must be removed before labelling","\n", "\n",
+  paste("   rm(",as.character(substitute( var)),")",";             ",
+  " label.var(", as.character(substitute(var)),", \"", as.character(substitute(label)),"\")",sep=""),"\n", "\n",
+  " or the variable in the data frame must be prior renamed","\n",  "\n",
+  paste("   ren(", as.character(substitute( var)),", newname)", "; ",
+  " label.var(newname,\"", as.character(substitute(label)),"\")", sep=""), "\n"))
+  }
   if(length(var)==nrow(dataFrame)){
 	data1[,names(data1)==as.character(substitute(var))] <- var
   }else{

@@ -12,15 +12,15 @@
 \description{Display of various epidemiological modelling results in a medically understandable format}
 \usage{
 logistic.display(logistic.model, alpha = 0.05, crude = TRUE, 
-    crude.p.value = FALSE, decimal = 2) 
+    crude.p.value = FALSE, decimal = 2, simplified = FALSE) 
 clogistic.display(clogit.model, alpha = 0.05, crude=TRUE, 
-    crude.p.value=FALSE, decimal = 2)
+    crude.p.value=FALSE, decimal = 2, simplified = FALSE)
 cox.display (cox.model, alpha = 0.05, crude=TRUE, crude.p.value=FALSE, 
-    decimal = 2) 
+    decimal = 2, simplified = FALSE) 
 regress.display(regress.model, alpha = 0.05, crude = FALSE, 
-    crude.p.value = FALSE, decimal = 2) 
+    crude.p.value = FALSE, decimal = 2, simplified = FALSE) 
 idr.display(idr.model, alpha = 0.05, crude = TRUE, crude.p.value = FALSE, 
-    decimal = 2) 
+    decimal = 2, simplified = FALSE) 
 mlogit.display(multinom.model, decimal = 2, alpha = 0.05) 
 ordinal.or.display(ordinal.model, decimal = 3, alpha = 0.05)  
 tableGlm (model, modified.coeff.array, decimal)
@@ -32,7 +32,7 @@ The function 'tableGlm' is not for general use. It is called by 'logistic.displa
 
 The output from 'logistic.display', 'regress.display' etc. have 'display' and 'list' as their class. Their apparence on R console are controlled by 'print.display'. The 'table' element of these 'display' objects are ready to write (using 'write.csv') to a .csv file which can then be copied to a manuscript document. This approach can substantially reduce time and errors due to conventional manual copying.
 }
-\arguments{
+\arguments{                     
 	\item{logistic.model}{a model from a logistic regression}
 	\item{clogit.model}{a model from a conditional logistic regression}
 	\item{regress.model}{a model from a linear regression}
@@ -41,6 +41,7 @@ The output from 'logistic.display', 'regress.display' etc. have 'display' and 'l
 	\item{crude}{whether crude results and their confidence intervals should also be displayed}
 	\item{crude.p.value}{whether crude P values should also be displayed if and only if 'crude=TRUE'}
 	\item{decimal}{number of decimal places displayed}
+  \item{simplified}{whether the display should be simplified}
 	\item{idr.model}{a model from a Poisson regression or a negative binomial regression}
 	\item{multinom.model}{a model from a multinomial or polytomous regression}
 	\item{ordinal.model}{a model from an ordinal logistic regression}
@@ -51,89 +52,102 @@ The output from 'logistic.display', 'regress.display' etc. have 'display' and 'l
 }
 \note{Before using these 'display' functions, please note the following limitations. 
 
-1) Users \bold{should} define the 'data' argument of the model.
+1) Users \bold{should} define the 'data' argument of the model. 
 
-2) The names of the independent variables \bold{must} be  a subset of the names of the variables in the 'data' argument. 
+2) The names of the independent variables \bold{must} be  a subset of the names of the variables in the 'data' argument. Sometimes, one of more variables are omitted by the model due to collinearity. In such a case, users have to turn on 'simplified=TRUE' in order to get the display function  work.
 
-2) The names of the independent variables \bold{must neither} contain a function such as 'factor()' \bold{nor} any '\bold{\$}' sign. 
+3) Under the following conditions, 'simplified' will be forced to TRUE and 'crude' forced to FALSE. 
 
-2) The levels of the factor variables \bold{must not} contain any '\bold{:}'.}
+    3.1) The names of the independent variables contain a function such as 'factor()' or any '\$' sign. 
+
+    3.2) The levels of the factor variables contain any ':' sign.
+
+    3.3) There are more than one interaction terms in the model
+
+    3.4) 'data' argument is missing in the conditional logistic regression and Cox regression model
+
+4) For any other problems with these display results, users are advised to run 'summary(model)' or 'summary(model)$coefficients' to check consistency between  variable names in the model and those in the coefficients. The number in the latter may be fewer than that in the former due to collinearity. In that case, it is advised to choose 'simplified=TRUE' to turn off the attempt to tidy up the rownames of the output from 'summary(model)$coeffients'. The output when 'simplified=TRUE' is more reliable but less beautiful and less understandable. 
+
+}
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
 }
 \value{'logistic.display', 'regress.display', 'clogit.display' and 'cox.display', each produces an output table. See 'details'.}
 \seealso{'glm', 'confint'}
 \examples{
-model0 <- glm(case ~ induced + spontaneous, family=binomial, data=infert)
-summary(model0)
-logistic.display(model0)
+     model0 <- glm(case ~ induced + spontaneous, family=binomial, data=infert)
+     summary(model0)
+     logistic.display(model0)
 
-data(ANCdata)
-glm1 <- glm(death ~ anc + clinic, family=binomial, data=ANCdata)
-logistic.display(glm1)
+     data(ANCdata)
+     glm1 <- glm(death ~ anc + clinic, family=binomial, data=ANCdata)
+     logistic.display(glm1)
+     logistic.display(glm1, simplified=TRUE)
 
-library(MASS) # necessary for negative binomial regression
-data(DHF99); use(DHF99)
-model.poisson <- glm(containers ~ education + viltype, 
-    family=poisson, data=.data)
-model.nb <- glm.nb(containers ~ education + viltype, 
-    data=.data)
-idr.display(model.poisson)  -> poiss
-print(poiss) # or print.display(poiss) or poiss
-idr.display(model.nb)  -> nb
-print(nb)  
-nb # same result
-write.csv(nb$table, file="tablenb.csv")
-getwd()
-## You may go to this directory (folder) and have a look
-## at the file using a spreadsheet programme. 
-file.remove(file = "tablenb.csv") # The file removed
- 
-data(VC1to6)
-use(VC1to6)
-fsmoke <- factor(smoking)
-levels(fsmoke) <- list("no"=0, "yes"=1)
-pack()
-clr1 <- clogit(case ~ alcohol + fsmoke + strata(matset), data=.data)
-clogistic.display(clr1)
- 
-data(BP)
-use(BP)
-age <- as.numeric(as.Date("2000-01-01") - birthdate)/365.25
-agegr <- pyramid(age,sex, bin=20)$ageGroup
-hypertension <- sbp >= 140 | dbp >=90
-pack()
-model1 <- glm(hypertension ~ sex + agegr + saltadd, family=binomial, data=.data)
-logistic.display(model1) -> table3
-attributes(table3)
-table3
-table3$table
-write.csv(table3$table, file="table3.csv") # Note $table
-## Have a look at this file with Excel, or similar spreadsheet program
-file.remove(file="table3.csv")
+     library(MASS) # necessary for negative binomial regression
+     data(DHF99); use(DHF99)
+     model.poisson <- glm(containers ~ education + viltype, 
+         family=poisson, data=.data)
+     model.nb <- glm.nb(containers ~ education + viltype, 
+         data=.data)
+     idr.display(model.poisson)  -> poiss
+     print(poiss) # or print.display(poiss) or poiss
+     idr.display(model.nb)  -> nb
+     print(nb)  
+     nb # same result
+     write.csv(nb$table, file="tablenb.csv")
+     getwd()
+     ## You may go to this directory (folder) and have a look
+     ## at the file using a spreadsheet programme. 
+      
+     data(VC1to6)
+     use(VC1to6)
+     fsmoke <- factor(smoking)
+     levels(fsmoke) <- list("no"=0, "yes"=1)
+     pack()
+     clr1 <- clogit(case ~ alcohol + fsmoke + strata(matset), data=.data)
+     clogistic.display(clr1)
+      
+     data(BP)
+     use(BP)
+     age <- as.numeric(as.Date("2000-01-01") - birthdate)/365.25
+     agegr <- pyramid(age,sex, bin=20)$ageGroup
+     hypertension <- sbp >= 140 | dbp >=90
+     pack()
+     model1 <- glm(hypertension ~ sex + agegr + saltadd, family=binomial, data=.data)
+     logistic.display(model1) -> table3
+     attributes(table3)
+     table3
+     table3$table
+     write.csv(table3$table, file="table3.csv") # Note $table
+     ## Have a look at this file with Excel, or similar spreadsheet program
+     file.remove(file="table3.csv")
+     model2 <- glm(hypertension ~ sex * age + sex* saltadd, family=binomial, data=.data)
+     logistic.display(model2) 
+     # More than 1 interaction term so 'simplified turned to TRUE
 
-reg1 <- lm(sbp ~ sex + agegr + saltadd, data=.data)
-regress.display(reg1)
+     reg1 <- lm(sbp ~ sex + agegr + saltadd, data=.data)
+     regress.display(reg1)
 
-reg2 <- glm(sbp ~ sex + agegr + saltadd, family=gaussian, data=.data)
-regress.display(reg2)
+     reg2 <- glm(sbp ~ sex + agegr + saltadd, family=gaussian, data=.data)
+     regress.display(reg2)
 
-data(Compaq)
-cox1 <- coxph(Surv(year, status) ~ hospital + stage * ses, data=Compaq)
-cox.display(cox1, crude.p.value=TRUE)
+     data(Compaq)
+     cox1 <- coxph(Surv(year, status) ~ hospital + stage * ses, data=Compaq)
+     cox.display(cox1, crude.p.value=TRUE)
 
+     # Ordinal logistic regression
+     library(nnet)
+     options(contrasts = c("contr.treatment", "contr.poly"))
+     house.plr <- polr(Sat ~ Infl + Type + Cont, weights = Freq, data = housing)
+     house.plr
+     ordinal.or.display(house.plr)
 
-# Ordinal logistic regression
-library(nnet)
-options(contrasts = c("contr.treatment", "contr.poly"))
-house.plr <- polr(Sat ~ Infl + Type + Cont, weights = Freq, data = housing)
-house.plr
-ordinal.or.display(house.plr)
+     # Polytomous or multinomial logistic regression
+     house.multinom <- multinom(Sat ~ Infl + Type + Cont, weights = Freq, 
+             data = housing)
+     summary(house.multinom)
+     mlogit.display(house.multinom, alpha=.01) # with 99 percent confidence limits.
 
-# Polytomous or multinomial logistic regression
-house.multinom <- multinom(Sat ~ Infl + Type + Cont, weights = Freq, 
-	data = housing)
-summary(house.multinom)
-mlogit.display(house.multinom, alpha=.01) # with 99 percent confidence limits.
 }
 \keyword{database}
