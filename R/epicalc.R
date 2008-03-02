@@ -1965,7 +1965,7 @@ tableGlm <- function (model, modified.coeff.array, decimal)
       }}
       if(is.null(nrow(table0))) table0 <- t(table0) 
       
-        # Define column names
+        # Define column names and row names
       if(nrow(table0)==1){ 
       # table0 with only a single row
         if(any(class(model)=="glm" | any(class(model)=="coxph"))){
@@ -2051,8 +2051,8 @@ tableGlm <- function (model, modified.coeff.array, decimal)
             splited.old.rownames <- unlist(strsplit(rownames(table0),":"))
             dim(splited.old.rownames) <- c(2, length(splited.old.rownames)/2)
             splited.old.rownames <- t(splited.old.rownames)
-            new.rownames1 <- gsub(first.var, replacement="",splited.old.rownames[,1])
-            new.rownames2 <- gsub(second.var, replacement="",splited.old.rownames[,2])
+            new.rownames1 <- substr(splited.old.rownames[,1], nchar(first.var)+1, nchar(splited.old.rownames[,1]) )
+            new.rownames2 <- substr(splited.old.rownames[,2], nchar(second.var)+1, nchar(splited.old.rownames[,2]))
             rownames(table0) <- paste(new.rownames1,":",new.rownames2,sep="") 
             if(any(class(model)=="lm")){
             all.level1 <- unlist(model$xlevels[names(model$xlevels)==first.var])
@@ -2063,14 +2063,14 @@ tableGlm <- function (model, modified.coeff.array, decimal)
             }
             non.interact <- rownames(modified.coeff.array)[-grep(":", rownames(modified.coeff.array))]
             non.interact1 <- non.interact[substr(non.interact, 1, nchar(first.var))== first.var]
-            used.levels1 <- gsub(pattern=first.var, replacement="", non.interact1)
+            used.levels1 <- substr(non.interact1, nchar(first.var)+1, nchar(non.interact1))
             ref.level1 <- setdiff(all.level1, used.levels1)
             non.interact2 <- non.interact[substr(non.interact, 1, nchar(second.var))== second.var]
-            used.levels2 <- gsub(pattern=second.var, replacement="", non.interact2)
+            used.levels2 <- substr(non.interact2, nchar(second.var)+1 , nchar(non.interact2))
             ref.level2 <- setdiff(all.level2, used.levels2)
             ref.level <- paste(ref.level1,":",ref.level2,sep="")
             }else{
-            rownames(table0) <- gsub(var.names[i], replacement="", rownames(table0))
+            rownames(table0) <- substr(rownames(table0), nchar(var.names[i])+1, nchar(rownames(table0)))
             if(any(class(model)=="lm")){
             all.levels <- unlist(unlist(model$xlevels))[substr(names(unlist(model$xlevels)),1,nchar(var.names[i]))==var.names[i]]
             }else{
