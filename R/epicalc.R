@@ -1683,7 +1683,7 @@ last.lines <- NULL
             outcome.lab <- outcome.name
             }}}
     first.line <- paste("Conditional logistic regression predicting ",outcome.lab, sep="", "\n")
-    last.lines <- paste("No. of observations = ", length(outcome), "\n")
+    last.lines <- paste("No. of observations = ", model$n, "\n")
 }
     results <- list(first.line=first.line, table=table1, last.lines=last.lines)
     class(results) <- c("display", "list")
@@ -1833,7 +1833,9 @@ tableGlm <- function (model, modified.coeff.array, decimal)
     var.names0 <- var.names
     if(length(grep("strata", var.names)) > 0){
     var.names <- var.names[-grep(pattern="strata", var.names)]
-    }}
+    }
+    data <- na.omit(get(as.character(model$call)[3]))
+    }
     table1 <- NULL
     if(any(class(model)=="glm") | any(class(model)=="lm"))
     {
@@ -1875,10 +1877,10 @@ tableGlm <- function (model, modified.coeff.array, decimal)
             }else{
             if(any(class(model)=="coxph")){
             if(length(grep(pattern=":", var.names[i])) < 1){
-            variable <- get(as.character(model$call)[3])[,var.names[i]]
-            var.name.class <- class(get(as.character(model$call)[3])[,var.names[i]])
+            variable <- data[,var.names[i]]
+            var.name.class <- class(data[,var.names[i]])
             if(var.name.class=="factor"){
-            var.name.levels <- levels(get(as.character(model$call)[3])[,var.names[i]]) 
+            var.name.levels <- levels(data[,var.names[i]]) 
             }}}}
 
         # Define variable labels
@@ -1928,18 +1930,20 @@ tableGlm <- function (model, modified.coeff.array, decimal)
       }else{
       b <- as.character(model$formula)  
       if(any(class(model)=="clogit")){
-      formula.full.coxph <- as.formula(paste(b[2], "~", paste(var.names0, collapse="+")))
+      formula.full.coxph <- as.formula(paste(as.character(model$term[[2]][3]), "~", paste(var.names0, collapse="+")))
+      model.full.coxph <- clogit(formula.full.coxph, data=data)
       }else{
       formula.full.coxph <- as.formula(paste(b[2], "~", paste(var.names, collapse="+")))      
+      model.full.coxph <- coxph(formula.full.coxph, data=data)
       }
-      model.full.coxph <- coxph(formula.full.coxph, data=get(as.character(model$call)[3]))
       if(any(class(model)=="clogit")){
-      formula.coxph.i <- as.formula(paste(b[2], "~", 
+      formula.coxph.i <- as.formula(paste(as.character(model$term[[2]][3]), "~", 
         paste(c(var.names[-i], var.names0[grep("strata", var.names0)]), collapse="+")))
+      model.coxph.i <- clogit(formula.coxph.i, data=data)
       }else{
       formula.coxph.i <- as.formula(paste(b[2], "~", paste(var.names[-i], collapse="+")))
+      model.coxph.i <- coxph(formula.coxph.i, data=data)
       }
-      model.coxph.i <- coxph(formula.coxph.i, data=get(as.character(model$call[3])))
       lr.p.value <- suppressWarnings(lrtest(model.full.coxph, model.coxph.i, print=FALSE)$p.value)
       }
       lr.p.value <- ifelse(lr.p.value < .001, "< 0.001",round(lr.p.value,decimal+1))
@@ -2086,6 +2090,8 @@ tableGlm <- function (model, modified.coeff.array, decimal)
       }
     }
 }
+
+
 
 #### Likelihood ratio test
 lrtest <- function (model1, model2, print = TRUE) 
