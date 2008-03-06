@@ -28,7 +28,7 @@ The argument 'reverse' (default = TRUE) automatically reverses items negatively 
 
 Similar to the 'reliability' function, users can see the effect of removing each item on the coefficents and the item-rest correlation. 
 
-'alphaBest' is a variant of 'alpha' for automatic selection of the subset of items (with appropriate items reversed) giving the highest possible Cronbach alpha. The resultant values include variable indices of excluded and remaining items, which can be forwarded to 'tableStack' to achieve total and mean scores of the best selected items.
+'alphaBest' is a variant of 'alpha' for successive removal of items aiming to reach the highest possible Cronbach alpha. The resultant values include variable indices of excluded and remaining items, which can be forwarded to 'tableStack' to achieve total and mean scores of the best selected items. However, there is no promise that this will give the highest possible alpha. Manual attemps may also be useful in making comparison.
 }
 \value{A list. 
 
@@ -69,7 +69,11 @@ alpha(qa1:qa18, var.labels.trunc=30)
 alpha(qa1:qa18, reverse=FALSE)
 
 alphaBest(qa1:qa18) -> best.alpha
-best.alpha
+best.alpha # .7621
 tableStack(best.alpha$remaining, reverse=TRUE)
+
+# Manual attempts by trial and error give the following
+alpha(c(qa1:qa9, qa15,qa18)) # .7644
+
 }
 \keyword{database}

@@ -1834,8 +1834,11 @@ tableGlm <- function (model, modified.coeff.array, decimal)
     if(length(grep("strata", var.names)) > 0){
     var.names <- var.names[-grep(pattern="strata", var.names)]
     }
-    data <- na.omit(get(as.character(model$call)[3]))
-    }
+    if(any(class(model)=="clogit")){
+    data <- na.omit((get(as.character(model$call)[3]))[,c(as.character(model$term[[2]][3]),var.names, as.character(model$term[[3]][[length(model$call)-1]][2]))])
+    }else{
+    data <- na.omit(get(as.character(model$call)[3])[,c(as.character(model$call[[2]][[2]][c(2,3)]) ,as.character(attr(model$terms, "variables")[-c(1:2)]))])
+    }}
     table1 <- NULL
     if(any(class(model)=="glm") | any(class(model)=="lm"))
     {
@@ -4542,34 +4545,41 @@ print.noquote(x$result)
 
 
 # The best Cronbach alpha
-alphaBest <- function(vars, standardized=FALSE, dataFrame=.data)
+alphaBest <- function (vars, standardized = FALSE, dataFrame = .data) 
 {
     nl <- as.list(1:ncol(dataFrame))
     names(nl) <- names(dataFrame)
     selected <- eval(substitute(vars), nl, parent.frame())
-a <- alpha(vars=selected, dataFrame=dataFrame)
-sorted.alpha.if.removed <- a$alpha.if.removed[order(a$alpha.if.removed[,1+standardized], decreasing=TRUE),1 + standardized]
-removed.names <- NULL
-removed.orders <- NULL
-count <- 0
-while(a[1+standardized] < sorted.alpha.if.removed[count + 1]){
-removed.name0 <-  names(sorted.alpha.if.removed)[count + 1]
-removed.names <- c(removed.names, removed.name0)
-removed.orders <- c(removed.orders, which(names(dataFrame) %in% removed.name0))
-count <- count +1
-a <- alpha(vars=setdiff(selected, removed.orders), dataFrame=dataFrame)
-sorted.alpha.if.removed <- a$alpha.if.removed[order(a$alpha.if.removed[,1+standardized], decreasing=TRUE),1 + standardized]
+    a <- alpha(vars = selected, dataFrame = dataFrame)
+    sorted.alpha.if.removed <- a$alpha.if.removed[order(a$alpha.if.removed[, 
+        1 + standardized], decreasing = TRUE), 1 + standardized]
+    removed.names <- NULL
+    removed.orders <- NULL
+    while (a[1 + standardized] < sorted.alpha.if.removed[1]) 
+    {
+        removed.name0 <- names(sorted.alpha.if.removed)[1]
+        removed.names <- c(removed.names, removed.name0)
+        removed.orders <- c(removed.orders, which(names(dataFrame) %in% 
+            removed.name0))
+        a <- alpha(vars = setdiff(selected, removed.orders), 
+            dataFrame = dataFrame)
+        sorted.alpha.if.removed <- a$alpha.if.removed[order(a$alpha.if.removed[, 
+            1 + standardized], decreasing = TRUE), 1 + standardized]
+    }
+    names(removed.orders) <- removed.names
+    remaining.names <- a$items.selected
+    remaining.orders <- which(names(dataFrame) %in% remaining.names)
+    names(remaining.orders) <- remaining.names
+    if (standardized) {
+        list(best.std.alpha = a$alpha, removed.items = removed.orders, 
+            remaining.items = remaining.orders)
+    }
+    else {
+        list(best.alpha = a$alpha, removed = removed.orders, 
+            remaining = remaining.orders, items.reversed = a$items.reversed)
+    }
 }
-names(removed.orders) <- removed.names
-remaining.names <- a$items.selected
-remaining.orders <- which(names(dataFrame) %in% remaining.names)
-names(remaining.orders) <- remaining.names
-if(standardized){
-list(best.std.alpha = a$alpha, removed.items = removed.orders, remaining.items = remaining.orders)
-}else{
-list(best.alpha = a$alpha, removed = removed.orders, remaining = remaining.orders, items.reversed = a$items.reversed)
-}
-}
+
 
 ## Table stack
 tableStack <-
