@@ -2845,16 +2845,7 @@ return <- as.table(table)
 
 ### Sample size calculation
 n.for.2p <- function (p1, p2, alpha=0.05, power=.8, ratio=1) {
-	if (p1 <1 & p2 <1) {
-	cat("\n")
-	cat("Estimation of sample size for testing Ho: p1==p2", "\n")
-	cat("Assumptions:", "\n", "\n")
-	cat("     alpha =", alpha, "\n")
-	cat("     power =", power, "\n")
-	cat("        p1 =", p1, "\n")
-	cat("        p2 =", p2, "\n")
-	cat("     n2/n1 =", ratio, "\n", "\n")
-	cat("Estimated required sample size:", "\n", "\n")
+	if (any(p1 <1) & any(p2 <1)) {
 	r1    <- ratio +1
 	pbar  <- (p1+ratio*p2)/r1
 	sqrt1 <- sqrt(r1 * pbar * (1-pbar))
@@ -2864,41 +2855,115 @@ n.for.2p <- function (p1, p2, alpha=0.05, power=.8, ratio=1) {
 	n1    <- (n0/4)* (1+sqrt(1+2*r1/(n0*ratio*abs(p1-p2))))^2
 	n1    <- trunc(n1) +1
 	n2    <- trunc(ratio * n1)
-	cat("        n1 =",n1,"\n")
-	cat("        n2 =",n2,"\n")
-	cat("   n1 + n2 =",n1+n2,"\n","\n")
-	}
+	}else{
+	stop("Both p1 and p2 must be less than 1")
+  }
+  if(length(alpha) > 1 ) {alpha1 <- alpha }else {alpha1 <- NULL}
+  if(length(power) > 1 ) {power1 <- power }else {power1 <- NULL}
+  if(length(ratio) > 1 ) {ratio1 <- ratio }else {ratio1 <- NULL}
+  table1 <- cbind(p1, p2, n1, n2, alpha1, power1, ratio1)
+  colnames(table1)[colnames(table1)=="alpha1"] <- "alpha"
+  colnames(table1)[colnames(table1)=="power1"] <- "power"
+  colnames(table1)[colnames(table1)=="ratio1"] <- "n2/n1"
+  returns <- list(p1=p1, p2=p2, n1=n1, n2=n2, alpha=alpha, power=power, ratio=ratio, 
+    table = as.data.frame(table1))
+  class(returns) <- c("n.for.2p", "list")
+  returns
 } 
 
+### print n.for.2p
+print.n.for.2p <- function(x, ...){
+if(nrow(x$table) < 6){
+	cat("\n")
+	cat("Estimation of sample size for testing Ho: p1==p2", "\n")
+	cat("Assumptions:", "\n", "\n")
+	cat("     alpha =", x$alpha, "\n")
+	cat("     power =", x$power, "\n")
+	cat("        p1 =", x$p1, "\n")
+	cat("        p2 =", x$p2, "\n")
+	cat("     n2/n1 =", x$ratio, "\n", "\n")
+	cat("Estimated required sample size:", "\n", "\n")
+	cat("        n1 =",x$n1,"\n")
+	cat("        n2 =",x$n2,"\n")
+	cat("   n1 + n2 =",x$n1+x$n2,"\n","\n")
+}else{
+	cat("Assumptions:", "\n", "\n")
+	if(length(x$alpha)==1) cat("     alpha =", x$alpha, "\n")
+	if(length(x$power)==1) cat("     power =", x$power, "\n")
+  if(length(x$ratio)==1) cat("     n2/n1 =", x$ratio, "\n")
+  cat("\n")
+print(x$table)
+}}
+
 ### sample size for survey
-n.for.survey <- function(p, delta=.5*min(c(p,1-p)), popsize=FALSE, deff=1, alpha = .05 ){
-	if(any(p >= 1) | any(delta >= 1) | any(popsize < 2 & popsize) ) 
+n.for.survey <- function(p, delta = "auto", popsize=NULL, deff=1, alpha = .05){
+q <- 1-p
+pq <- cbind(p, q)
+minpq <- apply(pq, 1, min)
+if(any(delta=="auto")){
+delta <- ifelse(minpq >= .3, 0.1, ifelse(minpq >= .1, .05, minpq/2))
+}
+	if(any(p >= 1) | any(delta >= 1) | any(popsize < 2) ) 
 		stop("Proportion and delta both must < 1. Popsize must be >=2")
 	else {
 	n1 <- qnorm(1-alpha/2)^2*p*(1-p)/delta^2
-	cat("\n")
-	cat("Sample size for survey.","\n")
-	cat("Assumptions:", "\n")
-	cat("  Proportion       =", p, "\n")
-	cat("  Confidence limit =", round((1-alpha)*100), "%","\n") 
-	cat("  Delta            =", round(delta, 3), "from the estimate.", "\n")
-	}
-	if (popsize != FALSE){
+	if (!is.null(popsize)){
 	n1 = n1/(1+n1/popsize)
-	cat("  Population size  =", popsize, "\n")
 	}
-	if (deff != 1) {
-	n1 = n1*deff
-	cat("  Design effect    =", deff, "\n")
+  if (deff != 1) {
+	n1 = n1*deff }
+  }
+  deff1 <- deff
+  if(deff==1) deff1 <- NULL
+  table1 <- cbind(p, popsize, deff1, delta, round(n1))
+  colnames(table1)[colnames(table1)=="deff1"] <- "deff"
+  colnames(table1)[ncol(table1)] <- "n"
+    		returns <- list(p = p, delta=delta, popsize=popsize, deff=deff, 
+    alpha = alpha, n1=n1, minpq=minpq,
+    table = as.data.frame(table1))
+ class(returns) <- c("n.for.survey", "list")
+ returns
+}
+
+### print n.for.survey
+print.n.for.survey <- function(x, ...)
+{
+if(nrow(x$table) < 6){
+	cat("\n")
+  cat("Sample size for survey.","\n")
+	cat("Assumptions:", "\n")
+	cat("  Proportion       =", x$p, "\n")
+	cat("  Confidence limit =", round((1-x$alpha)*100), "%","\n") 
+	cat("  Delta            =", x$delta, "from the estimate.", "\n")
+	if (!is.null(x$popsize)){
+	cat("  Population size  =", x$popsize, "\n")
+}
+	if (x$deff != 1) {
+	cat("  Design effect    =", x$deff, "\n")
 	}
 	cat("\n")
-	cat("  Sample size      =", round(n1), "\n")
+	cat("  Sample size      =", round(x$n1), "\n")
 	cat("\n")
+}else{
+  cat("Sample size for survey.","\n")
+	cat("Assumptions:", "\n")
+  if(length(x$alpha) == 1) cat("  Confidence limit =", round((1-x$alpha)*100), "%","\n") 
+  if(length(x$delta) == 1)	cat("  Delta            =", x$delta, "from the estimate.", "\n")
+cat("\n")
+print(x$table, rownames=FALSE)
+}
 }
 
 ### Sample size for lot quality assurance sampling
 
 n.for.lqas <- function(p0, q=0, N=10000, alpha=.05, exact=FALSE){
+  maxi <- nrow(cbind(p0,q,N))
+  if(length(p0)==1 & maxi >1) p0 <- rep(p0, maxi)
+  if(length(q)==1 & maxi >1) q <- rep(q, maxi)
+  if(length(N)==1 & maxi >1) N <- rep(N, maxi)
+  n <- N
+  alpha.i <- alpha
+  if(length(alpha)==1 & maxi > 1) alpha.i <- rep(alpha, maxi)
 if (exact) {
 # Hypergeometric distribution 2-by-2 table : See `help("Hypergeometric")'
 # 
@@ -2909,54 +2974,106 @@ if (exact) {
 #       n = sample size
 #       q = positive among sample
 #       k = total positive in the population
-
-	for(n in N:1){
-	m = N-n
-	k = trunc(p0*N)
-	if (dhyper(q, n, m, k) > alpha) break	
-	}
-	method = "Exact"
+  m <- rep(1, maxi)
+  k <- rep(1, maxi)
+  for(i in 1:maxi){
+	  for(j in N[i]:1){
+	  m[i] <- N[i]-j
+	  k[i] <- trunc(p0[i]*N[i])
+	  if (dhyper(q[i], j, m[i], k[i]) > alpha.i[i]) break	
+		n[i] <- j
+    }
+  }
+	method <- "Exact"
 }
-
-
 else {
 # For normal approximation calculation
 # Formula: d=n*p0-z*sqrt(n*p0*(1-p0)*(N-n)/(N-1))
-	for (n in N:1){
-	if ((n*p0-(qnorm(p=1-alpha))*sqrt(n*p0*(1-p0)*(N-n)/(N-1))- q) < .001) break
-	}
-	method = "Normal approximation"
 
+  for(i in 1:maxi){
+	for (j in N[i]:1){
+	if ((j*p0[i]-(qnorm(p=1-alpha.i[i]))*sqrt(j*p0[i]*(1-p0[i])*(N[i]-j)/(N[i]-1))- q[i]) < .001) break
+  n[i] <- j
+	}
+	method <- "Normal approximation"
 }
+}
+  n <- round(n)
+  if(length(alpha) > 1 ) {alpha1 <- alpha }else {alpha1 <- NULL}
+  if(length(N) > 1 ) {N1 <- N }else {N1 <- NULL}
+  table1 <- cbind(p0, q, N, n, alpha1)
+  colnames(table1)[colnames(table1)=="alpha1"] <- "alpha"
+  table1 <- as.data.frame(table1)
+
+  returns <- list(p0=p0, q=q, N=N, alpha=alpha, method=method, n=n, table=table1)
+  class(returns) <- c("n.for.lqas","list")
+  returns
+}
+
+### Print n.for.lqas
+print.n.for.lqas <- function(x, ...){
+if(nrow(x$table) < 6){
 cat("\n")
 cat("     Lot quality assurance sampling","\n","\n")
-cat(c("                             Method =", method, "\n"))
-cat(c("                    Population size =", N,"\n"))
-cat("  Maximum defective sample accepted =", q, "\n")
-cat("     Probability of defect accepted =", p0,"\n")
-cat("                              Alpha =", alpha, "\n")
-cat(c("               Sample size required =", trunc(n)+1, "\n","\n"))
-}
+cat(c("                             Method =", x$method, "\n"))
+cat(c("                    Population size =", x$N,"\n"))
+cat("  Maximum defective sample accepted =", x$q, "\n")
+cat("     Probability of defect accepted =", x$p0,"\n")
+cat("                              Alpha =", x$alpha, "\n")
+cat(c("               Sample size required =", x$n, "\n","\n"))
+}else{
+cat("\n")
+cat("  Lot quality assurance sampling","\n")
+cat(c("  Method =", x$method, "\n"))
+if(length(table(x$N))==1) cat(c("  Population size =", unique(x$N),"\n"))
+if(length(x$alpha)==1) cat("  Alpha =", x$alpha, "\n")
+cat("\n")
+print(x$table)
+}}
+
+
 ### Sample size for test of two means
 n.for.2means <- function (mu1, mu2, sd1, sd2, ratio=1, alpha=.05,
 	power=.8) {
-	cat("\n")
-	cat("Estimation of sample size for testing Ho: mu1==mu2", "\n")
-	cat("Assumptions:", "\n", "\n")
-	cat("     alpha =", alpha, "\n")
-	cat("     power =", power, "\n")
-	cat("       mu1 =", mu1, "\n")
-	cat("       mu2 =", mu2, "\n")
-	cat("       sd1 =", sd1, "\n")
-	cat("       sd2 =", sd2, "\n", "\n")
-	cat("Estimated required sample size:", "\n", "\n")
 	n1 <- (sd1^2+sd2^2/ratio)*(qnorm(1-alpha/2)-qnorm(1-power))^2/(mu1-mu2)^2
 	n1 <- round(n1)
 	n2 <- ratio * n1
-	cat("        n1 =",n1+1,"\n")
-	cat("        n2 =",n2+1,"\n")
-	cat("   n1 + n2 =",n1+n2+2,"\n","\n")
-}
+	if(length(alpha)==1) {alpha1 <- NULL}else{alpha1 <- alpha}
+	if(length(power)==1) {power1 <- NULL}else{power1 <- power}
+	if(length(ratio)==1) {ratio1 <- NULL}else{ratio1 <- ratio}
+  table1 <- cbind(mu1, mu2, sd1, sd2, n1, n2, alpha1, power1, ratio1)
+  colnames(table1)[colnames(table1)=="alpha1"] <- "alpha"
+  colnames(table1)[colnames(table1)=="power1"] <-"power"
+  colnames(table1)[colnames(table1)=="ratio1"] <-"n2/n1"
+  table1 <- as.data.frame(table1)
+  returns <- list(mu1=mu1, mu2=mu2, sd1=sd1, sd2=sd2, alpha=alpha, 
+  n1=n1, n2=n2, power=power, ratio= ratio, table = table1)
+  class(returns) <- c("n.for.2means","list")
+  returns
+}      
+
+# Print n.for.2means
+print.n.for.2means <- function(x, ...) {
+	cat("\n")
+	cat("Estimation of sample size for testing Ho: mu1==mu2", "\n")
+	cat("Assumptions:", "\n", "\n")
+	if(length(x$alpha)==1) cat("     alpha =", x$alpha, "\n")
+	if(length(x$power)==1) cat("     power =", x$power, "\n")
+	if(length(x$ratio)==1) cat("     n2/n1 =", x$ratio, "\n")
+if(nrow(x$table) < 6){
+	cat("       mu1 =", x$mu1, "\n")
+	cat("       mu2 =", x$mu2, "\n")
+	cat("       sd1 =", x$sd1, "\n")
+	cat("       sd2 =", x$sd2, "\n", "\n")
+	cat("Estimated required sample size:", "\n", "\n")
+	cat("        n1 =",x$n1+1,"\n")
+	cat("        n2 =",x$n2+1,"\n")
+	cat("   n1 + n2 =",x$n1+x$n2+2,"\n","\n")
+}else{
+cat("\n")
+print(x$table)
+}}
+
 ### Pack all related variables into the existing .data
 pack <- function (dataFrame = .data) 
 {
