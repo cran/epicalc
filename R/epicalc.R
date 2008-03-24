@@ -184,12 +184,7 @@ x1 <- x[1,]
         colnames(a) <- c("Variable     ", "Class          ", 
             "Description")
         rownames(a) <- vars
-        cat("\n")
-        cat(attr(x, "datalabel"), "\n")
-        cat(.No.of.observations)
-        cat(nrow(x), "\n") 
-        print.noquote(a)
-        cat("\n")
+header <- paste(attr(x, "datalabel"), "\n",.No.of.observations,nrow(x), "\n")
         options(warn = 0)
     }
     else {
@@ -218,16 +213,10 @@ x1 <- .data[1,]
                 colnames(a) <- c("Variable     ", "Class          ", 
                   "Description")
                 rownames(a) <- vars
-                cat("\n")
-                cat(attr(.data, "datalabel"), "\n")
-                cat(.No.of.observations)
-                cat(nrow(.data), "\n")
-                print.noquote(a)
-                cat("\n")
+header <- paste(attr(x, "datalabel"), "\n",.No.of.observations,nrow(x), "\n")
                 options(warn = 0)
             }
             else {
-                cat("\n")
                 candidate.position <- NULL
                 for (search.position in 1:length(search())) {
                   if (exists(as.character(substitute(x)), where = search.position)) {
@@ -280,11 +269,9 @@ x1 <- .data[1,]
                 colnames(a) <- c("Var. source ", "Var. order", 
                   "Class  ", "# records", "Description")
                 rownames(a) <- rep("", length(candidate.position))
-                cat(paste("'", as.character(substitute(x)), "'", 
-                  " is a variable found in the following source(s):", 
-                  "\n", "\n", sep = ""))
-                print.noquote(a)
-                cat("\n")
+                header <- paste("'", deparse(substitute(x)), "'",
+                " is a variable found in the following source(s):", 
+                  "\n", "\n", sep = "")
             }
         }
         else {
@@ -306,16 +293,21 @@ x1 <- x[1,]
             colnames(a) <- c("Variable     ", "Class          ", 
                 "Description")
             rownames(a) <- 1:nrow(a)
-            cat("\n")
-            cat(attr(x, "datalabel"), "\n")
-            cat(.No.of.observations)
-            cat(nrow(x), "\n")
-            print.noquote(a)
-            cat("\n")
+header <- paste(attr(x, "datalabel"), "\n",.No.of.observations,nrow(x), "\n")
             options(warn = 0)
         }
     }
+results <- list(table=a, header=header)
+class(results) <- c("des","matrix")
+results
 }
+#####
+print.des <- function(x, ...)
+{
+cat(x$header)
+print.noquote(x$table)
+}
+
 
 ### Detaching all data frame from the search path
 detachAllData <- function(){
@@ -331,7 +323,7 @@ for(i in 1:length(pos.to.detach)){
 }
 ### Getting percentage from the tabulation
 tabpct <- function(row, col, decimal=1, percent=c("both","col","row"), graph=TRUE, las=0, ...) {
-tab <- table(row, col, deparse.level=1, dnn=list(substitute(row),substitute(col)), ...)
+tab <- table(row, col, deparse.level=1, dnn=list(deparse(substitute(row)),deparse(substitute(col))), ...)
 # column percent
 cpercent <-tab
 for(i in 1:ncol(tab)) { cpercent[,i] <-paste("(",format(round(tab[,i]/colSums(tab)[i]*100, digits=decimal),trim=TRUE),")", sep="")}
@@ -360,32 +352,32 @@ for(i in 1:nrow(tab) ){ rnames <- c(rnames, rownames(tab)[i], "")}
 rownames(rpercent) <- rnames
 colnames(rpercent)[ncol(rpercent)] <- "Total"
 
-		var1 <- as.character(substitute(row))
+		var1 <- deparse(substitute(row))
 		if(length(var1)>1){
 			string2 <- var1[length(var1)]	
 		}else
 		if(substring(search()[2],first=1,last=8)!="package:"){
-			string2 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==substitute(row)]
+			string2 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==deparse(substitute(row))]
 			if(length(string2)==0){
-				string2 <- as.character(substitute(row))
+				string2 <- deparse(substitute(row))
 			}
 			if(string2==""){
-				string2 <- as.character(substitute(row))
+				string2 <- deparse(substitute(row))
 			}
 		}else{
-			string2 <- as.character(substitute(row))
+			string2 <- deparse(substitute(row))
 		}
 		if(substring(search()[2],first=1,last=8)!="package:"){
-			string4 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==substitute(col)]
+			string4 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==deparse(substitute(col))]
 			if(length(string4)==0){
-				string4 <- as.character(substitute(col))
+				string4 <- deparse(substitute(col))
 			}else{
 				if(string4==""){
-					string4 <- as.character(substitute(col))
+					string4 <- deparse(substitute(col))
 				}
 			}
 		}else{
-			string4 <- as.character(substitute(col))
+			string4 <- deparse(substitute(col))
 		}
 names(attr(tab,"dimnames")) <-c(string2, string4)
 cat( "\n")
@@ -425,8 +417,6 @@ for(i in 1:ncol(tab)) {cpercent[,i] <- tab[,i]/colSums(tab)[i]*100}
 
 rpercent <- tab
 for(i in 1:nrow(tab)) {rpercent[i,] <- tab[i,]/rowSums(tab)[i]*100}
-
-
 returns <- list(table.row.percent=rpercent, table.column.percent=cpercent)
 } 
 ####
@@ -2239,34 +2229,34 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 #if(length(grep("Thai",Sys.getlocale("LC_ALL")))==1){
 #  	Sys.setlocale(category = "LC_ALL", locale = "C")
 #    }
-		if(typeof(x)=="character"){stop(paste(as.character(substitute(x)),"is a character vector"))}
-		var1 <- as.character(substitute(x))
+		if(typeof(x)=="character"){stop(paste(deparse(substitute(x)),"is a character vector"))}
+		var1 <- deparse(substitute(x)) #as.character(substitute(x))
 		if(length(var1)>1){
 			string2 <- var1[length(var1)]	
 		}else
 		if(substring(search()[2],first=1,last=8)!="package:"){
-			string2 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==substitute(x)]
+			string2 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==deparse(substitute(x))]
 			if(length(string2)==0){
-				string2 <- as.character(substitute(x))
+				string2 <- deparse(substitute(x)) # as.character(substitute(x))
 			}
 			if(string2==""){
-				string2 <- as.character(substitute(x))
+				string2 <- deparse(substitute(x)) # as.character(substitute(x))
 			}
 		}else{
-			string2 <- as.character(substitute(x))
+			string2 <- deparse(substitute(x)) # as.character(substitute(x))
 		}
 		string3 <- paste(titleString()$distribution.of,string2)
 		if(substring(search()[2],first=1,last=8)!="package:"){
-			string4 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==substitute(by)]
+			string4 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==deparse(substitute(by))]
 			if(length(string4)==0){
-				string4 <- as.character(substitute(by))
+				string4 <- deparse(substitute(by))
 			}else{
 				if(string4==""){
-					string4 <- as.character(substitute(by))
+					string4 <- deparse(substitute(by))
 				}
 			}
 		}else{
-			string4 <- as.character(substitute(by))
+			string4 <- deparse(substitute(by))
 		}
 		string5 <- paste(string3,titleString()$by,string4)
 		if(nchar(string5)>45){string5 <- paste(string3,"\n", titleString()$by,string4)}
@@ -2391,24 +2381,21 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 #if(Sys.getlocale()=="C")	Sys.setlocale(category = "LC_ALL", locale = "")
   }
 	if(is.data.frame(x)){
-		cat ("\n")
-		cat(attr(x, "datalabel"), "\n")
-		cat(.No.of.observations); cat(nrow(x), "\n")
+    heading <- paste(attr(x, "datalabel"), "\n", .No.of.observations, nrow(x), "\n", "\n", sep="")
 	}
 	if(is.vector(x) | is.vector(unclass(x))|(is.factor(x))|any(class(x)=="POSIXt"|class(x)=="difftime")){
-		if(typeof(x)=="character"){stop(paste(as.character(substitute(x)),"is a character vector"))}
+		if(typeof(x)=="character"){stop(paste(deparse(substitute(x)),"is a character vector"))}
 		if(is.factor(x)) {x <- na.omit(as.numeric(x))}
 	###	print out statistics
 		if(!is.null(by)){
 			by1 <- factor(by, exclude=NULL)
 			if(any(is.na(levels(by1)))){levels(by1)[length(levels(by1))]<-"missing"}
 			lev <- levels(by1)
+			multiple.a <- NULL
 			for(i in 1:length(lev)) {
 				x1 <- subset(x, by1==lev[i])
-				if(any(class(x1)=="POSIXt")) {
-					cat(paste("For",as.character(substitute(by)),"=",levels(by1)[i]),"\n")
-					print.noquote(format((summary(x1))[c(1,3,4,6)],"%Y-%m-%d %H:%M"))
-					cat("\n")
+				if(any(class(x1)=="POSIXt")) {		
+        a <- format((summary(x1))[c(1,3,4,6)],"%Y-%m-%d %H:%M")
 				}else{
 					a <- rep("",6); dim(a) <- c(1,6)
 		if(any(class(x1)=="date")){
@@ -2429,14 +2416,13 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 					}
 					colnames(a) <- c(.obs, .mean, .median, .sd, .min, .max)
 					rownames(a) <- " "	
-					cat(paste("For",as.character(substitute(by)),"=",levels(by1)[i]),"\n")
-					print.noquote(a, row.names=NULL)
-					cat("\n")
 				}
+      multiple.a <- rbind(multiple.a, a)
+      row.names(multiple.a) <- rep("", nrow(multiple.a))
 			}
 		}else{
 			if(any(class(x)=="POSIXt")) {
-				print.noquote(format((summary(x))[c(1,3,4,6)],"%Y-%m-%d %H:%M"))
+      a <- (format((summary(x))[c(1,3,4,6)],"%Y-%m-%d %H:%M"))
 			}else{
 				a <- rep("",6); dim(a) <- c(1,6)
 		if(any(class(x)=="date")){
@@ -2457,14 +2443,14 @@ summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
 				}
 				colnames(a) <- c(.obs, .mean, .median, .sd, .min, .max)
 				rownames(a) <- " "	
-				print.noquote(a, row.names=NULL)
 			}
 		}
 	}
 else
-if (is.recursive(x)&&length(x)==1) summary(x)
+if (is.recursive(x)&&length(x)==1) {a <- summary(x)}
 else
-if (!is.recursive(x)&&!is.vector(x)&&!is.factor(x)) summary(x)
+#if (!is.recursive(x)&&!is.vector(x)&&!is.factor(x)) summary(x)
+if (!is.recursive(x)&&!is.vector(x)&&!is.factor(x)) a <- summary(x)
 else
 {
 a <- rep("", (dim(x)[2])*7)
@@ -2523,11 +2509,54 @@ for(i in 1:(dim(x)[2])) {
 			max(na.omit(unclass(x[i][,])))),3)
 }}
 }
-cat("\n")
-print.noquote (a[,], digits=3)
-cat("\n")
+}
+if(is.data.frame(x))
+{
+results <- list(heading=heading, table=a)
+class(results) <- c("summ","table")
+results
+}else{
+if(is.null(by))
+{
+if(class(a) == "matrix"){
+results <- list(table=a)
+class(results) <- c("summ", "matrix")
+results
+}else{
+results <- list(object=a)
+class(results) <- c("summ",class(a))
+results
+}
+}else{
+results <- list(byname=deparse(substitute(by)), levels=levels(factor(by)), table=multiple.a)
+class(results) <- c("summ", "list")
+results
 }
 }
+}            
+#### Print summ result
+
+print.summ <- function(x, ...)
+{
+if(any(class(x)=="table")){
+cat("\n")
+cat(x$heading)
+print.noquote(x$table)
+cat("\n")
+}else{
+if(any(class(x)=="list")){
+			for(i in 1:length(x$levels)) {
+          cat(paste("For",x$byname,"=",x$levels[i]),"\n")
+          print.noquote(x$table[i,,drop=FALSE])
+          cat("\n")
+}
+}else{
+if(any(class(x)=="matrix")){
+print.noquote(x$table)
+}else{
+print(x$object)
+}}}}
+
 
 #### ROC curve from Logistic Regression
 lroc <- function (logistic.model, graph=TRUE, add=FALSE, title=FALSE, 
@@ -3282,22 +3311,22 @@ for(i in 1:length(y)){
 }
 
 ### One-way tabulation
-tab1 <- function (x0, decimal=1, sort.group=c(FALSE,"decreasing","increasing"), cum.percent=!any(is.na(x0)), graph=TRUE, missing=TRUE, bar.values=c("frequency","percent", "none"), horiz=FALSE) {
+tab1 <- function (x0, decimal=1, sort.group=c(FALSE,"decreasing","increasing"), cum.percent=!any(is.na(x0)), graph=TRUE, missing=TRUE, bar.values=c("frequency","percent", "none"), horiz=FALSE, ...) {
 if(graph){
-		var1 <- as.character(substitute(x0))
+		var1 <- deparse(substitute(x0))
 		if(length(var1)>1){
 			string2 <- var1[length(var1)]	
 		}else
 		if(substring(search()[2],first=1,last=8)!="package:"){
-			string2 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==substitute(x0)]
+			string2 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==deparse(substitute(x0))]
 			if(length(string2)==0){
-				string2 <- as.character(substitute(x0))
+				string2 <- deparse(substitute(x0))
 			}
 			if(string2==""){
-				string2 <- as.character(substitute(x0))
+				string2 <- deparse(substitute(x0))
 			}
 		}else{
-			string2 <- as.character(substitute(x0))
+			string2 <- deparse(substitute(x0))
 		}
 	string3 <- paste(titleString()$distribution.of,string2)
 	
@@ -3326,14 +3355,14 @@ if(graph){
 	})
 	if((max(nchar(names(table.to.plot)))>8 & length(table.to.plot)>6)|horiz==TRUE){
 		par(mai=c(0.95625, 0.1, 0.76875, 0.39375)+.1+c(0,par()$cin[1]*max(nchar(names(table.to.plot))*.75),0,0))
-		barplot(table.to.plot,main=string3, horiz=TRUE, las=1, xlim=c(0, max(table.to.plot)*1.2), xlab = scale.label) -> y.coordinates
+		barplot(table.to.plot,main=string3, horiz=TRUE, las=1, xlim=c(0, max(table.to.plot)*1.2), xlab = scale.label, ...) -> y.coordinates
 		suppressWarnings(if(bar.values=="frequency" | bar.values=="percent" | length(bar.values)==3){
     text(table.to.plot, y.coordinates, as.character(table.to.plot), pos=4, offset=0.3)
     })
     par(mai=c(0.95625, 0.76875, 0.76875, 0.39375))
 		}else{
 			barplot(table.to.plot, main=string3, ylab=scale.label, 
-				ylim=c(0, max(table.to.plot)*1.1)) -> x.coordinates
+				ylim=c(0, max(table.to.plot)*1.1), ...) -> x.coordinates
 		suppressWarnings(if(bar.values=="frequency" | bar.values=="percent" | length(bar.values)==3){
       text(x.coordinates, table.to.plot, as.character(table.to.plot), pos=3)
 		})
@@ -3391,10 +3420,10 @@ if(cum.percent){
 }
 if(substring(search()[2], first=1, last=8)!="package:"){
 options(warn=-1)
-	first.line <- paste(as.character(substitute(x0)),":", attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==substitute(x0)], "\n","\n")
+	first.line <- paste(deparse(substitute(x0)),":", attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==deparse(substitute(x0))], "\n","\n")
 options(warn=TRUE)
 }else{
-  first.line <- paste(as.character(substitute(x0)),":", "\n") 
+  first.line <- paste(deparse(substitute(x0)),":", "\n") 
 }
 returns <- list(first.line=first.line, output.table=output)
 class(returns) <- c("tab1", "list")
@@ -3506,7 +3535,7 @@ if(any(class(x)=="Date")){
  }else{
  bin <- 40
 }}}}
-character.x <- as.character(substitute(x))
+character.x <- deparse(substitute(x))
 		if(any(class(x)=="date")){
       x <- as.Date(paste(date.mdy(x)$year,"-", date.mdy(x)$month,"-", date.mdy(x)$day, sep=""))
     }
@@ -3541,19 +3570,19 @@ xgr1 <- predict.lm(lm00, newdata )
 }
 xgr <- as.numeric(xgr)
      string2 <- ifelse ((character.x[1]=="$" | character.x[1]==":"),paste(character.x[2],character.x[1],character.x[3],sep=""), character.x)
-	byname <- as.character(substitute(by))
+	byname <- deparse(substitute(by))
 
 if(substring(search()[2],first=1,last=8)!="package:"){
 	string2 <-  attr(.data, "var.labels")[attr(.data,"names")==string2]
-	byname <-  attr(.data, "var.labels")[attr(.data, "names")==substitute(by)]
+	byname <-  attr(.data, "var.labels")[attr(.data, "names")==deparse(substitute(by))]
 	
 	if(length(string2)==0){
 		string2 <- ifelse ((character.x[1]=="$" | character.x[1]==":"),paste(character.x[2],character.x[1],character.x[3],sep=""), character.x)
 	}
 	if(length(byname)==0){
-		byname <- as.character(substitute(by))
+		byname <- deparse(substitute(by))
 	}else{
-	if(byname==""){byname <- as.character(substitute(by))}
+	if(byname==""){byname <- deparse(substitute(by))}
 	}
 	if(string2==""){
 		string2 <- ifelse ((character.x[1]=="$" | character.x[1]==":"),paste(character.x[2],character.x[1],character.x[3],sep=""), character.x)

@@ -7,7 +7,7 @@
 tab1(x0, decimal = 1, sort.group = c(FALSE, "decreasing", 
 "increasing"), cum.percent = !any(is.na(x0)), graph = TRUE, 
 missing = TRUE, bar.values = c("frequency", "percent", "none"),
-horiz=FALSE)
+horiz=FALSE, ...)
 
 \method{print}{tab1}(x, ...)
 }
@@ -49,6 +49,7 @@ tab1(chocolate, cum.percent=TRUE) # Slightly too many columns!
 tab1(chocolate, missing=FALSE, bar.values="percent")
 agegr <- cut(age, breaks=c(0,20,60,80))
 tab1(agegr)
+tab1(agegr, col=c("red","yellow","blue"))
 tab1(agegr, horiz=TRUE)
 
 tab1(agegr) -> a
