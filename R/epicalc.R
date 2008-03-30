@@ -42,44 +42,52 @@ codebook <- function (dataFrame = .data)
         else {
             if (class(x1) == "data.frame") {
                 x2 <- x1[, i]
-                }
-                else{
-                    x2 <- x1
-                }
-            if (any(class(x2) == "character") | any(class(x2) == "AsIs")) {
+            }
+            else {
+                x2 <- x1
+            }
+            if (any(class(x2) == "character") | any(class(x2) == 
+                "AsIs")) {
                 cat("A character vector", "\n")
             }
             else {
-                if(is.logical(x2)) x2 <- as.factor(x2)
+                if (is.logical(x2)) 
+                  x2 <- as.factor(x2)
                 if (any(class(x2) == "factor")) {
                   table1 <- (t(t(table(dataFrame[, i]))))
                   table1 <- cbind(table1, format(table1/sum(table1) * 
                     100, digits = 3))
                   colnames(table1) <- c(.frequency1, .percent)
-                  if (is.null(attr(dataFrame, "val.labels")[i]) ) {
+                  if (is.null(attr(dataFrame, "val.labels")[i])) {
                     print.noquote(table1, right = TRUE)
                   }
                   else {
-                  if(any(is.na(attr(dataFrame, "label.table")))){
-                    print.noquote(table1, right = TRUE)
-                  }else{
-                    attr(dataFrame, "label.table")[which(is.na(attr(attr(dataFrame, "label.table"), "names")))] <- ""
-                    index <- attr(attr(dataFrame, "label.table"), "names") ==
-                      attr(dataFrame, "val.labels")[i]
-                    index <- na.omit(index)                                              
-                    if(suppressWarnings(!all(rownames(as.data.frame(attr(dataFrame, "label.table")[index]))==levels(x2)))){
+                    if (any(is.na(attr(dataFrame, "label.table")))) {
                       print.noquote(table1, right = TRUE)
-                    }else{
-                      table2 <- data.frame(attr(dataFrame, "label.table")[index], table1)
-                      colnames(table2) <- c("code", colnames(table1))
-                      cat("Label table:", attr(dataFrame, "val.labels")[i], 
-                      "\n")
-                    print.noquote(table2, right = TRUE)
-}                  }
-                }
+                    }
+                    else {
+                      attr(dataFrame, "label.table")[which(is.na(attr(attr(dataFrame, 
+                        "label.table"), "names")))] <- ""
+                      index <- attr(attr(dataFrame, "label.table"), 
+                        "names") == attr(dataFrame, "val.labels")[i]
+                      index <- na.omit(index)
+                      if (suppressWarnings(!all(rownames(as.data.frame(attr(dataFrame, 
+                        "label.table")[index])) == levels(x2)))) {
+                        print.noquote(table1, right = TRUE)
+                      }
+                      else {
+                        table2 <- data.frame(attr(dataFrame, 
+                          "label.table")[index], table1)
+                        colnames(table2) <- c("code", colnames(table1))
+                        cat("Label table:", attr(dataFrame, "val.labels")[i], 
+                          "\n")
+                        print.noquote(table2, right = TRUE)
+                      }
+                    }
+                  }
                 }
                 else {
-                  summ(dataFrame[, i], graph = FALSE)
+                  print(summ(dataFrame[, i], graph = FALSE))
                 }
             }
         }
