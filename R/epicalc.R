@@ -330,8 +330,9 @@ for(i in 1:length(pos.to.detach)){
 }
 }
 ### Getting percentage from the tabulation
-tabpct <- function(row, col, decimal=1, percent=c("both","col","row"), graph=TRUE, las=0, ...) {
-tab <- table(row, col, deparse.level=1, dnn=list(deparse(substitute(row)),deparse(substitute(col))), ...)
+tabpct <- function(row, column, decimal=1, percent=c("both","col","row"), graph=TRUE, las=0, main = "auto", xlab = "auto", 
+    ylab = "auto", col="auto",  ...) {
+tab <- table(row, column, deparse.level=1, dnn=list(deparse(substitute(row)),deparse(substitute(column))))
 # column percent
 cpercent <-tab
 for(i in 1:ncol(tab)) { cpercent[,i] <-paste("(",format(round(tab[,i]/colSums(tab)[i]*100, digits=decimal),trim=TRUE),")", sep="")}
@@ -376,16 +377,16 @@ colnames(rpercent)[ncol(rpercent)] <- "Total"
 			string2 <- deparse(substitute(row))
 		}
 		if(substring(search()[2],first=1,last=8)!="package:"){
-			string4 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==deparse(substitute(col))]
+			string4 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==deparse(substitute(column))]
 			if(length(string4)==0){
-				string4 <- deparse(substitute(col))
+				string4 <- deparse(substitute(column))
 			}else{
 				if(string4==""){
-					string4 <- deparse(substitute(col))
+					string4 <- deparse(substitute(column))
 				}
 			}
 		}else{
-			string4 <- deparse(substitute(col))
+			string4 <- deparse(substitute(column))
 		}
 names(attr(tab,"dimnames")) <-c(string2, string4)
 cat( "\n")
@@ -413,12 +414,15 @@ if(graph==TRUE){
 	rownames(tab)[is.na(rownames(tab))] <- "missing"
 	colnames(tab)[is.na(colnames(tab))] <- "missing"
 	las.value <- las
+	if(any(col=="auto")) {colours <- c("white",2:length(column))}else{colours=col}
 	if(nchar(paste(titleString()$distribution.of,string4,titleString()$by,string2))>45){
-  	plot(as.table(tab),xlab=string2, ylab=string4, main=paste(titleString()$distribution.of,string4,"\n",titleString()$by,string2),
-	col=c("white",2:length(col)), las=las.value)
+  	mosaicplot(as.table(tab),xlab=ifelse(xlab=="auto",string2,xlab), ylab=ifelse(ylab=="auto",string4, ylab), 
+    main= ifelse(main=="auto",paste(titleString()$distribution.of,string4,"\n",titleString()$by,string2), main),
+	  col=colours, las=las.value,  ...)
   }else{
-	plot(as.table(tab),xlab=string2, ylab=string4, main=paste(titleString()$distribution.of,string4,titleString()$by,string2),
-	col=c("white",2:length(col)), las=las.value)}}
+	  mosaicplot(as.table(tab),xlab=ifelse(xlab=="auto",string2,xlab), ylab=ifelse(ylab=="auto",string4,ylab), 
+    main=ifelse(main=="auto",paste(titleString()$distribution.of,string4,titleString()$by,string2),main),
+	  col=colours, las=las.value, ...)}}
 
 cpercent <- tab
 for(i in 1:ncol(tab)) {cpercent[,i] <- tab[,i]/colSums(tab)[i]*100}
@@ -427,6 +431,7 @@ rpercent <- tab
 for(i in 1:nrow(tab)) {rpercent[i,] <- tab[i,]/rowSums(tab)[i]*100}
 returns <- list(table.row.percent=rpercent, table.column.percent=cpercent)
 } 
+
 ####
 cci <- function(caseexp, controlex, casenonex, controlnonex, cctable=NULL, decimal=2, graph=TRUE, design="cohort") {
 
@@ -2229,319 +2234,437 @@ print.noquote(oor.95ci)
 
 
 ### Summarize continous variable in the loaded data set
-summ <- function (x=.data, by=NULL, graph=TRUE, box=FALSE) {
-###	Graph function here
-  if(all(is.na(x))){ stop("All elements of ", substitute(x), " have a missing value")}
-	if(!is.atomic(x)) {graph=FALSE}
-	if(graph==TRUE){
-#if(length(grep("Thai",Sys.getlocale("LC_ALL")))==1){
-#  	Sys.setlocale(category = "LC_ALL", locale = "C")
-#    }
-		if(typeof(x)=="character"){stop(paste(deparse(substitute(x)),"is a character vector"))}
-		var1 <- deparse(substitute(x)) #as.character(substitute(x))
-		if(length(var1)>1){
-			string2 <- var1[length(var1)]	
-		}else
-		if(substring(search()[2],first=1,last=8)!="package:"){
-			string2 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==deparse(substitute(x))]
-			if(length(string2)==0){
-				string2 <- deparse(substitute(x)) # as.character(substitute(x))
-			}
-			if(string2==""){
-				string2 <- deparse(substitute(x)) # as.character(substitute(x))
-			}
-		}else{
-			string2 <- deparse(substitute(x)) # as.character(substitute(x))
-		}
-		string3 <- paste(titleString()$distribution.of,string2)
-		if(substring(search()[2],first=1,last=8)!="package:"){
-			string4 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==deparse(substitute(by))]
-			if(length(string4)==0){
-				string4 <- deparse(substitute(by))
-			}else{
-				if(string4==""){
-					string4 <- deparse(substitute(by))
-				}
-			}
-		}else{
-			string4 <- deparse(substitute(by))
-		}
-		string5 <- paste(string3,titleString()$by,string4)
-		if(nchar(string5)>45){string5 <- paste(string3,"\n", titleString()$by,string4)}
-#		if(length(grep("Thai",Sys.getlocale("LC_ALL")))==1){string5<-paste(string3,"¨Óá¹¡µÒÁ",string4)}
-#		if(length(grep("People's Republic of China",Sys.getlocale("LC_ALL")))==1){string5<-paste(string3,"Óë",string4)}
-#		if(length(grep("Malay",Sys.getlocale("LC_ALL")))==1){string5<-paste(string3,"mengikut",string4)}
-#		if(length(grep("Korean",Sys.getlocale("LC_ALL")))==1){string5<-paste(string3,"Ëæ Åà¶£²÷",string4)}
-
-		## Defining pretty x ticking for date and time
-		if(any(class(x)=="date")){
-      x <- as.Date(paste(date.mdy(x)$year,"-", date.mdy(x)$month,"-", date.mdy(x)$day, sep=""))
-    }
-    if(any(class(x)=="Date")) {
-			range.date <- difftime(summary(x)[6], summary(x)[1])
-			numdate <- as.numeric(range.date)
-			if(numdate <1){stop(paste("Only one day ie.",format(x,"%Y-%m-%d"),"not suitable for plotting"))}
-			if(numdate >=1  & numdate <10){date.pretty <- seq(from=summary(x)[1],to=summary(x)[6],by="day"); format.time <- "%a%d%b"}
-#			if(numdate >=10 & numdate <30){date.pretty <- seq(from=summary(x)[1],to=summary(x)[6],by="7 day"); format.time <- "%d%b"}
-			if(numdate >=10 & numdate <60){date.pretty <- seq(from=summary(x)[1],to=summary(x)[6],by="week"); format.time <- "%d%b"}
-			if(numdate >=60 & numdate <700){
-				date.pretty <- seq(from=(summary(x)[1]-as.numeric(substr(as.character(summary(x)[1]),9,10))+1),
-				to=summary(x)[6],by="month"); format.time <- "%b%y"
-			}
-		}
-		if(any(class(x)=="POSIXt")){
-			range.time <- difftime(summary(x)[6],summary(x)[1])
-			numeric.time <- as.numeric(range.time)
-			units <- attr(range.time, "units")
-			if(units=="secs")  {step <- "sec"; format.time <- "%M:%S";  scale.unit <- "min:sec"}
-			if(units=="mins")  {step <- "min"; format.time <- "%H:%M";  scale.unit <- "HH:MM"}
-			if(units=="hours") {step <- ifelse(numeric.time<2,"20 mins","hour");format.time <- "%H:%M";  scale.unit <- "HH:MM"}
-			if(units=="days")  {
-				if(numeric.time <2){
-					step <- "6 hour"; format.time <- "%a %H:%M";  scale.unit <- "HH:MM"
-				}else{
-					step <- "day"; format.time <- "%d%b%y"; scale.unit <- "Date"
-				}
-			}
-			if(units=="weeks") {step <- "week";format.time <- "%b%y";   scale.unit <- " "}
-			time.pretty <- seq(from=summary(x)[1],to=summary(x)[6],by=step)
-		}
-
-		if(!is.null(by)){
-			x1 <- x[order(by,as.numeric(x))] 
-			by1 <- by[order(by,as.numeric(x))]; 
-			by2 <- factor(by1, exclude=NULL)
-			character.length <- ifelse(max(nchar(levels(by2)))>8, max(nchar(levels(by2)))*(60-max(nchar(levels(by2))))/60, max(nchar(levels(by2)))*1.2)
-			left.offset <- max(c(0.76875+.2, .1+par()$cin[1]*character.length))
-			par(mai=c(0.95625, left.offset, 0.76875, 0.39375))
-			by3 <- as.numeric(by2) #by3 <- max(as.numeric(by2))- as.numeric(by2) +1
-			y0 <- 1:length(x1)
-			y <- suppressWarnings(y0 + as.numeric(by2)-1)#Note that y0 and by2 may have different length
-			if(is.factor(x)){
-				plot(as.numeric(x1),y, pch=18, col=by3, main=string5, ylim=c(-1,max(y)),
-				xlab=" ",ylab=" ", yaxt="n", xaxt="n" )
-				axis(1, at=1:length(levels(x1)),labels=levels(x1))
-			} else
-			if(any(class(x)=="POSIXt")){
-				plot(x1,y, pch=18, col=by3, main=string5, ylim=c(-1,max(y)),
-					xlab=" ",ylab=" ", yaxt="n", xaxt="n")
-				axis(1, at=time.pretty, labels=as.character(time.pretty,format=format.time))
-			}else
-			if(any(class(x)=="Date")){
-				if(numdate < 700){
-					plot(x1,y, pch=18, col=by3, main=string5, ylim=c(-1,max(y)),
-						xlab=" ",ylab=" ", yaxt="n", xaxt="n")
-					axis(1, at=date.pretty, labels=as.character(date.pretty,format=format.time))
-				}else{
-					plot(x1,y, pch=18, col=by3, main=string5, ylim=c(-1,(summary(y))[6]),
-						xlab=" ",ylab=" ", yaxt="n")
-				}
-			}else{
-				plot(x1,y, pch=18, col=by3, main=string5, ylim=c(-1,max(y)),
-					xlab=" ", ylab=" ", yaxt="n")
-				if(any(class(x)=="difftime")){unit <-attr(x,"unit")} else {unit<-" "}
-				title(xlab=unit)
-			}
-			if(length(x1)<20){abline(h=y, lty=3)}
-			yline <- NULL
-			if(any(is.na(levels(by2)))){levels(by2)[length(levels(by2))]<-"missing"}
- 			for(i in 1:length(levels(by2))){
-				yline <- c(yline, sum(as.numeric(by2)==i))
-			}
-			yline <- c(0,cumsum(yline)[1:(length(yline)-1)])+(0:(length(yline)-1)) 
-				abline(h=yline, col="blue")
-				axis(2,at=yline, labels=levels(by2), padj=0, las=1)
-			par(mai=c(0.95625, 0.76875, 0.76875, 0.39375))
-		}else{
-			x1 <- x[order(x)]; y <- 1:length(x1)
-			if(is.factor(x1)){
-				plot(as.numeric(x1),y, pch=18, col="blue", main=string3,
-					xlab=" ",ylab=.ylab.for.summ,  xaxt="n")
-				axis(1, at=1:length(levels(x1)),labels=levels(x1))
-			} else
-			if(any(class(x)=="POSIXt")){
-				plot(x1,y, pch=18, col="blue", main=string3,
-					xlab=" ",ylab=.ylab.for.summ, xaxt="n")
-				axis(1, at=time.pretty, labels=as.character(time.pretty,format=format.time))
-			}else
-			if(any(class(x)=="Date")){
-				if(numdate < 700){
-					plot(x1,y, pch=18, col="blue", main=string3,
-						xlab=" ",ylab=.ylab.for.summ, yaxt="n", xaxt="n")
-					axis(1, at=date.pretty, labels=as.character(date.pretty,format=format.time))
-				}else{
-					plot(x1,y, pch=18, col="blue", main=string3,
-						xlab=" ",ylab=.ylab.for.summ, yaxt="n")
-				}
-			}else{
-				plot(x1,y, pch=18, col="blue", main=string3,
-					xlab=" ", ylab=.ylab.for.summ, yaxt="n")
-				if(any(class(x)=="difftime")){unit <-attr(x,"unit")} else {unit<-" "}
-				title(xlab=unit)
-			}
-			
-			if(length(x1)<30){abline(h=y,lty = 3)}
-			if(box==TRUE){
-				boxplot(unclass(x1), add=TRUE, horizontal=TRUE, 
-					axes=FALSE, at=.8*length(sort(x1)),boxwex=.2*length(sort(x1)) )
-			}
-		}
-#if(Sys.getlocale()=="C")	Sys.setlocale(category = "LC_ALL", locale = "")
-  }
-	if(is.data.frame(x)){
-    heading <- paste(attr(x, "datalabel"), "\n", .No.of.observations, nrow(x), "\n", "\n", sep="")
-	}
-	if(is.vector(x) | is.vector(unclass(x))|(is.factor(x))|any(class(x)=="POSIXt"|class(x)=="difftime")){
-		if(typeof(x)=="character"){stop(paste(deparse(substitute(x)),"is a character vector"))}
-		if(is.factor(x)) {x <- na.omit(as.numeric(x))}
-	###	print out statistics
-		if(!is.null(by)){
-			by1 <- factor(by, exclude=NULL)
-			if(any(is.na(levels(by1)))){levels(by1)[length(levels(by1))]<-"missing"}
-			lev <- levels(by1)
-			multiple.a <- NULL
-			for(i in 1:length(lev)) {
-				x1 <- subset(x, by1==lev[i])
-				if(any(class(x1)=="POSIXt")) {		
-        a <- format((summary(x1))[c(1,3,4,6)],"%Y-%m-%d %H:%M")
-				}else{
-					a <- rep("",6); dim(a) <- c(1,6)
-		if(any(class(x1)=="date")){
-      x1 <- as.Date(paste(date.mdy(x1)$year,"-", date.mdy(x1)$month,"-", date.mdy(x1)$day, sep=""))
-    }
-					if(any(class(x1)=="Date")){
-						a[1,] <- c(length(x1),format(c(summary(x1)[4],summary(x1)[3],NA,summary(x1)[1],summary(x1)[6]),"%Y-%m-%d"))
-					}else
-					if(any(class(x)=="logical")){
-					a[1,] <- round(c(length(na.omit(x1)),mean(na.omit(x1)),
-						quantile(na.omit(x1), .5), ifelse(is.na(mean(na.omit(x1))), NA,round(sd(na.omit(x1)),2))  , 
-					min(na.omit(x1)), max(na.omit(x1)) ),3 )
-					}	
-					else{
-						a[1,] <- round( c(length(na.omit(x1)), summary(x1)[4], summary(x1)[3],
-							ifelse(is.na(mean(na.omit(x1))), NA,sd(na.omit(x1)))  , 
-						summary(x1)[1],summary(x1)[6]),3 )
-					}
-					colnames(a) <- c(.obs, .mean, .median, .sd, .min, .max)
-					rownames(a) <- " "	
-				}
-      multiple.a <- rbind(multiple.a, a)
-      row.names(multiple.a) <- rep("", nrow(multiple.a))
-			}
-		}else{
-			if(any(class(x)=="POSIXt")) {
-      a <- (format((summary(x))[c(1,3,4,6)],"%Y-%m-%d %H:%M"))
-			}else{
-				a <- rep("",6); dim(a) <- c(1,6)
-		if(any(class(x)=="date")){
-      x <- as.Date(paste(date.mdy(x)$year,"-", date.mdy(x)$month,"-", date.mdy(x)$day, sep=""))
-    }
-				if(any(class(x)=="Date")){
-					a[1,] <- c(length(na.omit(x)),format(c(summary(x)[4],summary(x)[3],NA,summary(x)[1],summary(x)[6]),"%Y-%m-%d"))
-				}else
-
-				if(any(class(x)=="difftime")){
-					a[1,] <- c(length(na.omit(x)), summary(x)[4],summary(x)[3],
-						ifelse(is.na(mean(na.omit(x1))), NA,round(sd(na.omit(x1)),2)),
-						summary(x)[1],summary(x)[6])
-				}else{
-					a[1,] <- round(c(length(na.omit(x)),mean(na.omit(x)),
-						quantile(na.omit(x), .5), ifelse(is.na(mean(na.omit(x))), NA,round(sd(na.omit(x)),2))  , 
-					min(na.omit(x)), max(na.omit(x)) ),3 )
-				}
-				colnames(a) <- c(.obs, .mean, .median, .sd, .min, .max)
-				rownames(a) <- " "	
-			}
-		}
-	}
-else
-if (is.recursive(x)&&length(x)==1) {a <- summary(x)}
-else
-#if (!is.recursive(x)&&!is.vector(x)&&!is.factor(x)) summary(x)
-if (!is.recursive(x)&&!is.vector(x)&&!is.factor(x)) a <- summary(x)
-else
+summ <- function (x = .data, by = NULL, graph = TRUE, box = FALSE, pch = 18, ylab = "auto", main = "auto", cex.X.axis = 1, cex.Y.axis = 1, dot.col = "auto", ...) 
 {
-a <- rep("", (dim(x)[2])*7)
-dim(a) <- c(dim(x)[2], 7)
-colnames(a) <- c(.var.name, .obs, .mean, .median, .sd,  .min, .max)
-a[,1] <- attr(x, "names")
-rownames(a) <- 1:nrow(a)
-for(i in 1:(dim(x)[2])) {
-	if ((typeof(x[i][1,])=="character")|| is.na(mean(na.omit(as.numeric(x[[i]]))))   )  {
-  a[i,3:7] <- ""
-  }
-	else{
-		if(any(class(x[[i]])=="date")){
-      x[[i]] <- as.Date(paste(date.mdy(x[[i]])$year,"-", date.mdy(x[[i]])$month,"-", date.mdy(x[[i]])$day, sep=""))
-    }                               
-	if (any(class(x[[i]])=="Date")){
-	a[i,c(3,4,6,7)] <- format(c(summary(x[[i]])[4],summary(x[[i]])[3],
-			summary(x[[i]])[1],summary(x[[i]])[6]), "%Y-%m-%d")
-	a[i,5] <- NA 
-	a[i,2] <- length((x[[i]])[!is.na(x[[i]])])
-
-}
-	else
-	if (any(class(x[[i]])=="POSIXt")){
-
-	a[i,c(3,4,6,7)] <- format(c(summary(x[[i]])[4],summary(x[[i]])[3],
-			summary(x[[i]])[1],summary(x[[i]])[6]), "%Y-%m-%d %H:%M")
-	a[i,5] <- NA 
-	a[i,2] <- length((x[[i]])[!is.na(x[[i]])])
-
-}
-	else
-
-	if(suppressWarnings (is.integer(x[[i]])||is.numeric(x[[i]])|(is.logical(x[[i]]) & !is.na(mean(na.omit(as.numeric(x[[i]]))))))){
-	a[i,3:7] <- round(c(mean(na.omit(x[[i]])),
-			quantile(na.omit(x[[i]]), .5), sd(na.omit(x[[i]])), 
-			min(na.omit(x[[i]])), max(na.omit(x[[i]]))),2)
-	a[i,2] <- as.character(length(na.omit(as.numeric(x[[i]]))))
-}
-	else
-	if (is.null(class(x[[i]]))) {
-	a[i,3:7] <- round(c(mean(na.omit(as.numeric(x[[i]]))),
-			quantile(na.omit(as.numeric(x[[i]])), .5), sd(na.omit(as.numeric(x[[i]]))), 
-			min(na.omit(as.numeric(x[[i]]))), max(na.omit(as.numeric(x[[i]])))),2)
-	a[i,2] <- as.character(length(na.omit(x[[i]])))
-}
-	else
-	if  (is.factor(x[i][2,])){
-	a[i,2] <- as.character(length(na.omit(x[[i]])))
-
-
-	a[i,3:7] <- round(c(mean(na.omit(unclass(x[i][,]))), 
-			median(na.omit(unclass(x[i][,]))), 
-			sd(na.omit(unclass(x[i][,]))), 
-			min(na.omit(unclass(x[i][,]))), 
-			max(na.omit(unclass(x[i][,])))),3)
+if(!is.null(by)){
+if(length(dot.col)>1 & length(table(factor(by)))!=length(dot.col)){
+stop(paste("The argument 'dot.col' must either be \"auto\"","\n"," or number of colours equals to number of categories of 'by'."))
 }}
+else{if(dot.col=="auto") dot.col <- "blue"	
 }
+    if (all(is.na(x))) {
+        stop("All elements of ", substitute(x), " have a missing value")
+    }
+    if (!is.atomic(x)) {
+        graph = FALSE
+    }
+        if (typeof(x) == "character") {
+            stop(paste(deparse(substitute(x)), "is a character vector"))
+        }
+    if (graph) {
+        var1 <- deparse(substitute(x))
+        if (length(var1) > 1) {
+            string2 <- var1[length(var1)]
+        }
+        else if (substring(search()[2], first = 1, last = 8) != 
+            "package:") {
+            string2 <- attr(get(search()[2]), "var.labels")[attr(get(search()[2]), 
+                "names") == deparse(substitute(x))]
+            if (length(string2) == 0) {
+                string2 <- deparse(substitute(x))
+            }
+            if (string2 == "") {                                            
+                string2 <- deparse(substitute(x))
+            }
+        }
+        else {
+            string2 <- deparse(substitute(x))
+        }
+        string3 <- paste(titleString()$distribution.of, string2)
+        if (substring(search()[2], first = 1, last = 8) != "package:") {
+            string4 <- attr(get(search()[2]), "var.labels")[attr(get(search()[2]), 
+                "names") == deparse(substitute(by))]
+            if (length(string4) == 0) {
+                string4 <- deparse(substitute(by))
+            }
+            else {
+                if (string4 == "") {
+                  string4 <- deparse(substitute(by))
+                }
+            }
+        }
+        else {
+            string4 <- deparse(substitute(by))
+        }
+        string5 <- paste(string3, titleString()$by, string4)
+        if (nchar(string5) > 45) {
+            string5 <- paste(string3, "\n", titleString()$by, 
+                string4)
+        }
+		## Defining pretty x ticking for date and time
+        if (any(class(x) == "date")) {
+            x <- as.Date(paste(date.mdy(x)$year, "-", date.mdy(x)$month, 
+                "-", date.mdy(x)$day, sep = ""))
+        }
+        if (any(class(x) == "Date")) {
+            range.date <- difftime(summary(x)[6], summary(x)[1])
+            numdate <- as.numeric(range.date)
+            if (numdate < 1) {
+                stop(paste("Only one day ie.", format(x, "%Y-%m-%d"), 
+                  "not suitable for plotting"))
+            }
+            if (numdate >= 1 & numdate < 10) {
+                date.pretty <- seq(from = summary(x)[1], to = summary(x)[6], 
+                  by = "day")
+                format.time <- "%a%d%b"
+            }
+            if (numdate >= 10 & numdate < 60) {
+                date.pretty <- seq(from = summary(x)[1], to = summary(x)[6], 
+                  by = "week")
+                format.time <- "%d%b"
+            }
+            if (numdate >= 60 & numdate < 700) {
+                date.pretty <- seq(from = (summary(x)[1] - as.numeric(substr(as.character(summary(x)[1]), 
+                  9, 10)) + 1), to = summary(x)[6], by = "month")
+                format.time <- "%b%y"
+            }
+        }
+        if (any(class(x) == "POSIXt")) {
+            range.time <- difftime(summary(x)[6], summary(x)[1])
+            numeric.time <- as.numeric(range.time)
+            units <- attr(range.time, "units")
+            if (units == "secs") {
+                step <- "sec"
+                format.time <- "%M:%S"
+                scale.unit <- "min:sec"
+            }
+            if (units == "mins") {
+                step <- "min"
+                format.time <- "%H:%M"
+                scale.unit <- "HH:MM"
+            }
+            if (units == "hours") {
+                step <- ifelse(numeric.time < 2, "20 mins", "hour")
+                format.time <- "%H:%M"
+                scale.unit <- "HH:MM"
+            }
+            if (units == "days") {
+                if (numeric.time < 2) {
+                  step <- "6 hour"
+                  format.time <- "%a %H:%M"
+                  scale.unit <- "HH:MM"
+                }
+                else {
+                  step <- "day"
+                  format.time <- "%d%b%y"
+                  scale.unit <- "Date"
+                }
+            }
+            if (units == "weeks") {
+                step <- "week"
+                format.time <- "%b%y"
+                scale.unit <- " "
+            }
+            time.pretty <- seq(from = summary(x)[1], to = summary(x)[6], 
+                by = step)
+        }
+        if (!is.null(by)) {
+            x1 <- x[order(by, as.numeric(x))]
+            by1 <- by[order(by, as.numeric(x))]
+            by2 <- factor(by1, exclude = NULL)
+            character.length <- ifelse(max(nchar(levels(by2))) > 
+                8, max(nchar(levels(by2))) * (60 - max(nchar(levels(by2))))/60, 
+                max(nchar(levels(by2))) * 1.2)
+            left.offset <- max(c(0.76875 + 0.2, 0.1 + par()$cin[1] * 
+                character.length))
+            par(mai = c(0.95625, left.offset, 0.76875, 0.39375))
+            by3 <- as.numeric(by2)
+              if(any(dot.col=="auto")){
+  dot.col1 <- as.numeric(by2)
+  }else{
+  tx <- cbind(1:length(dot.col), dot.col)
+  dot.col1 <- lookup(as.numeric(by2), tx)
+  }
+
+            if(any(dot.col=="auto")) {col1 <- by3} else {col1 <- dot.col1}
+            y0 <- 1:length(x1)
+            y <- suppressWarnings(y0 + as.numeric(by2) - 1)
+            if (is.factor(x)) {
+                plot(as.numeric(x1), y, pch = pch, col = col1, 
+                  main = ifelse(main=="auto", string5, main), ylim = c(-1, max(y)), xlab = " ", 
+                  ylab = ifelse(ylab=="auto"," ",ylab), yaxt = "n", xaxt = "n", ...)
+                axis(1, at = 1:length(levels(x1)), labels = levels(x1), cex.axis=cex.X.axis)
+            }
+            else if (any(class(x) == "POSIXt")) {
+                plot(x1, y, pch = pch, col = col1, main = ifelse(main=="auto", string5, main), 
+                  ylim = c(-1, max(y)), xlab = " ", ylab = ifelse(ylab=="auto"," ",ylab), 
+                  yaxt = "n", xaxt = "n", ...)
+                axis(1, at = time.pretty, labels = as.character(time.pretty, 
+                  format = format.time), cex.axis=cex.X.axis)
+            }
+            else if (any(class(x) == "Date")) {
+                if (numdate < 700) {
+                  plot(x1, y, pch = pch, col = col1, main = ifelse(main=="auto", string5, main), 
+                    ylim = c(-1, max(y)), xlab = " ", ylab = ifelse(ylab=="auto"," ",ylab), 
+                    yaxt = "n", xaxt = "n", ...)
+                  axis(1, at = date.pretty, labels = as.character(date.pretty, 
+                    format = format.time), cex.axis=cex.X.axis)
+                }
+                else {
+                  plot(x1, y, pch = pch, col = col1, main = ifelse(main=="auto", string5, main), 
+                    ylim = c(-1, (summary(y))[6]), xlab = " ", 
+                    ylab = ifelse(ylab=="auto"," ",ylab), yaxt = "n", cex.axis = cex.X.axis, ...)
+                }
+            }
+            else {
+                plot(x1, y, pch = pch, col = col1, main = ifelse(main=="auto", string5, main), 
+                  ylim = c(-1, max(y)), xlab = " ", ylab = ifelse(ylab=="auto"," ",ylab), 
+                  yaxt = "n", cex.axis = cex.X.axis, ...)
+                if (any(class(x) == "difftime")) {
+                  unit <- attr(x, "unit")
+                }
+                else {
+                  unit <- " "
+                }
+                title(xlab = unit)
+            }
+            if (length(x1) < 20) {
+                abline(h = y, lty = 3)
+            }
+            yline <- NULL
+            if (any(is.na(levels(by2)))) {
+                levels(by2)[length(levels(by2))] <- "missing"
+            }
+            for (i in 1:length(levels(by2))) {
+                yline <- c(yline, sum(as.numeric(by2) == i))
+            }
+            yline <- c(0, cumsum(yline)[1:(length(yline) - 1)]) + 
+                (0:(length(yline) - 1))
+            abline(h = yline, col = "blue")
+            axis(2, at = yline, labels = levels(by2), padj = 0, 
+                las = 1, cex.axis = cex.Y.axis)
+            par(mai = c(0.95625, 0.76875, 0.76875, 0.39375))
+        }
+        else {
+            x1 <- x[order(x)]
+            y <- 1:length(x1)
+            if (is.factor(x1)) {
+                plot(as.numeric(x1), y, pch = pch, col = ifelse(dot.col=="auto","blue",dot.col), 
+                  main = ifelse(main=="auto", string3, main), xlab = " ", ylab = ifelse(ylab=="auto",.ylab.for.summ,ylab), 
+                  xaxt = "n", cex.axis=cex.Y.axis, ...)
+                axis(1, at = 1:length(levels(x1)), labels = levels(x1), cex.axis=cex.X.axis)
+            }
+            else if (any(class(x) == "POSIXt")) {
+                plot(x1, y, pch = pch, col = ifelse(dot.col=="auto","blue",dot.col), main = ifelse(main=="auto", string3, main), 
+                  xlab = " ", ylab = ifelse(ylab=="auto",.ylab.for.summ,ylab), xaxt = "n", cex.axis=cex.Y.axis, ...)
+                axis(1, at = time.pretty, labels = as.character(time.pretty, 
+                  format = format.time), cex.axis=cex.X.axis)
+            }
+            else if (any(class(x) == "Date")) {
+                if (numdate < 700) {
+                  plot(x1, y, pch = pch, col = ifelse(dot.col=="auto","blue",dot.col), main = ifelse(main=="auto", string3, main), 
+                    xlab = " ", ylab = ifelse(ylab=="auto",.ylab.for.summ,ylab), yaxt = "n", 
+                    xaxt = "n", ...)
+                  axis(1, at = date.pretty, labels = as.character(date.pretty, 
+                    format = format.time), cex.axis=cex.X.axis)
+                }
+                else {
+                  plot(x1, y, pch = pch, col = ifelse(dot.col=="auto","blue",dot.col), main = ifelse(main=="auto", string3, main), 
+                    xlab = " ", ylab = ifelse(ylab=="auto",.ylab.for.summ,ylab), yaxt = "n", cex.axis = cex.X.axis, ...)
+                }
+            }
+            else {
+                plot(x1, y, pch = pch, col = ifelse(dot.col=="auto","blue",dot.col), main = ifelse(main=="auto", string3, main), 
+                  xlab = " ", ylab = ifelse(ylab=="auto",.ylab.for.summ,ylab), yaxt = "n", cex.axis = cex.X.axis, ...)
+                if (any(class(x) == "difftime")) {
+                  unit <- attr(x, "unit")
+                }
+                else {
+                  unit <- " "
+                }
+                title(xlab = unit)
+            }
+            if (length(x1) < 30) {
+                abline(h = y, lty = 3)
+            }
+            if (box == TRUE) {
+                boxplot(unclass(x1), add = TRUE, horizontal = TRUE, 
+                  axes = FALSE, at = 0.8 * length(sort(x1)), 
+                  boxwex = 0.2 * length(sort(x1)))
+            }
+        }
+    }
+    if (is.data.frame(x)) {
+        heading <- paste(attr(x, "datalabel"), "\n", .No.of.observations, 
+            nrow(x), "\n", "\n", sep = "")
+    }
+    if (is.vector(x) | is.vector(unclass(x)) | (is.factor(x)) | 
+        any(class(x) == "POSIXt" | class(x) == "difftime")) {
+        if (typeof(x) == "character") {
+            stop(paste(deparse(substitute(x)), "is a character vector"))
+        }
+        if (is.factor(x)) {
+            x <- na.omit(as.numeric(x))
+        }
+        if (!is.null(by)) {
+            by1 <- factor(by, exclude = NULL)
+            if (any(is.na(levels(by1)))) {
+                levels(by1)[length(levels(by1))] <- "missing"
+            }
+            lev <- levels(by1)
+            multiple.a <- NULL
+            for (i in 1:length(lev)) {
+                x1 <- subset(x, by1 == lev[i])
+                if (any(class(x1) == "POSIXt")) {
+                  a <- format((summary(x1))[c(1, 3, 4, 6)], "%Y-%m-%d %H:%M")
+                }
+                else {
+                  a <- rep("", 6)
+                  dim(a) <- c(1, 6)
+                  if (any(class(x1) == "date")) {
+                    x1 <- as.Date(paste(date.mdy(x1)$year, "-", 
+                      date.mdy(x1)$month, "-", date.mdy(x1)$day, 
+                      sep = ""))
+                  }
+                  if (any(class(x1) == "Date")) {
+                    a[1, ] <- c(length(x1), format(c(summary(x1)[4], 
+                      summary(x1)[3], NA, summary(x1)[1], summary(x1)[6]), 
+                      "%Y-%m-%d"))
+                  }
+                  else if (any(class(x) == "logical")) {
+                    a[1, ] <- round(c(length(na.omit(x1)), mean(na.omit(x1)), 
+                      quantile(na.omit(x1), 0.5), ifelse(is.na(mean(na.omit(x1))), 
+                        NA, round(sd(na.omit(x1)), 2)), min(na.omit(x1)), 
+                      max(na.omit(x1))), 3)
+                  }
+                  else {
+                    a[1, ] <- round(c(length(na.omit(x1)), summary(x1)[4], 
+                      summary(x1)[3], ifelse(is.na(mean(na.omit(x1))), 
+                        NA, sd(na.omit(x1))), summary(x1)[1], 
+                      summary(x1)[6]), 3)
+                  }
+                  colnames(a) <- c(.obs, .mean, .median, .sd, 
+                    .min, .max)
+                  rownames(a) <- " "
+                }
+                multiple.a <- rbind(multiple.a, a)
+                row.names(multiple.a) <- rep("", nrow(multiple.a))
+            }
+        }
+        else {
+            if (any(class(x) == "POSIXt")) {
+                a <- (format((summary(x))[c(1, 3, 4, 6)], "%Y-%m-%d %H:%M"))
+            }
+            else {
+                a <- rep("", 6)
+                dim(a) <- c(1, 6)
+                if (any(class(x) == "date")) {
+                  x <- as.Date(paste(date.mdy(x)$year, "-", date.mdy(x)$month, 
+                    "-", date.mdy(x)$day, sep = ""))
+                }
+                if (any(class(x) == "Date")) {
+                  a[1, ] <- c(length(na.omit(x)), format(c(summary(x)[4], 
+                    summary(x)[3], NA, summary(x)[1], summary(x)[6]), 
+                    "%Y-%m-%d"))
+                }
+                else if (any(class(x) == "difftime")) {
+                  a[1, ] <- c(length(na.omit(x)), summary(x)[4], 
+                    summary(x)[3], ifelse(is.na(mean(na.omit(x1))), 
+                      NA, round(sd(na.omit(x1)), 2)), summary(x)[1], 
+                    summary(x)[6])
+                }
+                else {
+                  a[1, ] <- round(c(length(na.omit(x)), mean(na.omit(x)), 
+                    quantile(na.omit(x), 0.5), ifelse(is.na(mean(na.omit(x))), 
+                      NA, round(sd(na.omit(x)), 2)), min(na.omit(x)), 
+                    max(na.omit(x))), 3)
+                }
+                colnames(a) <- c(.obs, .mean, .median, .sd, .min, 
+                  .max)
+                rownames(a) <- " "
+            }
+        }
+    }
+    else if (is.recursive(x) && length(x) == 1) {
+        a <- summary(x)
+    }
+    else if (!is.recursive(x) && !is.vector(x) && !is.factor(x)) 
+        a <- summary(x)
+    else {
+        a <- rep("", (dim(x)[2]) * 7)
+        dim(a) <- c(dim(x)[2], 7)
+        colnames(a) <- c(.var.name, .obs, .mean, .median, .sd, 
+            .min, .max)
+        a[, 1] <- attr(x, "names")
+        rownames(a) <- 1:nrow(a)
+        for (i in 1:(dim(x)[2])) {
+            if ((typeof(x[i][1, ]) == "character") || is.na(mean(na.omit(as.numeric(x[[i]]))))) {
+                a[i, 3:7] <- ""
+            }
+            else {
+                if (any(class(x[[i]]) == "date")) {
+                  x[[i]] <- as.Date(paste(date.mdy(x[[i]])$year, 
+                    "-", date.mdy(x[[i]])$month, "-", date.mdy(x[[i]])$day, 
+                    sep = ""))
+                }
+                if (any(class(x[[i]]) == "Date")) {
+                  a[i, c(3, 4, 6, 7)] <- format(c(summary(x[[i]])[4], 
+                    summary(x[[i]])[3], summary(x[[i]])[1], summary(x[[i]])[6]), 
+                    "%Y-%m-%d")
+                  a[i, 5] <- NA
+                  a[i, 2] <- length((x[[i]])[!is.na(x[[i]])])
+                }
+                else if (any(class(x[[i]]) == "POSIXt")) {
+                  a[i, c(3, 4, 6, 7)] <- format(c(summary(x[[i]])[4], 
+                    summary(x[[i]])[3], summary(x[[i]])[1], summary(x[[i]])[6]), 
+                    "%Y-%m-%d %H:%M")
+                  a[i, 5] <- NA
+                  a[i, 2] <- length((x[[i]])[!is.na(x[[i]])])
+                }
+                else if (suppressWarnings(is.integer(x[[i]]) || 
+                  is.numeric(x[[i]]) | (is.logical(x[[i]]) & 
+                  !is.na(mean(na.omit(as.numeric(x[[i]]))))))) {
+                  a[i, 3:7] <- round(c(mean(na.omit(x[[i]])), 
+                    quantile(na.omit(x[[i]]), 0.5), sd(na.omit(x[[i]])), 
+                    min(na.omit(x[[i]])), max(na.omit(x[[i]]))), 
+                    2)
+                  a[i, 2] <- as.character(length(na.omit(as.numeric(x[[i]]))))
+                }
+                else if (is.null(class(x[[i]]))) {
+                  a[i, 3:7] <- round(c(mean(na.omit(as.numeric(x[[i]]))), 
+                    quantile(na.omit(as.numeric(x[[i]])), 0.5), 
+                    sd(na.omit(as.numeric(x[[i]]))), min(na.omit(as.numeric(x[[i]]))), 
+                    max(na.omit(as.numeric(x[[i]])))), 2)
+                  a[i, 2] <- as.character(length(na.omit(x[[i]])))
+                }
+                else if (is.factor(x[i][2, ])) {
+                  a[i, 2] <- as.character(length(na.omit(x[[i]])))
+                  a[i, 3:7] <- round(c(mean(na.omit(unclass(x[i][, 
+                    ]))), median(na.omit(unclass(x[i][, ]))), 
+                    sd(na.omit(unclass(x[i][, ]))), min(na.omit(unclass(x[i][, 
+                      ]))), max(na.omit(unclass(x[i][, ])))), 
+                    3)
+                }
+            }
+        }
+    }
+    if (is.data.frame(x)) {
+        results <- list(heading = heading, table = a)
+        class(results) <- c("summ", "table")
+        results
+    }
+    else {
+        if (is.null(by)) {
+            if (class(a) == "matrix") {
+                results <- list(table = a)
+                class(results) <- c("summ", "matrix")
+                results
+            }
+            else {
+                results <- list(object = a)
+                class(results) <- c("summ", class(a))
+                results
+            }
+        }
+        else {
+            results <- list(byname = deparse(substitute(by)), 
+                levels = levels(factor(by)), table = multiple.a)
+            class(results) <- c("summ", "list")
+            results
+        }
+    }
 }
-if(is.data.frame(x))
-{
-results <- list(heading=heading, table=a)
-class(results) <- c("summ","table")
-results
-}else{
-if(is.null(by))
-{
-if(class(a) == "matrix"){
-results <- list(table=a)
-class(results) <- c("summ", "matrix")
-results
-}else{
-results <- list(object=a)
-class(results) <- c("summ",class(a))
-results
-}
-}else{
-results <- list(byname=deparse(substitute(by)), levels=levels(factor(by)), table=multiple.a)
-class(results) <- c("summ", "list")
-results
-}
-}
-}            
+
 #### Print summ result
 
 print.summ <- function(x, ...)
@@ -2601,11 +2724,10 @@ if(graph){
 if(!add){
 plot(secondtable[,1],secondtable[,2], xlab="1-Specificity",
 		ylab="Sensitivity", xlim=(c(0,1)), 
-		ylim=(c(0,1)), asp=1, ...)
+		ylim=(c(0,1)), asp=1, col=line.col, type="l", ...)
 if(title){
-  title(main =model.des)
+  title(main =model.des, ...)
 }
-lines(secondtable[,1],secondtable[,2], col=line.col)
 lines(x=c(0,1),y=c(0,1), lty=2, col="blue")
 abline(v=0, lty=2, col="blue")
 abline(v=.2, lty=2, col="blue")
@@ -2622,7 +2744,6 @@ abline(h=1, lty=2, col="blue")
 auclabel <- paste("Area under the curve =", round(auc, 3))
   if(!is.null(auc.coords)){text(x=auc.coords[1],y=auc.coords[2], pos=4, labels=auclabel, ...)}
 }else{
-points(secondtable[,1],secondtable[,2], ...)
 lines(secondtable[,1],secondtable[,2], col=line.col, ...)
 }}
 list(model.description=model.des, auc=auc, predicted.table=firsttable1, diagnostic.table=secondtable)
@@ -2649,6 +2770,7 @@ for(i in 1:length(secondtable[,1]))
 	rownames(secondtable)[i] <- paste(">",rownames(secondtable)[i])
 	}
 secondtable <- rbind((c(1,1)),secondtable)
+colnames(secondtable) <- c("1-Specificity","Sensitivity")
 ## Area under the curve
 auc <- 0
 for(i in 1:(nrow(secondtable)-1)) {
@@ -2659,9 +2781,8 @@ if(graph){
 if(!add){
 	plot(secondtable[,1],secondtable[,2], xlab="1-Specificity",
 		ylab="Sensitivity", xlim=(c(0,1)), 
-		ylim=(c(0,1)), asp=1, ...)
-	if(title){title(main = "ROC curve of the diagnostic table")}
-	lines(secondtable[,1],secondtable[,2], col="red")
+		ylim=(c(0,1)), asp=1, col=line.col, type="l", ...)
+	if(title){title(main = "ROC curve of the diagnostic table", ...)}
 	lines(x=c(0,1),y=c(0,1), lty=2, col="blue")
 	abline(v=0, lty=2, col="blue")
 	abline(v=.2, lty=2, col="blue")
@@ -2677,13 +2798,13 @@ if(!add){
 	abline(h=1, lty=2, col="blue")
 	auclabel <- paste("Area under the curve =", round(auc, 3))
 }else{
-	points(secondtable[,1],secondtable[,2], ...)
   lines(secondtable[,1],secondtable[,2], col=line.col, ...)
   }
   if(!is.null(auc.coords)){text(x=auc.coords[1],y=auc.coords[2], pos=4, labels=auclabel, ...)}
 }
 list(auc=auc, original.table=firsttable, diagnostic.table=secondtable)
 }
+
 
 ### Kappa statistics
 kap <- function(x, ...){
@@ -3319,124 +3440,192 @@ for(i in 1:length(y)){
 }
 
 ### One-way tabulation
-tab1 <- function (x0, decimal=1, sort.group=c(FALSE,"decreasing","increasing"), cum.percent=!any(is.na(x0)), graph=TRUE, missing=TRUE, bar.values=c("frequency","percent", "none"), horiz=FALSE, ...) {
-if(graph){
-		var1 <- deparse(substitute(x0))
-		if(length(var1)>1){
-			string2 <- var1[length(var1)]	
-		}else
-		if(substring(search()[2],first=1,last=8)!="package:"){
-			string2 <-  attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==deparse(substitute(x0))]
-			if(length(string2)==0){
-				string2 <- deparse(substitute(x0))
-			}
-			if(string2==""){
-				string2 <- deparse(substitute(x0))
-			}
-		}else{
-			string2 <- deparse(substitute(x0))
-		}
-	string3 <- paste(titleString()$distribution.of,string2)
-	
-	table.to.plot <- table(x0)
-	if(missing==TRUE){table.to.plot <- table(x0,exclude=NULL)
-	if(is.factor(x0)) {table.to.plot <- as.table(summary(x0))}
-	if(is.na(names(table.to.plot)[length(names(table.to.plot))]) |  
-		names(table.to.plot)[length(names(table.to.plot))]=="NA's") 
-	names(table.to.plot)[length(names(table.to.plot))] <-"Missing"}
-	scale.label <- as.character(titleString()$frequency)
-	suppressWarnings(if(bar.values=="percent"){
-      table.to.plot <- round(table.to.plot/sum(table.to.plot)*100,decimal)
-      scale.label <- "%"
-      })
-	suppressWarnings(if(sort.group=="decreasing"){
-		table.to.plot <- table.to.plot[order(table.to.plot,names(table.to.plot), decreasing=TRUE)]
-		if(max(nchar(names(table.to.plot)))>8 & length(table.to.plot)>6){
-			table.to.plot <- table.to.plot[order(table.to.plot,names(table.to.plot),decreasing=FALSE)]
-		}
-	})
-	suppressWarnings(if(sort.group=="increasing"){
-		table.to.plot <- table.to.plot[order(table.to.plot,names(table.to.plot), decreasing=FALSE)]
-		if(max(nchar(names(table.to.plot)))>8 & length(table.to.plot)>6){
-			table.to.plot <- table.to.plot[order(table.to.plot,names(table.to.plot), decreasing=TRUE)]
-		}
-	})
-	if((max(nchar(names(table.to.plot)))>8 & length(table.to.plot)>6)|horiz==TRUE){
-		par(mai=c(0.95625, 0.1, 0.76875, 0.39375)+.1+c(0,par()$cin[1]*max(nchar(names(table.to.plot))*.75),0,0))
-		barplot(table.to.plot,main=string3, horiz=TRUE, las=1, xlim=c(0, max(table.to.plot)*1.2), xlab = scale.label, ...) -> y.coordinates
-		suppressWarnings(if(bar.values=="frequency" | bar.values=="percent" | length(bar.values)==3){
-    text(table.to.plot, y.coordinates, as.character(table.to.plot), pos=4, offset=0.3)
-    })
-    par(mai=c(0.95625, 0.76875, 0.76875, 0.39375))
-		}else{
-			barplot(table.to.plot, main=string3, ylab=scale.label, 
-				ylim=c(0, max(table.to.plot)*1.1), ...) -> x.coordinates
-		suppressWarnings(if(bar.values=="frequency" | bar.values=="percent" | length(bar.values)==3){
-      text(x.coordinates, table.to.plot, as.character(table.to.plot), pos=3)
-		})
-}}
-if(any(is.na(x0))){
-	if(is.factor(x0)){
-		output0 <- t(t(as.table(summary(x0))))
-		output1 <- (t(t(table(x0))))
-	}
-	else{
-		output0 <- t(t(table(x0, exclude=NULL)))
-		output1 <- (t(t(table(x0))))
-	}	
-		percent0 <- output0[,1]/sum(output0)*100
-		percent1 <- output1[,1]/sum(output1[,1],na.rm=TRUE)*100
-if(cum.percent){
-		output <- cbind(output0, round(percent0,decimal), round(cumsum(percent0),decimal), c(round(percent1,decimal),as.integer(0)), round(cumsum(c(percent1, as.integer(0))),decimal))
-		}else{
-    output <- cbind(output0, round(percent0,decimal), c(round(percent1,decimal),as.integer(0)))    
+tab1 <- function (x0, decimal = 1, sort.group = c(FALSE, "decreasing", 
+    "increasing"), cum.percent = !any(is.na(x0)), graph = TRUE, 
+    missing = TRUE, bar.values = c("frequency", "percent", "none"), 
+    horiz = FALSE, cex = 1, cex.names = 1, main = "auto", xlab = "auto", 
+    ylab = "auto", col = "auto", ...) 
+{
+    if (graph) {
+        var1 <- deparse(substitute(x0))
+        if (length(var1) > 1) {
+            string2 <- var1[length(var1)]
+        }
+        else if (substring(search()[2], first = 1, last = 8) != 
+            "package:") {
+            string2 <- attr(get(search()[2]), "var.labels")[attr(get(search()[2]), 
+                "names") == deparse(substitute(x0))]
+            if (length(string2) == 0) {
+                string2 <- deparse(substitute(x0))
+            }
+            if (string2 == "") {
+                string2 <- deparse(substitute(x0))
+            }
+        }
+        else {
+            string2 <- deparse(substitute(x0))
+        }
+        string3 <- paste(titleString()$distribution.of, string2)
+        table.to.plot <- table(x0)
+        if (missing == TRUE) {
+            table.to.plot <- table(x0, exclude = NULL)
+            if (is.factor(x0)) {
+                table.to.plot <- as.table(summary(x0))
+            }
+            if (is.na(names(table.to.plot)[length(names(table.to.plot))]) | 
+                names(table.to.plot)[length(names(table.to.plot))] == 
+                  "NA's") 
+                names(table.to.plot)[length(names(table.to.plot))] <- "Missing"
+        }
+        scale.label <- as.character(titleString()$frequency)
+        suppressWarnings(if (bar.values == "percent") {
+            table.to.plot <- round(table.to.plot/sum(table.to.plot) * 
+                100, decimal)
+            scale.label <- "%"
+        })
+        suppressWarnings(if (sort.group == "decreasing") {
+            table.to.plot <- table.to.plot[order(table.to.plot, 
+                names(table.to.plot), decreasing = TRUE)]
+            if (max(nchar(names(table.to.plot))) > 8 & length(table.to.plot) > 
+                6) {
+                table.to.plot <- table.to.plot[order(table.to.plot, 
+                  names(table.to.plot), decreasing = FALSE)]
+            }
+        })
+        suppressWarnings(if (sort.group == "increasing") {
+            table.to.plot <- table.to.plot[order(table.to.plot, 
+                names(table.to.plot), decreasing = FALSE)]
+            if (max(nchar(names(table.to.plot))) > 8 & length(table.to.plot) > 
+                6) {
+                table.to.plot <- table.to.plot[order(table.to.plot, 
+                  names(table.to.plot), decreasing = TRUE)]
+            }
+        })
+        if(any(col == "auto")){
+        if (length(names(table.to.plot)) < 3){
+          colours <- "grey"
+          }else{
+          colours <- c("white",2:length(names(table.to.plot)))
+          }
+          }else{
+          colours <- col
+          }
+        if ((max(nchar(names(table.to.plot))) > 8 & length(table.to.plot) > 
+            6) | horiz == TRUE) {
+            par(mai = c(0.95625, 0.1, 0.76875, 0.39375) + 0.1 + 
+                c(0, par()$cin[1] * max(nchar(names(table.to.plot))) * 
+                  0.75 * cex.names, 0, 0))
+            y.coordinates <- barplot(table.to.plot, main = ifelse(main == 
+                "auto", string3, main), horiz = TRUE, las = 1, 
+                xlim = c(0, max(table.to.plot) * 1.2), xlab = ifelse(xlab == 
+                "auto", scale.label, xlab), cex.names = cex.names, col=colours,
+                ...)
+            suppressWarnings(if (bar.values == "frequency" | 
+                bar.values == "percent" | length(bar.values) == 
+                3) {
+                text(table.to.plot, y.coordinates, as.character(table.to.plot), 
+                  pos = 4, offset = 0.3, cex = cex)
+            })
+            par(mai = c(0.95625, 0.76875, 0.76875, 0.39375))
+        }
+        else {
+            x.coordinates <- barplot(table.to.plot, main = ifelse(main == 
+                "auto", string3, main), ylab = ifelse(ylab == 
+                "auto", scale.label, ylab), cex.names = cex.names, 
+                ylim = c(0, max(table.to.plot) * 1.1), col=colours,
+                 ...)
+            suppressWarnings(if (bar.values == "frequency" | 
+                bar.values == "percent" | length(bar.values) == 
+                3) {
+                text(x.coordinates, table.to.plot, as.character(table.to.plot), 
+                  pos = 3, cex = cex)
+            })
+        }
     }
-suppressWarnings(if(sort.group=="decreasing"){
-	output <- output[order(output[,1],decreasing=TRUE),]
-})
-suppressWarnings(if(sort.group=="increasing"){
-	output <- output[order(output[,1],decreasing=FALSE),]
-})
-if(cum.percent){
-		output <- rbind(output,c(sum(as.integer(output[,1])),100,100,100,100))
-		colnames(output) <- c(.frequency,"  %(NA+)", "cum.%(NA+)","  %(NA-)","cum.%(NA-)")
-  }else{
-		output <- rbind(output,c(sum(as.integer(output[,1])),100,100))
-		colnames(output) <- c(.frequency,"  %(NA+)", "  %(NA-)")  
-  }
-		rownames(output)[nrow(output)] <- "  Total"
+    if (any(is.na(x0))) {
+        if (is.factor(x0)) {
+            output0 <- t(t(as.table(summary(x0))))
+            output1 <- (t(t(table(x0))))
+        }
+        else {
+            output0 <- t(t(table(x0, exclude = NULL)))
+            output1 <- (t(t(table(x0))))
+        }
+        percent0 <- output0[, 1]/sum(output0) * 100
+        percent1 <- output1[, 1]/sum(output1[, 1], na.rm = TRUE) * 
+            100
+        if (cum.percent) {
+            output <- cbind(output0, round(percent0, decimal), 
+                round(cumsum(percent0), decimal), c(round(percent1, 
+                  decimal), as.integer(0)), round(cumsum(c(percent1, 
+                  as.integer(0))), decimal))
+        }
+        else {
+            output <- cbind(output0, round(percent0, decimal), 
+                c(round(percent1, decimal), as.integer(0)))
+        }
+        suppressWarnings(if (sort.group == "decreasing") {
+            output <- output[order(output[, 1], decreasing = TRUE), 
+                ]
+        })
+        suppressWarnings(if (sort.group == "increasing") {
+            output <- output[order(output[, 1], decreasing = FALSE), 
+                ]
+        })
+        if (cum.percent) {
+            output <- rbind(output, c(sum(as.integer(output[, 
+                1])), 100, 100, 100, 100))
+            colnames(output) <- c(.frequency, "  %(NA+)", "cum.%(NA+)", 
+                "  %(NA-)", "cum.%(NA-)")
+        }
+        else {
+            output <- rbind(output, c(sum(as.integer(output[, 
+                1])), 100, 100))
+            colnames(output) <- c(.frequency, "  %(NA+)", "  %(NA-)")
+        }
+        rownames(output)[nrow(output)] <- "  Total"
+    }
+    else {
+        output <- (t(t(table(x0))))
+        suppressWarnings(if (sort.group == "decreasing") {
+            output <- output[order(table(x0), names(table(x0)), 
+                decreasing = TRUE), ]
+        })
+        suppressWarnings(if (sort.group == "increasing") {
+            output <- output[order(table(x0), names(table(x0)), 
+                decreasing = FALSE), ]
+        })
+        percent <- output/sum(output) * 100
+        if (cum.percent) {
+            output <- cbind(output, round(percent, decimal), 
+                round(cumsum(percent), decimal))
+            output <- rbind(output, c(sum(output[, 1]), 100, 
+                100))
+            colnames(output) <- c(.frequency1, .percent, .cum.percent)
+        }
+        else {
+            output <- cbind(output, round(percent, decimal))
+            output <- rbind(output, c(sum(output[, 1]), 100))
+            colnames(output) <- c(.frequency1, .percent)
+        }
+        rownames(output)[length(rownames(output))] <- "  Total"
+    }
+    if (substring(search()[2], first = 1, last = 8) != "package:") {
+        options(warn = -1)
+        first.line <- paste(deparse(substitute(x0)), ":", attr(get(search()[2]), 
+            "var.labels")[attr(get(search()[2]), "names") == 
+            deparse(substitute(x0))], "\n", "\n")
+        options(warn = TRUE)
+    }
+    else {
+        first.line <- paste(deparse(substitute(x0)), ":", "\n")
+    }
+    returns <- list(first.line = first.line, output.table = output)
+    class(returns) <- c("tab1", "list")
+    returns
 }
-else{
-	output <- (t(t(table(x0))))
-suppressWarnings(if(sort.group=="decreasing"){
-	output <- output[order(table(x0),names(table(x0)), decreasing=TRUE),]
-})
-suppressWarnings(if(sort.group=="increasing"){
-	output <- output[order(table(x0),names(table(x0)), decreasing=FALSE),]
-})
-	percent <- output/sum(output)*100
-if(cum.percent){
-	output <- cbind(output,round(percent,decimal),round(cumsum(percent),decimal))
-	output <- rbind(output,c(sum(output[,1]),100,100))
-	colnames(output) <- c(.frequency1,.percent,.cum.percent)
-  }else{
-	output <- cbind(output,round(percent,decimal))
-	output <- rbind(output,c(sum(output[,1]),100))
-	colnames(output) <- c(.frequency1,.percent)
-  }
-	rownames(output)[length(rownames(output))] <- "  Total"
-}
-if(substring(search()[2], first=1, last=8)!="package:"){
-options(warn=-1)
-	first.line <- paste(deparse(substitute(x0)),":", attr(get(search()[2]), "var.labels")[attr(get(search()[2]), "names")==deparse(substitute(x0))], "\n","\n")
-options(warn=TRUE)
-}else{
-  first.line <- paste(deparse(substitute(x0)),":", "\n") 
-}
-returns <- list(first.line=first.line, output.table=output)
-class(returns) <- c("tab1", "list")
-returns
-}
+
+
 
 ### Print tab1 results
 print.tab1 <- function(x, ...)
@@ -3515,9 +3704,9 @@ attach(data1, name=as.character(substitute(dataFrame)), warn.conflicts = FALSE)
 }
 
 ### Dot plot
-dotplot <- function(x, bin="auto", by=NULL, xmin=NULL, xmax=NULL, time.format=NULL, time.step=NULL, pch=18, dot.col="auto", ...){
+dotplot <- function(x, bin="auto", by=NULL, xmin=NULL, xmax=NULL, time.format=NULL, time.step=NULL, pch=18, dot.col="auto", main="auto", ylab="auto", cex.X.axis=1, cex.Y.axis=1, ...){
 if(!is.null(by)){
-if(length(dot.col)>1 & length(table(by))!=length(dot.col)){
+if(length(dot.col)>1 & length(table(factor(by)))!=length(dot.col)){
 stop(paste("The argument 'dot.col' must either be \"auto\"","\n"," or number of colours equals to number of categories of 'by'."))
 }}
 if (bin=="auto"){
@@ -3661,10 +3850,10 @@ if(dot.col=="auto") dot.col <- "black"
 		freq[xgr==i] <- 1:sum(xgr==i) 
 	}
 	if(max(freq)<20){
-		plot(xgr,freq, xaxt="n", xlab=" ",main=string3,	ylab=titleString()$frequency,
+		plot(xgr,freq, xaxt="n", xlab=" ",main=ifelse(main=="auto",string3,main),	ylab=ifelse(ylab=="auto",titleString()$frequency, ylab),
       ylim=c(0,20), xlim = xlim, pch=pch, col=dot.col[1], ...)
 	}else{
-  plot(xgr,freq, xaxt="n", xlab=" ",main=string3,	ylab=titleString()$frequency, 
+  plot(xgr,freq, xaxt="n", xlab=" ",main=ifelse(main=="auto",string3,main),	ylab=ifelse(ylab=="auto",titleString()$frequency, ylab), 
        xlim = xlim, pch=pch, col=dot.col[1], ...)
 	}
 }else{ 
@@ -3689,17 +3878,14 @@ if(is.factor(by0)){
 		}
 		add.i <- max(y, na.rm=TRUE) +2
 	}
-	main.lab <- paste(string3,titleString()$by,byname)
+	main.lab <- ifelse(main=="auto",paste(string3,titleString()$by,byname), main)
 	if(nchar(main.lab)>45){main.lab <- paste(string3,"\n",titleString()$by,byname)}
   if(any(dot.col=="auto")){
   dot.col1 <- as.numeric(by1)
   }else{
-  dot.col1 <- rep(dot.col[1], length(by1))
-  if(length(dot.col) > 1){
-  for(i in length(table(by1))){
-  dot.col1[by1==as.numeric(names(table(by1)))[i]] <- dot.col[i] 
+  tx <- cbind(1:length(dot.col), dot.col)
+  dot.col1 <- lookup(as.numeric(by1), tx)
   }
-  }}
   if(max(y)<20){
 	plot(xgr,y, xaxt="n", yaxt="n",
 		xlab=" ",main=main.lab, ylim=c(-1,20),
@@ -3710,22 +3896,22 @@ if(is.factor(by0)){
 		ylab=" ", col=dot.col1, pch=pch, xlim=xlim, ...)
 	}
 	abline(h=yline, col="blue")
-	axis(2,at=yline, labels=levels(by1), padj=0, las=1, ...)
+	axis(2,at=yline, labels=levels(by1), padj=0, las=1, cex.axis=cex.Y.axis)
 	par(mai=c(0.95625, 0.76875, 0.76875, 0.39375))
 	}
 	if(any(class(x)=="POSIXct")){
-		axis(side=1, at=xgr.pretty, labels=as.character(time.pretty,format=format.time))	
+		axis(side=1, at=xgr.pretty, labels=as.character(time.pretty,format=format.time), cex.axis=cex.X.axis)	
 		title(xlab=scale.unit)
 	}
 	if(any(class(x)=="difftime")){
-		axis(side=1,at=xgr.pretty, labels=value.pretty)
+		axis(side=1,at=xgr.pretty, labels=value.pretty, cex.axis=cex.X.axis)
 		title(xlab=unit.value)
 	}
 	if(any(class(x)=="Date")){
-		axis(side=1,at=xgr.pretty, labels=as.character(format(value.pretty+as.Date("1970-01-01"), format.time)))
+		axis(side=1,at=xgr.pretty, labels=as.character(format(value.pretty+as.Date("1970-01-01"), format.time)), cex.axis=cex.X.axis)
 	}
 	if(any(class(x)=="numeric") || any(class(x)=="integer")){
-		axis(side=1,at=xgr.pretty, labels=value.pretty)
+		axis(side=1,at=xgr.pretty, labels=value.pretty, cex.axis=cex.X.axis)
 	}
 }
 
@@ -3908,11 +4094,10 @@ suppressWarnings(if(percent=="total"){
     table.header <- "(percentage of each sex)."
 })
 par(mai=left.par.mai)
-barplot(-age.sex.table[,1], horiz=TRUE,yaxt="n",xlab=colnames(age.sex.table)[1], xlim=c(-max(age.sex.table),0),xaxt="n",...)-> label.points
-axis(side=1, at=pretty(c(-max(age.sex.table),0)),labels=-pretty(c(-max(age.sex.table),0)))
-axis(side=4,at=label.points, labels=rownames(age.sex.table), tick=FALSE, col="blue", las=2)
+barplot(-age.sex.table[,1], horiz=TRUE,yaxt="n",xlab=colnames(age.sex.table)[1], xlim=c(-max(age.sex.table),0), xaxt="n", ...)-> label.points
+axis(side=1, at=pretty(c(-max(age.sex.table),0)),labels=-pretty(c(-max(age.sex.table),0)), ...)
 par(mai=right.par.mai)
-barplot(age.sex.table[,2], horiz=TRUE, yaxt="n",xlab=colnames(age.sex.table)[2], xlim=c(0,max(age.sex.table)), ...) 
+barplot(age.sex.table[,2], horiz=TRUE, xlab=colnames(age.sex.table)[2], xlim=c(0,max(age.sex.table)), las=1,  ...) 
 par(mfrow=c(1,1))
 par(mai=old.par.mai)
 
@@ -3930,6 +4115,7 @@ if(is.null(inputTable)){
   returns <- list(output.table=age.sex.table, ageGroup=agegr) 
   }
 }
+
 
 ## Followup plot
 followup.plot <- function (id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, 

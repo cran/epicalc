@@ -5,9 +5,10 @@
 \description{One-way tabulation with automatic bar chart}
 \usage{
 tab1(x0, decimal = 1, sort.group = c(FALSE, "decreasing", 
-"increasing"), cum.percent = !any(is.na(x0)), graph = TRUE, 
-missing = TRUE, bar.values = c("frequency", "percent", "none"),
-horiz=FALSE, ...)
+    "increasing"), cum.percent = !any(is.na(x0)), graph = TRUE, 
+    missing = TRUE, bar.values = c("frequency", "percent", "none"), 
+    horiz = FALSE, cex = 1, cex.names = 1, main = "auto", xlab = "auto", 
+    ylab = "auto", col = "auto", ...) 
 
 \method{print}{tab1}(x, ...)
 }
@@ -20,6 +21,12 @@ horiz=FALSE, ...)
 	\item{missing}{include the missing values category or <NA> in the graphic display}
 	\item{bar.values}{include the value of frequency, percentage or none at the end of each bar}
 	\item{horiz}{set the bar chart to horizontal orientation}
+  \item{cex}{parameter for extension of characters or relative size of the bar.values}
+  \item{cex.names}{character extension or relative scale of the name labels for the bars}
+  \item{main}{main title of the graph}
+  \item{xlab}{label of X axis}
+  \item{ylab}{label of Y axis}
+  \item{col}{colours of the bar}
   \item{x}{object of class 'tab1' obtained from saving 'tab1' results}
   \item{...}{further arguments passed to or used by other methods}
 }
@@ -27,6 +34,7 @@ horiz=FALSE, ...)
 
 The bar chart is vertical unless the number of categories is more than six \strong{and} any of the labels of the levels consists of more than 8 characters \strong{or} 'horiz' is set to TRUE.
 
+For table has less than categories, the automatic colour is "grey". Otherwise, the graph will be colourful. The argument, 'col' can be overwritten by the user.
 }
 \value{Output table}
 \author{Virasakdi Chongsuvivatwong
@@ -38,6 +46,13 @@ tab1(state.division)
 tab1(state.division, bar.values ="percent")
 tab1(state.division, sort.group ="decreasing")
 tab1(state.division, sort.group ="increasing")
+tab1(state.division, col=c("chocolate","brown1","brown4"),
+  main="Number of states in each zone")
+# For presentation, several 'cex' parameters should increase
+tab1(state.division, col=c("chocolate","brown1","brown4"),
+  main="Number of states in each zone",
+  cex.main=1.7, cex.name=1.2, cex.axis=1.3, cex.lab=1.3)
+
 
 data(Oswego)
 use(Oswego)
@@ -45,14 +60,18 @@ tab1(ill) # Note the column of cumulative percentages in the table.
 tab1(ill, cum.percent=FALSE)
 tab1(chocolate) 
 # Due to missing values, cumulative percentages are now automatically turned off.
-tab1(chocolate, cum.percent=TRUE) # Slightly too many columns!
+tab1(chocolate, cum.percent=TRUE) 
+# Slightly too many columns in text!
 tab1(chocolate, missing=FALSE, bar.values="percent")
-agegr <- cut(age, breaks=c(0,20,60,80))
+agegr <- cut(age, breaks=c(0,10,20,30,40,50,60,70,80))
 tab1(agegr)
-tab1(agegr, col=c("red","yellow","blue"))
+tab1(agegr, col="grey") # graphic output from older versions of 'tab1'
+tab1(agegr, col=c("red","yellow","blue")) # Colours recycled
 tab1(agegr, horiz=TRUE)
 
-tab1(agegr) -> a
+# Keeping output table
+dev.off()
+tab1(agegr, graph = FALSE) -> a
 print(a)
 a # same results
 attributes(a)

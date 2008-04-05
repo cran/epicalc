@@ -39,12 +39,14 @@ logistic.display(model1)
 # This is actually not a causal relationship
 
 lroc(model1, title=TRUE, auc.coords=c(.5,.1))
+# For PowerPoint presentation, the graphic elements should be enhanced as followed 
+lroc(model1, title=TRUE, cex.main=2, cex.lab=1.5, col.lab="blue", cex.axis=1.3, lwd=3)
 lroc1 <- lroc(model1) # The main title and auc text have disappeared
 model2 <- glm(case ~ spontaneous, data=infert, family=binomial)
 logistic.display(model2)
-lroc2 <- lroc(model2, add=TRUE, line.col="black")
+lroc2 <- lroc(model2, add=TRUE, line.col="brown", lty=2)
 legend("bottomright",legend=c(lroc1$model.description, lroc2$model.description),
-        lty=1, col=c("red","brown"),bg="white")
+        lty=1:2, col=c("red","brown"), bg="white")
 title(main="Comparison of two logistic regression models")
 lrtest(model1, model2) 
 # Number of induced abortions is associated with increased risk for infertility
@@ -53,7 +55,7 @@ lrtest(model1, model2)
 # ROC from a diagnostic table
 table1 <- as.table(cbind(c(1,27,56,15,1),c(0,0,10,69,21)))
 colnames(table1) <- c("Non-diseased", "Diseased")
-rownames(table1) <- c("15-","30-","45-","60-","90-")
+rownames(table1) <- c("15-29","30-44","45-59","60-89","90+")
 table1
 roc.from.table(table1)
 roc.from.table(table1, title=TRUE, auc.coords=c(.4,.1), cex=1.2)
@@ -62,6 +64,6 @@ roc.from.table(table1, title=TRUE, auc.coords=c(.4,.1), cex=1.2)
 roc1 <- roc.from.table(table1, graph=FALSE)
 cut.points <- rownames(roc1$diagnostic.table)
 text(x=roc1$diagnostic.table[,1], y=roc1$diagnostic.table[,2], 
-	labels=cut.points, cex=1.2, col="brown", pos=4)
+	labels=cut.points, cex=1.2, col="brown")
 }
 \keyword{array}

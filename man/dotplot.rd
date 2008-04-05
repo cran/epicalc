@@ -3,9 +3,9 @@
 \title{Dot plot}
 \description{Plot of frequency in dots}
 \usage{
-dotplot(x, bin = "auto", by = NULL, xmin = NULL, xmax = NULL, 
-    time.format = NULL, time.step = NULL, pch=18, 
-    dot.col="auto", ...) 
+dotplot (x, bin = "auto", by = NULL, xmin = NULL, xmax = NULL, 
+    time.format = NULL, time.step = NULL, pch = 18, dot.col = "auto", 
+    main = "auto", ylab = "auto", cex.X.axis = 1, cex.Y.axis = 1, ...)  
 }
 \arguments{
 	\item{x}{a numeric vector. Allowed types also include "Date" and "POSIXct"}
@@ -17,6 +17,10 @@ dotplot(x, bin = "auto", by = NULL, xmin = NULL, xmax = NULL,
 	\item{time.step}{a character string indicating increment of the sequence of tick marks}
 	\item{pch}{either an integer specifying a symbol or a single character to be used as the default in plotting points}
   \item{dot.col}{a character or a numeric vector indicating the colour of each category of 'by'}
+  \item{main}{main title}
+  \item{ylab}{Y axis title}
+  \item{cex.X.axis}{character extension scale of X axis}
+  \item{cex.Y.axis}{character extension scale of Y axis}
 	\item{...}{graphical parameters for the dots when there is no stratification}
 }
 \details{'dotplot' in Epicalc is similar to a histogram. Each dot represents one record. Attributes of the dots can be further specified in '...' when there is no strafication. Otherwise, the dots are plotted as a diamond shape and the colours are automatically chosen based on the current palette and the number of strata.
@@ -47,6 +51,7 @@ dotplot(b, by=a, pch=1) # You may try other values of 'pch'
 
 # The number of dots in each column is the frequency
 # of 'x' for the exact value on the X axis.
+zap()
 data(Outbreak)
 use(Outbreak)
 class(age) # numeric
@@ -63,9 +68,11 @@ dotplot(age.as.integer, xmin=0, xmax=70, by=sex)
 
 # Controlling colours of the dots
 dotplot(age.as.integer, xmin=0, xmax=70, dot.col="chocolate") 
-dotplot(age.as.integer, xmin=0, xmax=70, by=sex, dot.col=c(2,5)) 
-dotplot(age.as.integer, xmin=0, xmax=70, by=sex, 
-  dot.col=c("brown","blue")) 
+sex1 <- factor(sex); levels(sex1) <- list("M"=1,"F"=0)
+dotplot(age.as.integer, xmin=0, xmax=70, by=sex1, dot.col=c(2,5)) 
+dotplot(age.as.integer, xmin=0, xmax=70, by=sex1, 
+  dot.col=c("brown","blue"), main="Age by sex",
+  cex.X.axis=1.3, cex.Y.axis=1.5, cex.main=1.5) 
 
 
 # Dotplot of a time variable
