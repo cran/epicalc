@@ -4,9 +4,9 @@
 \description{Plot longitudinal values of individuals with or without stratification}
 \usage{
 followup.plot(id, time, outcome, by = NULL, n.of.lines = NULL, 
-legend = TRUE, line.col = "blue", stress = NULL, 
+legend = TRUE, line.col = "auto", stress = NULL, 
 stress.labels = FALSE, label.col = 1, stress.col = NULL, 
-stress.width = NULL, stress.type = NULL, ...)
+stress.width = NULL, stress.type = NULL, lwd = 1, ...)
 }
 \arguments{
 	\item{id}{idenfication variable of the same subject being followed up}
@@ -22,6 +22,7 @@ stress.width = NULL, stress.type = NULL, ...)
   \item{stress.col}{colour values used for the stressed line. Default value is '1' or black}
   \item{stress.width}{relative width of the stressed line}
   \item{stress.type}{line type code for the stressed line}
+  \item{lwd}{line width}
   \item{...}{other graphic parameters}
 }
 \details{'followup.plot' plots outcome over time of the individual subjects.
@@ -50,8 +51,6 @@ followup.plot(tree, Time, size)
 followup.plot(tree, Time, size, line.col = "brown")
 followup.plot(tree, Time, size, line.col = "multicolor")
 followup.plot(tree, Time, size, n.of.lines=20, line.col = "multicolor")
-
-
 
 # Breakdown of color by treatment group
 followup.plot(tree, Time, size, by=treat)

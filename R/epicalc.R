@@ -4119,11 +4119,11 @@ if(is.null(inputTable)){
 
 ## Followup plot
 followup.plot <- function (id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, 
-    line.col = "blue", stress = NULL, stress.labels = FALSE, label.col = 1, stress.col = NULL, 
-    stress.width = NULL, stress.type = NULL, ...) 
+    line.col = "auto", stress = NULL, stress.labels = FALSE, label.col = 1, stress.col = NULL, 
+    stress.width = NULL, stress.type = NULL, lwd = 1,...) 
 {
 
-    plot(time, outcome, xlab = " ", ylab = " ", type = "n", ...)
+    plot(time, outcome, xlab = " ", ylab = " ", type = "n", lwd = lwd, ...)
 id1 <- id; time1 <- time; by1 <- by; outcome1 <- outcome
     if (is.null(n.of.lines)) {
         if (!is.null(by)) {
@@ -4133,17 +4133,20 @@ id1 <- id; time1 <- time; by1 <- by; outcome1 <- outcome
             outcome <- outcome[order(id1, time1, by1)]
             by <- by[order(id1, time1, by1)]
             by.factor <- factor(by)
+            if(any(line.col=="auto")) {
+            line.col <- 1:length(levels(by.factor))
+              }
             for (i in 1:length(levels(by.factor))) {
                 for (j in 1:length(levels(id.factor))) {
                   lines(time[id.factor == levels(id.factor)[j] & by.factor == levels(by.factor)[i]], 
                   outcome[id.factor == levels(id.factor)[j] & by.factor == levels(by.factor)[i]], 
-                    col = i, lty = i)
+                    col = line.col[i], lty = i, lwd = lwd)
                 }
             }
             if (legend) {
                 legend("topright", legend = levels(factor(by)), 
-                  col = 1:length(levels(factor(by))), bg = "white", 
-                  lty = 1:length(levels(factor(by))))
+                  col = line.col, bg = "white", 
+                  lty = 1:length(levels(factor(by))), lwd = lwd)
             }
         }
         else {
@@ -4151,29 +4154,32 @@ id1 <- id; time1 <- time; by1 <- by; outcome1 <- outcome
             id.factor <- factor(id)
             time <- time[order(id1, time1)]
             outcome <- outcome[order(id1, time1)]
+           
             if (length(levels(factor(id))) < 8) {
+              if(any(line.col=="auto")) line.col <- 1:length(levels(id.factor) )  
                 for (j in 1:length(levels(id.factor))) {
                   lines(time[id.factor == levels(id.factor)[j]], 
                     outcome[id.factor == levels(id.factor)[j]], 
-                    col = j)
+                    col = line.col[j], lwd = lwd)
                   }
                 if (legend) {
                   legend("topright", legend = levels(factor(id[order(id1)])), 
-                    col = 1:length(levels(factor(id))), bg = "white", 
-                    lty = 1)
+                    col = line.col[1:length(levels(factor(id)))], bg = "white", 
+                    lty = 1, lwd = lwd)
                 }
             }
             else {
                 for (j in 1:length(levels(id.factor))) {
-                  if (line.col == "multicolor") {
+                  if (any(line.col == "multicolor")) {
                     lines(time[id.factor == levels(id.factor)[j]], 
                       outcome[id.factor == levels(id.factor)[j]], 
-                      col = j)
+                      col = j, lwd = lwd)
                   }
                   else {
+                    if(any(line.col=="auto")) line.col <- "blue"
                     lines(time[id.factor == levels(id.factor)[j]], 
                       outcome[id.factor == levels(id.factor)[j]], 
-                      col = line.col)
+                      col = line.col, lwd = lwd)
                   }
                 }
             }
@@ -4189,19 +4195,20 @@ id1 <- id; time1 <- time; by1 <- by; outcome1 <- outcome
             by <- by[order(id1, time1, by1)]
             id.factor <- factor(id)
             by.factor <- factor(by)
+            if(any(line.col=="auto")) line.col <- 1:length(levels(by.factor))
             for (i in 1:length(levels(by.factor))) {
                 for (j in 1:length(levels(id.factor))) {
                   lines(time[id.factor == levels(id.factor)[j] & 
                     by.factor == levels(by.factor)[i]] * order.id.selected[j], 
                     outcome[id.factor == levels(id.factor)[j] & 
                       by.factor == levels(by.factor)[i]] * order.id.selected[j], 
-                    col = i, lty = i)
+                    col = line.col[i], lty = i, lwd = lwd)
                 }
             }
             if (legend) {
                 legend("topright", legend = levels(factor(by)), 
-                  col = 1:length(levels(factor(by))), lty = 1:length(levels(factor(by))), 
-                  bg = "white")
+                  col = line.col[1:length(levels(factor(by)))], lty = 1:length(levels(factor(by))), 
+                  bg = "white", lwd = lwd)
             }
         }
         else {
@@ -4210,17 +4217,20 @@ id1 <- id; time1 <- time; by1 <- by; outcome1 <- outcome
             time <- time[order(id1, time1)]
             outcome <- outcome[order(id1, time1)]
             for (j in 1:length(levels(id.factor))) {
-                if (line.col == "multicolor") {
+                if (any(line.col == "multicolor")) {
                   lines(time[id.factor == levels(id.factor)[j]] * 
                     order.id.selected[j], outcome[id.factor == 
                     levels(id.factor)[j]] * order.id.selected[j], 
-                    col = j)
+                    col = j, lwd = lwd)
                 }
                 else {
+                if(any(line.col=="auto")) {
+                  line.col <- "blue"
+                }
                   lines(time[id.factor == levels(id.factor)[j]] * 
                     order.id.selected[j], outcome[id.factor == 
                     levels(id.factor)[j]] * order.id.selected[j], 
-                    col = line.col)
+                    col = line.col, lwd = lwd)
                 }
             }
         }
@@ -4316,7 +4326,7 @@ dataName <- as.character(substitute(dataFrame))
         attr(data1, "val.labels") <- val.labels[vars]
         attr(data1, "var.labels") <- var.labels[vars]
         attr(data1, "label.table") <- label.table[is.element(names(label.table), 
-            val.labels[vars])][1:length(vars)]
+            val.labels[vars])]
 
     assign(dataName, data1, pos=1)
     if(is.element(dataName, search())){
@@ -4501,6 +4511,159 @@ if(length(FUN)==0)
         }
     }
     y
+}
+
+## Aggregate plot
+aggregatePlot <- function (x, by, grouping=NULL, FUN = c("mean", "median"),error=c("se","ci","sd","none"), alpha=0.05, line.width=1, line.col="auto", bin.time=4, bin.method=c("fixed","quantile"), legend="auto", xlim="auto", ylim="auto", ...)
+{
+p25 <- function(xx) quantile(xx, prob=.25, na.rm=TRUE)
+p75 <- function(xx) quantile(xx, prob=.75, na.rm=TRUE)
+if(length(FUN)==2 | any(FUN=="mean"))  {
+  FUN1 <- c("mean","sd","sum","count")
+}else{
+  FUN1 <- c("median","p25","p75")
+}
+if(is.list(by)){
+if(any(line.col=="auto")) line.col <- 1
+if(length(FUN)==2) FUN <- "mean"
+if(length(error)==4 & error[1]=="se") error <- "se"
+if(is.factor(x)){
+if(length(levels(x)) > 2) {
+  stop("'x' is factor with more than 2 levels, which cannot be aggregated")
+  }else{
+  x1 <- as.numeric(unclass(x) - 1)
+  }
+}
+if(is.logical(x)) x1 <- x * 1
+if(is.numeric(x)) x1 <- x
+if(FUN == "mean"){
+sum.matrix <- tapply(x1, by, FUN="sum", na.rm=TRUE)
+mean.matrix <- tapply(x1, by, FUN="mean", na.rm=TRUE)
+sd.matrix <- tapply(x1, by, FUN="sd", na.rm=TRUE)
+count <- function(x) length(na.omit(x))
+count.matrix <- tapply(x1, by, FUN="count")
+if(error=="se"){ 
+error.matrix <- sd.matrix/sqrt(count.matrix)
+}
+if(error=="sd"){
+error.matrix <- sd.matrix
+}
+sum.data.frame <- as.data.frame.table(sum.matrix)
+means.data.frame <- as.data.frame.table(mean.matrix)
+sd.data.frame <- as.data.frame.table(sd.matrix)
+count.data.frame <- as.data.frame.table(count.matrix)
+if(error=="ci") {
+  if(length(levels(factor(x1)))==2){
+ci.data.frame0 <- ci.binomial(sum.data.frame[, ncol(sum.data.frame)], count.data.frame[, ncol(count.data.frame)], alpha=alpha)
+}else{
+ci.data.frame0 <- ci.numeric(means.data.frame[, ncol(means.data.frame)], count.data.frame[, ncol(count.data.frame)], sd.data.frame[, ncol(sd.data.frame)], alpha=alpha)
+}
+error.data.frame <- data.frame(count.data.frame[,-ncol(count.data.frame)],(ci.data.frame0[,ncol(ci.data.frame0)] - ci.data.frame0[,ncol(ci.data.frame0)-1])/2)
+colnames(error.data.frame) <- c(colnames(sum.data.frame)[1:(ncol(error.data.frame)-1)],"se")
+error.matrix <- xtabs(se ~ ., data=error.data.frame)
+  }   
+barplot(mean.matrix, beside=TRUE, ylim=c(0,1.01*max(mean.matrix+error.matrix)), ...) -> a
+segments(x0=a, x1=a, y0=mean.matrix, y1=mean.matrix + error.matrix, lwd=line.width, col=line.col)
+segments(x0=a-0.2, x1=a+.2, y0=mean.matrix+error.matrix, y1=mean.matrix+error.matrix, lwd=line.width, col=line.col)
+if(error=="ci"){
+segments(x0=a, x1=a, y0=mean.matrix, y1=mean.matrix - error.matrix, lwd=line.width, col=line.col)
+segments(x0=a-0.2, x1=a+.2, y0=mean.matrix- error.matrix, y1=mean.matrix- error.matrix, lwd=line.width, col=line.col) 
+}}
+if(FUN=="median"){
+  if(length(levels(factor(x1)))==2){
+  stop(paste("There are only two levels of \"", deparse(substitute(x)), "\",","\n","  The variable is not appropriate to aggregate with \"median\"", sep=""))
+  }
+  median.matrix <- tapply(x1, by, FUN="median", na.rm=TRUE)
+  p25.matrix <- tapply(x1, by, FUN="p25")
+  p75.matrix <- tapply(x1, by, FUN="p75")
+  midpoints.matrix <- median.matrix
+  barplot(median.matrix, beside=TRUE, ylim=c(0,1.01*max(p75.matrix)), ...) -> a
+  segments(x0=a, x1=a, y0=median.matrix, y1=p75.matrix, lwd=line.width, col=line.col)
+  segments(x0=a-0.2, x1=a+.2, y0=p75.matrix, y1=p75.matrix, lwd=line.width, col=line.col)
+  segments(x0=a, x1=a, y0=median.matrix, y1=p25.matrix, lwd=line.width, col=line.col)
+  segments(x0=a-0.2, x1=a+.2, y0=p25.matrix, y1=p25.matrix, lwd=line.width, col=line.col)
+}
+}else{
+time <- by
+if(any(xlim=="auto")) xlim <- range(by, na.rm=FALSE) 
+if(is.factor(time)) stop("'time' must not be factor")
+if(is.logical(x)) x <- x*1
+if(is.factor(x) | length(levels(x))==2) x <- as.numeric(unclass(x))-1
+
+if(length(error)==4) error <- "ci"
+  if(min(table(time), na.rm=TRUE) > 3){
+  bin.time <- length(na.omit(table(time)))-1
+  time1 <- time
+  }else{
+  if(length(bin.method)==2 & any(bin.method=="fixed")){
+  break.points <- seq(from=min(time, na.rm=TRUE), to=max(time, na.rm=TRUE), by=(max(time, na.rm=TRUE) - min(time, na.rm=TRUE))/(bin.time+1))
+  }else{
+  break.points <- quantile(time, prob=seq(0,1,1/(bin.time+1)))
+  }                     
+  midpoints <- ((break.points + c(NA, break.points[-length(break.points)]))[-1])/2
+  time.gr <- cut(time, breaks=break.points, include.lowest=TRUE)
+  tx <- cbind(1:(length(break.points)-1),midpoints)
+  time1 <- lookup(unclass(time.gr), tx)
+  }                                      
+
+if(!is.null(grouping)){
+if(legend=="auto")  {
+legend <- TRUE} else{legend <- legend}
+if(any(FUN1=="median")){
+data1 <- aggregate.numeric(x, by=list(grouping=grouping, time=time1), FUN="median", length.warning=FALSE)
+data1$p25.x <- as.data.frame.table(tapply(x, list(grouping=grouping, time=time1), FUN="p25"))[,3]
+data1$p75.x <- as.data.frame.table(tapply(x, list(grouping=grouping, time=time1), FUN="p75"))[,3]
+}else{
+data1 <- aggregate.numeric(x, by=list(grouping=grouping, time=time1), FUN=FUN1, length.warning=FALSE)
+}
+}else{
+if(any(FUN1=="median")){
+data1 <- aggregate.numeric(x, by=list(time=time1), FUN="median", length.warning=FALSE)
+data1$p25.x <- as.data.frame.table(tapply(x, list(time=time1), FUN="p25"))[,2]
+data1$p75.x <- as.data.frame.table(tapply(x, list(time=time1), FUN="p75"))[,2]
+}else{
+data1 <- aggregate.numeric(x, by=list(time=time1), FUN=FUN1, length.warning=FALSE)
+}
+}
+if(any(FUN1=="median")){
+  data1$mean.x <- data1$median.x
+  data1$lowerci <- data1$p25.x
+  data1$upperci <- data1$p75.x
+}else{
+if(error=="ci"){
+if(length(table(x))==2) {
+  data.ci <- ci.binomial(data1$sum.x, data1$count.x)
+}else{
+  data.ci <- ci.numeric(data1$mean.x, data1$count.x, data1$sd.x)
+}
+  data1$lowerci <- data.ci[,5]
+  data1$upperci <- data.ci[,6]
+}}
+
+if(any(ylim=="auto")) {
+if(error=="ci") {
+ylim0 <- c(min(data1$lowerci, na.rm=TRUE), max(data1$upperci, na.rm=TRUE))
+ylim <- ylim0 + c(-1,1)*0.2*(ylim0[2]-ylim0[1])
+}else{
+ylim0 <- c(min(data1$mean.x), max(data1$mean.x))
+ylim <- ylim0 + c(-1,1)*0.2*(ylim0[2]-ylim0[1])
+}
+}
+
+if(!is.null(grouping)){
+data1$grouping <- factor(data1$grouping)
+if(any(line.col=="auto")) line.col <- unclass(data1$grouping)
+for(i in 1:length(table(data1$grouping))){
+data1$time[data1$grouping==levels(data1$grouping)[i]] <- data1$time[data1$grouping==levels(data1$grouping)[i]] + (i-1)*0.03*(max(data1$time, na.rm=TRUE)-min(data1$time, na.rm=TRUE))/bin.time
+}
+followup.plot(id=data1$grouping, time=data1$time, outcome=data1$mean.x, ylim=ylim, legend=legend, lwd=line.width, xlim=xlim, line.col=line.col,  ...)
+if(error=="ci") segments(x0=data1$time, y0=data1$upperci , x1=data1$time, y1=data1$lowerci, col=line.col, lwd=line.width)
+}else{
+if(any(line.col=="auto")) line.col <- 1
+followup.plot(id=rep(1,nrow(data1)), time=data1$time, outcome=data1$mean.x, ylim=ylim, legend=FALSE, lwd=line.width, xlim=xlim, line.col =line.col, ...)
+if(error=="ci") segments(x0=data1$time, y0=data1$upperci , x1=data1$time, y1=data1$lowerci, lwd=line.width, col=line.col)
+}
+}
 }
 
 ## Confidence interval

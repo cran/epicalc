@@ -1,6 +1,6 @@
-\name{aggregate.numeric}
+\name{aggregate of Epicalc}
 \alias{aggregate.numeric}
-\title{Compute summary statistics of a numeric variable}
+\title{Summary statistics of a numeric variable by group}
 \description{Split the numeric variable into subsets, compute summary statistics for each, and return the results in a data frame.}
 \usage{
 \method{aggregate}{numeric}(x, by, FUN=c("count","sum","mean","median","sd","min","max"), 
@@ -12,7 +12,7 @@
        \item{FUN}{scalar functions to compute the summary statistics which can be applied to all data subsets.}
        \item{na.rm}{whether missing values will be removed during the computation of the statistics.}
        \item{length.warning}{show warning if x has any missing values}
-       \item{...}{additional arguments passed on to 'aggregate' in the stats package}
+       \item{...}{additional arguments passed on to 'aggregate'}
 }
 \details{This is the 'aggregate' method for objects inheriting from class 'numeric'.
 
@@ -31,6 +31,8 @@ Note that 'na.rm' set to TRUE by default to allow computation of descriptive sta
 The default value of the argument 'length.warning' is TRUE. A condition where 'x' has any missing value will be noticed, which is useful during data exploration. In further analysis, after missing values have been recognized, users may change 'length.warning' to FALSE to make the output look nicer. Both 'na.rm' and 'length.,warning' will have no effect if there are no missing values in x.
 
 'count' is an additional function specific to 'aggregate.numeric'. It displays the number of non-missing records in each subgroup.
+
+'aggregate.plot' makes use of the above function in drawing bar plots with error lines computed from 'aggregate.numeric'. When 'FUN="mean"', the automactic choice of error values is "se". Users can also choose "sd" or "ci". 'alpha' is effective only for 'error="ci"'.  If 'FUN="median"', the error values are inter-quartile range.
 }
 \author{Virasakdi Chongsuvivatwong
        \email{ <cvirasak@medicine.psu.ac.th>}
@@ -86,7 +88,6 @@ aggregate(year, by = list(HOSPITAL = hospital, STAGE = stage), length.warning=FA
 p05 <- function(x) quantile(x, prob=.05, na.rm=TRUE)
 p95 <- function(x) quantile(x, prob=.95, na.rm=TRUE)
 aggregate(year, by = list(HOSPITAL = hospital, STAGE = stage), FUN=c("p05", "p95"))
-
 }
 \keyword{database}
 
