@@ -2300,8 +2300,9 @@ else{if(dot.col=="auto") dot.col <- "blue"
             range.date <- difftime(summary(x)[6], summary(x)[1])
             numdate <- as.numeric(range.date)
             if (numdate < 1) {
-                stop(paste("Only one day ie.", format(x, "%Y-%m-%d"), 
-                  "not suitable for plotting"))
+                date.pretty <- seq(from = summary(x)[1]-1, to = summary(x)[6]+1, 
+                  by = "day")
+                format.time <- "%a%d%b"
             }
             if (numdate >= 1 & numdate < 10) {
                 date.pretty <- seq(from = summary(x)[1], to = summary(x)[6], 
@@ -2664,6 +2665,7 @@ else{if(dot.col=="auto") dot.col <- "blue"
         }
     }
 }
+
 
 #### Print summ result
 
@@ -4062,60 +4064,114 @@ rm(list=vector1, pos=1)
 } 
 
 ### Pyramid of age by sex
-pyramid <- function(age, sex, binwidth=5, inputTable=NULL, printTable=FALSE, 
-  percent=c("none","each","total"), decimal=3, ...){
-if(is.null(inputTable)){
-agegr <- cut(age, br = ( (min(age, na.rm=TRUE)%/%binwidth)
-:(max(age,na.rm=TRUE)%/%binwidth+ (max(age,na.rm=TRUE)%%binwidth>0))*binwidth), include.lowest=TRUE)
-	age.sex.table <- table(agegr, sex, deparse.level=1, dnn=list(substitute(age),substitute(sex)))
-if(ncol(table(agegr,sex))!=2)stop("There must be two genders")
-	age.sex.table.dimnames <- names(attr(age.sex.table,"dimnames"))
-}else{
-if(is.matrix(inputTable) | is.table(inputTable)){
-  age.sex.table <- inputTable
-	age.sex.table.dimnames <- names(attr(inputTable,"dimnames"))
-  }
+pyramid <- function (age, sex, binwidth = 5, inputTable = NULL, printTable = FALSE, 
+    percent = c("none", "each", "total"), col.gender = NULL, bar.label = "auto", decimal = 1, 
+    col = NULL, cex.bar.value = .8, cex.axis =1, main = "auto", cex.main = 1.2,...) 
+{
+    if(!is.null(col.gender)){
+    if(length(col.gender) != 2) stop("Argument 'col.gender' must be two colours or NULL.")
+    }
+    if(length(percent) == 3) {
+      percent <- "none"
+      if(bar.label == "auto"){
+      bar.label <- FALSE
+      }
+    }  
+    if (is.null(inputTable)) {
+        agegr <- cut(age, br = ((min(age, na.rm = TRUE)%/%binwidth):(max(age, 
+            na.rm = TRUE)%/%binwidth + (max(age, na.rm = TRUE)%%binwidth > 
+            0)) * binwidth), include.lowest = TRUE)
+        age.sex.table <- table(agegr, sex, deparse.level = 1, 
+            dnn = list(substitute(age), substitute(sex)))
+        if (ncol(table(agegr, sex)) != 2) 
+            stop("There must be two genders")
+        age.sex.table.dimnames <- names(attr(age.sex.table, "dimnames"))
+    }
+    else {
+        if (is.matrix(inputTable) | is.table(inputTable)) {
+            age.sex.table <- inputTable
+            age.sex.table.dimnames <- names(attr(inputTable, 
+                "dimnames"))
+        }
+    }
+    par(mfrow = c(1, 2))
+    old.par.mai <- c(0.95625, 0.76875, 0.76875, 0.39375)
+    left.par.mai <- old.par.mai
+    right.par.mai <- c(old.par.mai[1], old.par.mai[4], old.par.mai[3], 
+        old.par.mai[2])
+    column.names <- colnames(age.sex.table)
+    if (percent == "each") {
+        if(bar.label == "auto"){
+           bar.label <- TRUE
+        }
+        age.sex.table <- cbind(age.sex.table[, 1]/colSums(age.sex.table)[1] * 
+            100, age.sex.table[, 2]/colSums(age.sex.table)[2] * 
+            100)
+        colnames(age.sex.table) <- column.names
+        age.sex.table1 <- round(age.sex.table, digits = decimal)
+        table.header <- "(percentage of each gender)."
+    }
+    if (percent == "total") {
+        if(bar.label == "auto"){
+           bar.label <- TRUE
+        }
+        age.sex.table <- cbind(age.sex.table[, 1]/sum(age.sex.table), 
+            age.sex.table[, 2]/sum(age.sex.table)) * 100
+        colnames(age.sex.table) <- column.names
+        age.sex.table1 <- round(age.sex.table, digits = decimal)
+        table.header <- "(percentage of total population)."
+    }
+    if(!is.null(col.gender)){
+        col.1 <- col.gender[1]; col.2 <- col.gender[2]
+    }else{
+        col.1 <- col ; col.2 <- col
+    }
+    par(mai = left.par.mai)
+    label.points.left <- barplot(-age.sex.table[, 1], horiz = TRUE, 
+        yaxt = "n", xlab = colnames(age.sex.table)[1], xlim = c(-max(age.sex.table)*1.3, 
+            0), xaxt = "n", col = col.1, ...)
+    if(bar.label){
+    if(!any(percent == "none")){
+    text(y = label.points.left, x = - age.sex.table[,1], labels = round(age.sex.table[,1],1), pos = 2, cex = cex.bar.value)
+    }else{
+    text(y = label.points.left, x = - age.sex.table[,1], labels = age.sex.table[,1], pos = 2, cex = cex.bar.value)
+    }}
+    axis(side = 1, at = pretty(c(-max(age.sex.table), 0)), labels = -pretty(c(-max(age.sex.table), 
+        0)), cex.axis = cex.axis)
+    par(mai = right.par.mai)
+    label.points.right <- barplot(age.sex.table[, 2], horiz = TRUE, xlab = colnames(age.sex.table)[2], 
+        xlim = c(0, max(age.sex.table)*1.3), las = 1, cex.axis = cex.axis, col = col.2, ...)
+    if(bar.label){
+    if(!any(percent == "none")){
+      text(y = label.points.right, x = age.sex.table[,2], labels = round(age.sex.table[,2],1), pos = 4, cex = cex.bar.value)
+    }else{
+      text(y = label.points.right, x = age.sex.table[,2], labels = age.sex.table[,2], pos = 4, cex = cex.bar.value)
+    }}
+    par(mfrow = c(1, 1))
+    par(mai = old.par.mai)
+    if(!is.null(main)){
+    if(main=="auto"){
+      if(percent == "none") main.lab <- "frequency"
+      if(percent == "each") main.lab <- "percentage of each gender"
+      if(percent == "total") main.lab <- "percentage of total population"    
+      title(main = paste("Population pyramid in", main.lab), cex.main = cex.main)   
+    }else{
+      title(main = main)   
+    }}
+    if (printTable & is.null(inputTable)) {
+        cat("\n", "Tabulation of age by sex ")
+        if (!exists("age.sex.table1")) {
+            table.header <- "(frequency)."
+            age.sex.table1 <- age.sex.table
+        }
+        cat(table.header, "\n")
+        print.noquote(age.sex.table1)
+        cat("\n")
+    }
+    if (is.null(inputTable)) {
+        returns <- list(output.table = age.sex.table, ageGroup = agegr)
+    }
 }
-par(mfrow=c(1,2))
-old.par.mai <- c(0.95625, 0.76875, 0.76875, 0.39375)
-left.par.mai <- old.par.mai
-right.par.mai <- c(old.par.mai[1],old.par.mai[4],old.par.mai[3],old.par.mai[2])
-column.names <-colnames(age.sex.table)
-suppressWarnings(if(percent=="each"){
-  age.sex.table<-cbind(age.sex.table[,1]/colSums(age.sex.table)[1]*100,age.sex.table[,2]/colSums(age.sex.table)[2]*100)
-  column.names -> colnames(age.sex.table)
-    age.sex.table1 <- round(age.sex.table, digits=decimal)
-    table.header <- "(percentage of each sex)."
-})
-suppressWarnings(if(percent=="total"){
-  age.sex.table<-cbind(age.sex.table[,1]/sum(age.sex.table),age.sex.table[,2]/sum(age.sex.table))*100
-  column.names -> colnames(age.sex.table)
-    age.sex.table1 <- round(age.sex.table, digits=decimal)
-    table.header <- "(percentage of each sex)."
-})
-par(mai=left.par.mai)
-barplot(-age.sex.table[,1], horiz=TRUE,yaxt="n",xlab=colnames(age.sex.table)[1], xlim=c(-max(age.sex.table),0), xaxt="n", ...)-> label.points
-axis(side=1, at=pretty(c(-max(age.sex.table),0)),labels=-pretty(c(-max(age.sex.table),0)), ...)
-par(mai=right.par.mai)
-barplot(age.sex.table[,2], horiz=TRUE, xlab=colnames(age.sex.table)[2], xlim=c(0,max(age.sex.table)), las=1,  ...) 
-par(mfrow=c(1,1))
-par(mai=old.par.mai)
-
-if(printTable & is.null(inputTable)){
-  cat("\n","Tabulation of age by sex ")
-  if (!exists("age.sex.table1")) {
-    table.header <- "(frequency)."  
-    age.sex.table1 <- age.sex.table
-  }
-  cat(table.header, "\n")
-  print.noquote(age.sex.table1)
-  cat("\n")
-} 
-if(is.null(inputTable)){
-  returns <- list(output.table=age.sex.table, ageGroup=agegr) 
-  }
-}
-
 
 ## Followup plot
 followup.plot <- function (id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, 
@@ -4514,157 +4570,309 @@ if(length(FUN)==0)
 }
 
 ## Aggregate plot
-aggregatePlot <- function (x, by, grouping=NULL, FUN = c("mean", "median"),error=c("se","ci","sd","none"), alpha=0.05, line.width=1, line.col="auto", bin.time=4, bin.method=c("fixed","quantile"), legend="auto", xlim="auto", ylim="auto", ...)
+aggregate.plot <- function (x, by, grouping = NULL, FUN = c("mean", "median"), 
+    error = c("se", "ci", "sd", "none"), alpha = 0.05, line.width = 1, 
+    line.col = "auto", bin.time = 4, bin.method = c("fixed", 
+        "quantile"), legend = "auto", xlim = "auto", ylim = "auto", 
+    cap.size = 0.02, main = "auto", ...) 
 {
-p25 <- function(xx) quantile(xx, prob=.25, na.rm=TRUE)
-p75 <- function(xx) quantile(xx, prob=.75, na.rm=TRUE)
-if(length(FUN)==2 | any(FUN=="mean"))  {
-  FUN1 <- c("mean","sd","sum","count")
-}else{
-  FUN1 <- c("median","p25","p75")
+    p25 <- function(xx) quantile(xx, prob = 0.25, na.rm = TRUE)
+    p75 <- function(xx) quantile(xx, prob = 0.75, na.rm = TRUE)
+    if (length(FUN) == 2 | any(FUN == "mean")) {
+        FUN1 <- c("mean", "sd", "sum", "count")
+    }
+    else {
+        FUN1 <- c("median", "p25", "p75")
+    }
+    if (is.list(by)) {
+        if (legend == "auto") legend <- TRUE
+        if (any(line.col == "auto")) 
+            line.col <- 1
+        if (length(FUN) == 2) 
+            FUN <- "mean"
+        if (length(error) == 4 & error[1] == "se") 
+            error <- "se"
+        if (is.factor(x)) {
+            if (length(levels(x)) > 2) {
+                stop("'x' is factor with more than 2 levels, which cannot be aggregated")
+            }
+            else {
+                x1 <- as.numeric(unclass(x) - 1)
+            }
+        }
+        if (is.logical(x)) 
+            x1 <- x * 1
+        if (is.numeric(x)) 
+            x1 <- x                                  
+        if (FUN == "mean") {
+            sum.matrix <- tapply(x1, by, FUN = "sum", na.rm = TRUE)
+            mean.matrix <- tapply(x1, by, FUN = "mean", na.rm = TRUE)
+            sd.matrix <- tapply(x1, by, FUN = "sd", na.rm = TRUE)
+            count <- function(x) length(na.omit(x))
+            count.matrix <- tapply(x1, by, FUN = "count")
+            if (error == "se") {
+                error.matrix <- sd.matrix/sqrt(count.matrix)
+            }
+            if (error == "sd") {
+                error.matrix <- sd.matrix
+            }
+            sum.data.frame <- as.data.frame.table(sum.matrix)
+            means.data.frame <- as.data.frame.table(mean.matrix)
+            sd.data.frame <- as.data.frame.table(sd.matrix)
+            count.data.frame <- as.data.frame.table(count.matrix)
+            if (error == "ci") {
+                if (length(levels(factor(x1))) == 2) {
+                  ci.data.frame0 <- ci.binomial(sum.data.frame[, 
+                    ncol(sum.data.frame)], count.data.frame[, 
+                    ncol(count.data.frame)], alpha = alpha)
+                }
+                else {
+                  ci.data.frame0 <- ci.numeric(means.data.frame[, 
+                    ncol(means.data.frame)], count.data.frame[, 
+                    ncol(count.data.frame)], sd.data.frame[, 
+                    ncol(sd.data.frame)], alpha = alpha)
+                }
+                error.data.frame <- data.frame(count.data.frame[, 
+                  -ncol(count.data.frame)], (ci.data.frame0[, 
+                  ncol(ci.data.frame0)] - ci.data.frame0[, ncol(ci.data.frame0) - 
+                  1])/2)
+                colnames(error.data.frame) <- c(colnames(sum.data.frame)[1:(ncol(error.data.frame) - 
+                  1)], "se")
+                error.matrix <- xtabs(se ~ ., data = error.data.frame)
+            }
+            a <- barplot.default(mean.matrix, beside = TRUE, ylim = c(0, 
+                1.01 * max(mean.matrix + error.matrix)), legend = legend, bg = "white", ...)
+            segments(x0 = a, x1 = a, y0 = mean.matrix, y1 = mean.matrix + 
+                error.matrix, lwd = line.width, col = line.col)
+            segments(x0 = a - 0.2, x1 = a + 0.2, y0 = mean.matrix + 
+                error.matrix, y1 = mean.matrix + error.matrix, 
+                lwd = line.width, col = line.col)
+            if (error == "ci") {
+                segments(x0 = a, x1 = a, y0 = mean.matrix, y1 = mean.matrix - 
+                  error.matrix, lwd = line.width, col = line.col)
+                segments(x0 = a - 0.2, x1 = a + 0.2, y0 = mean.matrix - 
+                  error.matrix, y1 = mean.matrix - error.matrix, 
+                  lwd = line.width, col = line.col)
+            }
+        }
+        if (FUN == "median") {
+            if (length(levels(factor(x1))) == 2) {
+                stop(paste("There are only two levels of \"", 
+                  deparse(substitute(x)), "\",", "\n", "  The variable is not appropriate to aggregate with \"median\"", 
+                  sep = ""))
+            }
+            median.matrix <- tapply(x1, by, FUN = "median", na.rm = TRUE)
+            p25.matrix <- tapply(x1, by, FUN = "p25")
+            p75.matrix <- tapply(x1, by, FUN = "p75")
+            midpoints.matrix <- median.matrix
+            a <- barplot(median.matrix, beside = TRUE, ylim = c(0, 
+                1.01 * max(p75.matrix)), legend = legend, ...)
+            segments(x0 = a, x1 = a, y0 = median.matrix, y1 = p75.matrix, 
+                lwd = line.width, col = line.col)
+            segments(x0 = a - 0.2, x1 = a + 0.2, y0 = p75.matrix, 
+                y1 = p75.matrix, lwd = line.width, col = line.col)
+            segments(x0 = a, x1 = a, y0 = median.matrix, y1 = p25.matrix, 
+                lwd = line.width, col = line.col)
+            segments(x0 = a - 0.2, x1 = a + 0.2, y0 = p25.matrix, 
+                y1 = p25.matrix, lwd = line.width, col = line.col)
+        }
+    }
+    else {
+        time <- by
+        if (any(xlim == "auto")) 
+            xlim <- c(min(by, na.rm=TRUE),max(by, na.rm=TRUE))
+        xrange <- xlim[2]-xlim[1]
+        if (is.factor(time)) 
+            stop("'time' must not be factor")
+        if (is.logical(x)) 
+            x <- x * 1
+        if (is.factor(x) | length(levels(x)) == 2) 
+            x <- as.numeric(unclass(x)) - 1
+        if (length(error) == 1){
+            if (error != "none") {
+            error <- "ci"
+            }
+        }
+        if(length(error) == 4) error <- "ci"   
+        if (min(table(time), na.rm = TRUE) > 3) {
+            bin.time <- length(na.omit(table(time))) - 1
+            time1 <- time
+        }
+        else {
+            if (length(bin.method) == 2 | any(bin.method == "fixed")) {
+                break.points <- seq(from = min(time, na.rm = TRUE), 
+                  to = max(time, na.rm = TRUE), by = (max(time, 
+                    na.rm = TRUE) - min(time, na.rm = TRUE))/(bin.time + 
+                    1))
+            }
+            else {
+                break.points <- quantile(time, prob = seq(0, 
+                  1, 1/(bin.time + 1)), na.rm=TRUE)
+            }
+            midpoints <- ((break.points + c(NA, break.points[-length(break.points)]))[-1])/2
+            time.gr <- cut(time, breaks = break.points, include.lowest = TRUE)
+            tx <- cbind(1:(length(break.points) - 1), midpoints)
+            time1 <- lookup(unclass(time.gr), tx)
+        }
+        if (!is.null(grouping)) {
+            if (legend == "auto") {
+                legend <- TRUE
+            }
+            else {
+                legend <- legend
+            }
+            if (any(FUN1 == "median")) {
+                data1 <- aggregate.numeric(x, by = list(grouping = grouping, 
+                  time = time1), FUN = "median", length.warning = FALSE)
+                data1$p25.x <- as.data.frame.table(tapply(x, 
+                  list(grouping = grouping, time = time1), FUN = "p25"))[, 
+                  3]
+                data1$p75.x <- as.data.frame.table(tapply(x, 
+                  list(grouping = grouping, time = time1), FUN = "p75"))[, 
+                  3]
+            }
+            else {
+                data1 <- aggregate.numeric(x, by = list(grouping = grouping, 
+                  time = time1), FUN = FUN1, length.warning = FALSE)
+            }
+        }
+        else {
+            if (any(FUN1 == "median")) {
+                data1 <- aggregate.numeric(x, by = list(time = time1), 
+                  FUN = "median", length.warning = FALSE)
+                data1$p25.x <- as.data.frame.table(tapply(x, 
+                  list(time = time1), FUN = "p25"))[, 2]
+                data1$p75.x <- as.data.frame.table(tapply(x, 
+                  list(time = time1), FUN = "p75"))[, 2]
+            }
+            else {
+                data1 <- aggregate.numeric(x, by = list(time = time1), 
+                  FUN = FUN1, length.warning = FALSE)
+            }
+        }
+        if (any(FUN1 == "median")) {
+            data1$mean.x <- data1$median.x
+            data1$lowerci <- data1$p25.x
+            data1$upperci <- data1$p75.x
+        }
+        else {
+            if (error[1] == "ci") {
+                if (length(table(x)) == 2) {
+                  data.ci <- ci.binomial(data1$sum.x, data1$count.x)
+                }
+                else {
+                  data.ci <- ci.numeric(data1$mean.x, data1$count.x, 
+                    data1$sd.x)
+                }
+                data1$lowerci <- data.ci[, 5]
+                data1$upperci <- data.ci[, 6]
+            }
+        }
+        if (any(ylim == "auto")) {
+            if (error[1] == "ci") {
+                ylim0 <- c(min(data1$lowerci, na.rm = TRUE), 
+                  max(data1$upperci, na.rm = TRUE))
+                ylim <- ylim0 + c(-1, 1) * 0.2 * (ylim0[2] - 
+                  ylim0[1])
+            }
+            else {
+                ylim0 <- c(min(data1$mean.x), max(data1$mean.x))
+                ylim <- ylim0 + c(-1, 1) * 0.2 * (ylim0[2] - 
+                  ylim0[1])
+            }
+        }
+        if (!is.null(grouping)) {
+            data1$grouping <- factor(data1$grouping)
+            if (any(line.col == "auto")) 
+                line.col <- unclass(data1$grouping)
+            for (i in 1:length(table(data1$grouping))) {
+                data1$time[data1$grouping == levels(data1$grouping)[i]] <- data1$time[data1$grouping == 
+                  levels(data1$grouping)[i]] + (i - 1) * 0.03 * 
+                  (max(data1$time, na.rm = TRUE) - min(data1$time, 
+                    na.rm = TRUE))/bin.time
+            }
+            followup.plot(id = data1$grouping, time = data1$time, 
+                outcome = data1$mean.x, ylim = ylim, legend = legend, 
+                lwd = line.width, xlim = xlim, line.col = line.col, 
+                ...)
+            if (error == "ci") { 
+                segments(x0 = data1$time, y0 = data1$upperci, 
+                  x1 = data1$time, y1 = data1$lowerci, col = line.col, 
+                  lwd = line.width)
+                segments (x0 = data1$time - cap.size/2*xrange, y0 = data1$upperci, 
+                  x1 = data1$time + cap.size/2*xrange, y1 = data1$upperci, col = line.col, lwd = line.width)
+                segments (x0 = data1$time - cap.size/2*xrange, y0 = data1$lowerci, 
+                  x1 = data1$time + cap.size/2*xrange, y1 = data1$lowerci, col = line.col, lwd = line.width)
+             }     
+        }
+        else {
+            if (any(line.col == "auto")) 
+                line.col <- 1
+            followup.plot(id = rep(1, nrow(data1)), time = data1$time, 
+                outcome = data1$mean.x, ylim = ylim, legend = FALSE, 
+                lwd = line.width, xlim = xlim, line.col = line.col, 
+                ...)
+            if (error == "ci") { 
+                segments(x0 = data1$time, y0 = data1$upperci, 
+                  x1 = data1$time, y1 = data1$lowerci, lwd = line.width, 
+                  col = line.col)
+                segments (x0 = data1$time - cap.size/2*xrange, y0 = data1$upperci, 
+                  x1 = data1$time + cap.size/2*xrange, y1 = data1$upperci, col = line.col, lwd = line.width)
+                segments (x0 = data1$time - cap.size/2*xrange, y0 = data1$lowerci, 
+                  x1 = data1$time + cap.size/2*xrange, y1 = data1$lowerci, col = line.col, lwd = line.width)
+            }
+        }
+    }
+    if (!is.null(main)) {
+        if (main == "auto"){
+            if(FUN[1] == "mean") {
+                main.first <- "Mean"
+                if (error[1] == "ci" & length(table(x)==2)) 
+                if ((max(x, na.rm=TRUE)*1) !=1 ){
+                    main.first <- paste("Probability of", 
+                        deparse(substitute(x)), "=", max(x, na.rm=TRUE))
+                    }else{
+                    main.first <- paste("Probability of", 
+                        deparse(substitute(x)))
+                }
+            }else{
+                main.first <- "Median"    
+            }
+            main.and <- paste("and",error[1])
+            if (!is.list(by) & main.and == "and se") main.and <- NULL
+            if (main.first == "Median") {
+                if (error[1] == "none") {
+                    main.and <- NULL
+                }else{
+                    main.and <- "and IQR"
+                }
+            }else{    
+                if (error[1] == "ci") {
+                    main.and <- paste("and ", as.character((1-alpha)*100),"% CI", sep="" )
+                }
+                if (error[1] == "none") main.and <- NULL
+            }
+            if(is.list(by)){
+                main.by1 <- names(by)[1]
+            }else{
+                main.by1 <- deparse(substitute(by))
+            }
+            if (is.null(grouping)){
+                main.by2 <- NULL
+            }else{
+                main.by2 <- paste("and", deparse(substitute(grouping)))
+            }
+            if(error[1] == "ci" & length(table(x)==2)){
+                title(main = paste(main.first, main.and,
+                    "by", main.by1, main.by2), cex.main = 1.2)
+                }else{
+                title(main = paste(main.first, main.and, "of", 
+                    deparse(substitute(x)), "by", main.by1, main.by2), cex.main = 1.2)
+                }
+        }
+    }    
 }
-if(is.list(by)){
-if(any(line.col=="auto")) line.col <- 1
-if(length(FUN)==2) FUN <- "mean"
-if(length(error)==4 & error[1]=="se") error <- "se"
-if(is.factor(x)){
-if(length(levels(x)) > 2) {
-  stop("'x' is factor with more than 2 levels, which cannot be aggregated")
-  }else{
-  x1 <- as.numeric(unclass(x) - 1)
-  }
-}
-if(is.logical(x)) x1 <- x * 1
-if(is.numeric(x)) x1 <- x
-if(FUN == "mean"){
-sum.matrix <- tapply(x1, by, FUN="sum", na.rm=TRUE)
-mean.matrix <- tapply(x1, by, FUN="mean", na.rm=TRUE)
-sd.matrix <- tapply(x1, by, FUN="sd", na.rm=TRUE)
-count <- function(x) length(na.omit(x))
-count.matrix <- tapply(x1, by, FUN="count")
-if(error=="se"){ 
-error.matrix <- sd.matrix/sqrt(count.matrix)
-}
-if(error=="sd"){
-error.matrix <- sd.matrix
-}
-sum.data.frame <- as.data.frame.table(sum.matrix)
-means.data.frame <- as.data.frame.table(mean.matrix)
-sd.data.frame <- as.data.frame.table(sd.matrix)
-count.data.frame <- as.data.frame.table(count.matrix)
-if(error=="ci") {
-  if(length(levels(factor(x1)))==2){
-ci.data.frame0 <- ci.binomial(sum.data.frame[, ncol(sum.data.frame)], count.data.frame[, ncol(count.data.frame)], alpha=alpha)
-}else{
-ci.data.frame0 <- ci.numeric(means.data.frame[, ncol(means.data.frame)], count.data.frame[, ncol(count.data.frame)], sd.data.frame[, ncol(sd.data.frame)], alpha=alpha)
-}
-error.data.frame <- data.frame(count.data.frame[,-ncol(count.data.frame)],(ci.data.frame0[,ncol(ci.data.frame0)] - ci.data.frame0[,ncol(ci.data.frame0)-1])/2)
-colnames(error.data.frame) <- c(colnames(sum.data.frame)[1:(ncol(error.data.frame)-1)],"se")
-error.matrix <- xtabs(se ~ ., data=error.data.frame)
-  }   
-barplot(mean.matrix, beside=TRUE, ylim=c(0,1.01*max(mean.matrix+error.matrix)), ...) -> a
-segments(x0=a, x1=a, y0=mean.matrix, y1=mean.matrix + error.matrix, lwd=line.width, col=line.col)
-segments(x0=a-0.2, x1=a+.2, y0=mean.matrix+error.matrix, y1=mean.matrix+error.matrix, lwd=line.width, col=line.col)
-if(error=="ci"){
-segments(x0=a, x1=a, y0=mean.matrix, y1=mean.matrix - error.matrix, lwd=line.width, col=line.col)
-segments(x0=a-0.2, x1=a+.2, y0=mean.matrix- error.matrix, y1=mean.matrix- error.matrix, lwd=line.width, col=line.col) 
-}}
-if(FUN=="median"){
-  if(length(levels(factor(x1)))==2){
-  stop(paste("There are only two levels of \"", deparse(substitute(x)), "\",","\n","  The variable is not appropriate to aggregate with \"median\"", sep=""))
-  }
-  median.matrix <- tapply(x1, by, FUN="median", na.rm=TRUE)
-  p25.matrix <- tapply(x1, by, FUN="p25")
-  p75.matrix <- tapply(x1, by, FUN="p75")
-  midpoints.matrix <- median.matrix
-  barplot(median.matrix, beside=TRUE, ylim=c(0,1.01*max(p75.matrix)), ...) -> a
-  segments(x0=a, x1=a, y0=median.matrix, y1=p75.matrix, lwd=line.width, col=line.col)
-  segments(x0=a-0.2, x1=a+.2, y0=p75.matrix, y1=p75.matrix, lwd=line.width, col=line.col)
-  segments(x0=a, x1=a, y0=median.matrix, y1=p25.matrix, lwd=line.width, col=line.col)
-  segments(x0=a-0.2, x1=a+.2, y0=p25.matrix, y1=p25.matrix, lwd=line.width, col=line.col)
-}
-}else{
-time <- by
-if(any(xlim=="auto")) xlim <- range(by, na.rm=FALSE) 
-if(is.factor(time)) stop("'time' must not be factor")
-if(is.logical(x)) x <- x*1
-if(is.factor(x) | length(levels(x))==2) x <- as.numeric(unclass(x))-1
 
-if(length(error)==4) error <- "ci"
-  if(min(table(time), na.rm=TRUE) > 3){
-  bin.time <- length(na.omit(table(time)))-1
-  time1 <- time
-  }else{
-  if(length(bin.method)==2 & any(bin.method=="fixed")){
-  break.points <- seq(from=min(time, na.rm=TRUE), to=max(time, na.rm=TRUE), by=(max(time, na.rm=TRUE) - min(time, na.rm=TRUE))/(bin.time+1))
-  }else{
-  break.points <- quantile(time, prob=seq(0,1,1/(bin.time+1)))
-  }                     
-  midpoints <- ((break.points + c(NA, break.points[-length(break.points)]))[-1])/2
-  time.gr <- cut(time, breaks=break.points, include.lowest=TRUE)
-  tx <- cbind(1:(length(break.points)-1),midpoints)
-  time1 <- lookup(unclass(time.gr), tx)
-  }                                      
-
-if(!is.null(grouping)){
-if(legend=="auto")  {
-legend <- TRUE} else{legend <- legend}
-if(any(FUN1=="median")){
-data1 <- aggregate.numeric(x, by=list(grouping=grouping, time=time1), FUN="median", length.warning=FALSE)
-data1$p25.x <- as.data.frame.table(tapply(x, list(grouping=grouping, time=time1), FUN="p25"))[,3]
-data1$p75.x <- as.data.frame.table(tapply(x, list(grouping=grouping, time=time1), FUN="p75"))[,3]
-}else{
-data1 <- aggregate.numeric(x, by=list(grouping=grouping, time=time1), FUN=FUN1, length.warning=FALSE)
-}
-}else{
-if(any(FUN1=="median")){
-data1 <- aggregate.numeric(x, by=list(time=time1), FUN="median", length.warning=FALSE)
-data1$p25.x <- as.data.frame.table(tapply(x, list(time=time1), FUN="p25"))[,2]
-data1$p75.x <- as.data.frame.table(tapply(x, list(time=time1), FUN="p75"))[,2]
-}else{
-data1 <- aggregate.numeric(x, by=list(time=time1), FUN=FUN1, length.warning=FALSE)
-}
-}
-if(any(FUN1=="median")){
-  data1$mean.x <- data1$median.x
-  data1$lowerci <- data1$p25.x
-  data1$upperci <- data1$p75.x
-}else{
-if(error=="ci"){
-if(length(table(x))==2) {
-  data.ci <- ci.binomial(data1$sum.x, data1$count.x)
-}else{
-  data.ci <- ci.numeric(data1$mean.x, data1$count.x, data1$sd.x)
-}
-  data1$lowerci <- data.ci[,5]
-  data1$upperci <- data.ci[,6]
-}}
-
-if(any(ylim=="auto")) {
-if(error=="ci") {
-ylim0 <- c(min(data1$lowerci, na.rm=TRUE), max(data1$upperci, na.rm=TRUE))
-ylim <- ylim0 + c(-1,1)*0.2*(ylim0[2]-ylim0[1])
-}else{
-ylim0 <- c(min(data1$mean.x), max(data1$mean.x))
-ylim <- ylim0 + c(-1,1)*0.2*(ylim0[2]-ylim0[1])
-}
-}
-
-if(!is.null(grouping)){
-data1$grouping <- factor(data1$grouping)
-if(any(line.col=="auto")) line.col <- unclass(data1$grouping)
-for(i in 1:length(table(data1$grouping))){
-data1$time[data1$grouping==levels(data1$grouping)[i]] <- data1$time[data1$grouping==levels(data1$grouping)[i]] + (i-1)*0.03*(max(data1$time, na.rm=TRUE)-min(data1$time, na.rm=TRUE))/bin.time
-}
-followup.plot(id=data1$grouping, time=data1$time, outcome=data1$mean.x, ylim=ylim, legend=legend, lwd=line.width, xlim=xlim, line.col=line.col,  ...)
-if(error=="ci") segments(x0=data1$time, y0=data1$upperci , x1=data1$time, y1=data1$lowerci, col=line.col, lwd=line.width)
-}else{
-if(any(line.col=="auto")) line.col <- 1
-followup.plot(id=rep(1,nrow(data1)), time=data1$time, outcome=data1$mean.x, ylim=ylim, legend=FALSE, lwd=line.width, xlim=xlim, line.col =line.col, ...)
-if(error=="ci") segments(x0=data1$time, y0=data1$upperci , x1=data1$time, y1=data1$lowerci, lwd=line.width, col=line.col)
-}
-}
-}
 
 ## Confidence interval
 ci <- function(x, ...){

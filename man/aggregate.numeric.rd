@@ -1,4 +1,4 @@
-\name{aggregate of Epicalc}
+\name{aggregate numeric}
 \alias{aggregate.numeric}
 \title{Summary statistics of a numeric variable by group}
 \description{Split the numeric variable into subsets, compute summary statistics for each, and return the results in a data frame.}
