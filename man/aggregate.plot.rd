@@ -68,6 +68,7 @@ boxplot(size ~ treat + Time, col = 3:4, las=3)
 data(BP)
 use(BP); des()
 age <- as.numeric(as.Date("2008-01-01") - birthdate)/365.25
+pack()
 tab1(age, graph=FALSE) 
 aggregate.plot(x=sbp, by=age)
 aggregate.plot(x=sbp, by=age, grouping=saltadd)
@@ -79,13 +80,16 @@ aggregate.plot(x=sbp, by=age, grouping=saltadd, line.width=3,
 title(main="Effect of age and salt adding on SBP", xlab="years",ylab="mm.Hg")
 points(age[saltadd=="no"], sbp[saltadd=="no"], col="blue")
 points(age[saltadd=="yes"], sbp[saltadd=="yes"], pch=18, col="green")
-rm(age)
 
 ## For a binary outcome variable
 data(Outbreak)
 use(Outbreak)
 recode(vars = age, old.value = 99, new.value = NA)
 aggregate.plot(diarrhea, by=age, bin.time=5)
+diarrhea1 <- factor(diarrhea)
+levels(diarrhea1) <- c("no","yes")
+pack()
+aggregate.plot(diarrhea1, by=age, bin.time=5)
 
 }
 \keyword{database}

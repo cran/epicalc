@@ -4585,6 +4585,7 @@ aggregate.plot <- function (x, by, grouping = NULL, FUN = c("mean", "median"),
         FUN1 <- c("median", "p25", "p75")
     }
     if (is.list(by)) {
+        if (length(by) > 2) stop ("The argument 'by' cannot have more than 2 elements!")
         if (legend == "auto") legend <- TRUE
         if (any(line.col == "auto")) 
             line.col <- 1
@@ -4684,10 +4685,19 @@ aggregate.plot <- function (x, by, grouping = NULL, FUN = c("mean", "median"),
         xrange <- xlim[2]-xlim[1]
         if (is.factor(time)) 
             stop("'time' must not be factor")
-        if (is.logical(x)) 
-            x <- x * 1
-        if (is.factor(x) | length(levels(x)) == 2) 
+#        if (is.logical(x)) 
+#            x <- x*1
+        x.is.factor.2.levels <- is.factor(x) & (length(levels(factor(x)))==2)
+        x.is.01 <- length(table(x))==2 & names(table(x))[1]=="0" & names(table(x))[2] == "1"
+        if (is.factor(x)){
+            if(length(levels(x)) == 2){ 
+            name.x <- deparse(substitute(x))
+            levels.x.2 <- levels(factor(x))[2]
             x <- as.numeric(unclass(x)) - 1
+        }else{
+        stop("Not possible to aggregrate.plot factor of more than 2 levels")
+        }
+        }
         if (length(error) == 1){
             if (error != "none") {
             error <- "ci"
@@ -4757,7 +4767,7 @@ aggregate.plot <- function (x, by, grouping = NULL, FUN = c("mean", "median"),
         }
         else {
             if (error[1] == "ci") {
-                if (length(table(x)) == 2) {
+                if (x.is.factor.2.levels | is.logical(x) | x.is.01) {
                   data.ci <- ci.binomial(data1$sum.x, data1$count.x)
                 }
                 else {
@@ -4827,14 +4837,22 @@ aggregate.plot <- function (x, by, grouping = NULL, FUN = c("mean", "median"),
         if (main == "auto"){
             if(FUN[1] == "mean") {
                 main.first <- "Mean"
-                if (error[1] == "ci" & length(table(x)==2)) 
-                if ((max(x, na.rm=TRUE)*1) !=1 ){
-                    main.first <- paste("Probability of", 
-                        deparse(substitute(x)), "=", max(x, na.rm=TRUE))
+                if(length(levels(factor(x))) == 2){
+                if(is.logical(x)){
+                main.first <- paste("Prob. of ",deparse(substitute(x)))
+                }else{
+                if (x.is.factor.2.levels){
+                    main.first <- paste("Prob. of", 
+                        name.x, "=", levels.x.2)
                     }else{
-                    main.first <- paste("Probability of", 
+                if(names(table(x))[2] == "1"){
+                    main.first <- paste("Prob. of", 
                         deparse(substitute(x)))
-                }
+                }else{    
+                    main.first <- paste("Mean of", deparse(substitute(x)))
+                    }
+                    }
+                }}
             }else{
                 main.first <- "Median"    
             }
@@ -4862,7 +4880,7 @@ aggregate.plot <- function (x, by, grouping = NULL, FUN = c("mean", "median"),
             }else{
                 main.by2 <- paste("and", deparse(substitute(grouping)))
             }
-            if(error[1] == "ci" & length(table(x)==2)){
+            if((error[1] == "ci") & (length(table(x))==2)){
                 title(main = paste(main.first, main.and,
                     "by", main.by1, main.by2), cex.main = 1.2)
                 }else{
@@ -4872,6 +4890,7 @@ aggregate.plot <- function (x, by, grouping = NULL, FUN = c("mean", "median"),
         }
     }    
 }
+
 
 
 ## Confidence interval
