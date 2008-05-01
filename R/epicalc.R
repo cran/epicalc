@@ -4174,13 +4174,19 @@ pyramid <- function (age, sex, binwidth = 5, inputTable = NULL, printTable = FAL
 }
 
 ## Followup plot
-followup.plot <- function (id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, 
-    line.col = "auto", stress = NULL, stress.labels = FALSE, label.col = 1, stress.col = NULL, 
-    stress.width = NULL, stress.type = NULL, lwd = 1,...) 
+followup.plot <- 
+function (id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, legend.site = "topright",
+    lty = "auto", line.col = "auto", stress = NULL, stress.labels = FALSE, 
+    label.col = 1, stress.col = NULL, stress.width = NULL, stress.type = NULL, 
+    lwd = 1, ...) 
 {
-
-    plot(time, outcome, xlab = " ", ylab = " ", type = "n", lwd = lwd, ...)
-id1 <- id; time1 <- time; by1 <- by; outcome1 <- outcome
+    plot(time, outcome, xlab = " ", ylab = " ", type = "n", lwd = lwd, 
+        ...)
+    if(any(lty == "auto")) lty <- rep(1, length(id))
+    id1 <- id
+    time1 <- time
+    by1 <- by
+    outcome1 <- outcome
     if (is.null(n.of.lines)) {
         if (!is.null(by)) {
             id <- id[order(id1, time1, by1)]
@@ -4189,20 +4195,21 @@ id1 <- id; time1 <- time; by1 <- by; outcome1 <- outcome
             outcome <- outcome[order(id1, time1, by1)]
             by <- by[order(id1, time1, by1)]
             by.factor <- factor(by)
-            if(any(line.col=="auto")) {
-            line.col <- 1:length(levels(by.factor))
-              }
+            if (any(line.col == "auto")) {
+                line.col <- 1:length(levels(by.factor))
+            }
             for (i in 1:length(levels(by.factor))) {
                 for (j in 1:length(levels(id.factor))) {
-                  lines(time[id.factor == levels(id.factor)[j] & by.factor == levels(by.factor)[i]], 
-                  outcome[id.factor == levels(id.factor)[j] & by.factor == levels(by.factor)[i]], 
+                  lines(time[id.factor == levels(id.factor)[j] & 
+                    by.factor == levels(by.factor)[i]], outcome[id.factor == 
+                    levels(id.factor)[j] & by.factor == levels(by.factor)[i]], 
                     col = line.col[i], lty = i, lwd = lwd)
                 }
             }
             if (legend) {
-                legend("topright", legend = levels(factor(by)), 
-                  col = line.col, bg = "white", 
-                  lty = 1:length(levels(factor(by))), lwd = lwd)
+                legend(x=legend.site, legend = levels(factor(by)), 
+                  col = line.col, bg = "white", lty = 1:length(levels(factor(by))), 
+                  lwd = lwd)
             }
         }
         else {
@@ -4210,18 +4217,18 @@ id1 <- id; time1 <- time; by1 <- by; outcome1 <- outcome
             id.factor <- factor(id)
             time <- time[order(id1, time1)]
             outcome <- outcome[order(id1, time1)]
-           
             if (length(levels(factor(id))) < 8) {
-              if(any(line.col=="auto")) line.col <- 1:length(levels(id.factor) )  
+                if (any(line.col == "auto")) 
+                  line.col <- 1:length(levels(id.factor))
                 for (j in 1:length(levels(id.factor))) {
                   lines(time[id.factor == levels(id.factor)[j]], 
                     outcome[id.factor == levels(id.factor)[j]], 
-                    col = line.col[j], lwd = lwd)
-                  }
+                    col = line.col[j], lwd = lwd, lty = lty[j])
+                }
                 if (legend) {
-                  legend("topright", legend = levels(factor(id[order(id1)])), 
-                    col = line.col[1:length(levels(factor(id)))], bg = "white", 
-                    lty = 1, lwd = lwd)
+                  legend(x=legend.site, legend = levels(factor(id[order(id1)])), 
+                    col = line.col[1:length(levels(factor(id)))], 
+                    bg = "white", lty = lty, lwd = lwd)
                 }
             }
             else {
@@ -4232,7 +4239,8 @@ id1 <- id; time1 <- time; by1 <- by; outcome1 <- outcome
                       col = j, lwd = lwd)
                   }
                   else {
-                    if(any(line.col=="auto")) line.col <- "blue"
+                    if (any(line.col == "auto")) 
+                      line.col <- "blue"
                     lines(time[id.factor == levels(id.factor)[j]], 
                       outcome[id.factor == levels(id.factor)[j]], 
                       col = line.col, lwd = lwd)
@@ -4247,11 +4255,12 @@ id1 <- id; time1 <- time; by1 <- by; outcome1 <- outcome
         if (!is.null(by)) {
             id <- id[order(id1, time1, by1)]
             time <- time[order(id1, time1, by1)]
-            outcome <- outcome [order(id1, time1, by1)]
+            outcome <- outcome[order(id1, time1, by1)]
             by <- by[order(id1, time1, by1)]
             id.factor <- factor(id)
             by.factor <- factor(by)
-            if(any(line.col=="auto")) line.col <- 1:length(levels(by.factor))
+            if (any(line.col == "auto")) 
+                line.col <- 1:length(levels(by.factor))
             for (i in 1:length(levels(by.factor))) {
                 for (j in 1:length(levels(id.factor))) {
                   lines(time[id.factor == levels(id.factor)[j] & 
@@ -4262,9 +4271,10 @@ id1 <- id; time1 <- time; by1 <- by; outcome1 <- outcome
                 }
             }
             if (legend) {
-                legend("topright", legend = levels(factor(by)), 
-                  col = line.col[1:length(levels(factor(by)))], lty = 1:length(levels(factor(by))), 
-                  bg = "white", lwd = lwd)
+                legend(x=legend.site, legend = levels(factor(by)), 
+                  col = line.col[1:length(levels(factor(by)))], 
+                  lty = 1:length(levels(factor(by))), bg = "white", 
+                  lwd = lwd)
             }
         }
         else {
@@ -4280,9 +4290,9 @@ id1 <- id; time1 <- time; by1 <- by; outcome1 <- outcome
                     col = j, lwd = lwd)
                 }
                 else {
-                if(any(line.col=="auto")) {
-                  line.col <- "blue"
-                }
+                  if (any(line.col == "auto")) {
+                    line.col <- "blue"
+                  }
                   lines(time[id.factor == levels(id.factor)[j]] * 
                     order.id.selected[j], outcome[id.factor == 
                     levels(id.factor)[j]] * order.id.selected[j], 
@@ -4292,17 +4302,17 @@ id1 <- id; time1 <- time; by1 <- by; outcome1 <- outcome
         }
     }
     for (j in 1:length(levels(id.factor))) {
-                  text(time[id.factor == levels(id.factor)[j]],
-                  outcome[id.factor ==  levels(id.factor)[j]], 
-                    labels = j, col = any(stress.labels*stress %in% j)*label.col)
+        text(time[id.factor == levels(id.factor)[j]], outcome[id.factor == 
+            levels(id.factor)[j]], labels = j, col = any(stress.labels * 
+            stress %in% j) * label.col)
     }
     for (j in 1:length(levels(id.factor))) {
-                  lines(time[id.factor == levels(id.factor)[j]],
-                  outcome[id.factor ==  levels(id.factor)[j]], 
-                    col = any(stress %in% j)*stress.col,
-                    lwd = stress.width, lty = stress.type)
+        lines(time[id.factor == levels(id.factor)[j]], outcome[id.factor == 
+            levels(id.factor)[j]], col = any(stress %in% j) * 
+            stress.col, lwd = stress.width, lty = stress.type)
     }
 }
+
 
 ## Subsetting .data
 keepData <- function (dataFrame = .data, sample = NULL, exclude = NULL, subset, select, 
@@ -4570,11 +4580,12 @@ if(length(FUN)==0)
 }
 
 ## Aggregate plot
-aggregate.plot <- function (x, by, grouping = NULL, FUN = c("mean", "median"), 
-    error = c("se", "ci", "sd", "none"), alpha = 0.05, line.width = 1, 
+aggregate.plot <- 
+function (x, by, grouping = NULL, FUN = c("mean", "median"), 
+    error = c("se", "ci", "sd", "none"), alpha = 0.05, lwd = 1, lty = "auto",
     line.col = "auto", bin.time = 4, bin.method = c("fixed", 
-        "quantile"), legend = "auto", xlim = "auto", ylim = "auto", 
-    cap.size = 0.02, main = "auto", ...) 
+        "quantile"), legend = "auto", legend.site = "topright", legend.bg = "white", xlim = "auto", ylim = "auto", 
+    bar.col = "auto", cap.size = 0.02, lagging = 0.007, main = "auto", ...) 
 {
     p25 <- function(xx) quantile(xx, prob = 0.25, na.rm = TRUE)
     p75 <- function(xx) quantile(xx, prob = 0.75, na.rm = TRUE)
@@ -4585,8 +4596,11 @@ aggregate.plot <- function (x, by, grouping = NULL, FUN = c("mean", "median"),
         FUN1 <- c("median", "p25", "p75")
     }
     if (is.list(by)) {
-        if (length(by) > 2) stop ("The argument 'by' cannot have more than 2 elements!")
-        if (legend == "auto") legend <- TRUE
+        if (any(bar.col == "auto"))  bar.col <- grey.colors(length(levels(factor(by[[1]])))) 
+        if (length(by) > 2) 
+            stop("The argument 'by' cannot have more than 2 elements!")
+        if (legend == "auto") 
+            legend <- TRUE
         if (any(line.col == "auto")) 
             line.col <- 1
         if (length(FUN) == 2) 
@@ -4604,7 +4618,7 @@ aggregate.plot <- function (x, by, grouping = NULL, FUN = c("mean", "median"),
         if (is.logical(x)) 
             x1 <- x * 1
         if (is.numeric(x)) 
-            x1 <- x                                  
+            x1 <- x
         if (FUN == "mean") {
             sum.matrix <- tapply(x1, by, FUN = "sum", na.rm = TRUE)
             mean.matrix <- tapply(x1, by, FUN = "mean", na.rm = TRUE)
@@ -4641,19 +4655,20 @@ aggregate.plot <- function (x, by, grouping = NULL, FUN = c("mean", "median"),
                   1)], "se")
                 error.matrix <- xtabs(se ~ ., data = error.data.frame)
             }
-            a <- barplot.default(mean.matrix, beside = TRUE, ylim = c(0, 
-                1.01 * max(mean.matrix + error.matrix)), legend = legend, bg = "white", ...)
+            a <- barplot.default(mean.matrix, beside = TRUE, 
+                ylim = c(0, 1.01 * max(mean.matrix + error.matrix)), 
+                col = bar.col, ...)
             segments(x0 = a, x1 = a, y0 = mean.matrix, y1 = mean.matrix + 
-                error.matrix, lwd = line.width, col = line.col)
+                error.matrix, lwd = lwd, col = line.col)
             segments(x0 = a - 0.2, x1 = a + 0.2, y0 = mean.matrix + 
                 error.matrix, y1 = mean.matrix + error.matrix, 
-                lwd = line.width, col = line.col)
+                lwd = lwd, col = line.col)
             if (error == "ci") {
                 segments(x0 = a, x1 = a, y0 = mean.matrix, y1 = mean.matrix - 
-                  error.matrix, lwd = line.width, col = line.col)
+                  error.matrix, lwd = lwd, col = line.col)
                 segments(x0 = a - 0.2, x1 = a + 0.2, y0 = mean.matrix - 
                   error.matrix, y1 = mean.matrix - error.matrix, 
-                  lwd = line.width, col = line.col)
+                  lwd = lwd, col = line.col)
             }
         }
         if (FUN == "median") {
@@ -4667,43 +4682,49 @@ aggregate.plot <- function (x, by, grouping = NULL, FUN = c("mean", "median"),
             p75.matrix <- tapply(x1, by, FUN = "p75")
             midpoints.matrix <- median.matrix
             a <- barplot(median.matrix, beside = TRUE, ylim = c(0, 
-                1.01 * max(p75.matrix)), legend = legend, ...)
+                1.01 * max(p75.matrix)), col = bar.col, ...)
             segments(x0 = a, x1 = a, y0 = median.matrix, y1 = p75.matrix, 
-                lwd = line.width, col = line.col)
+                lwd = lwd, col = line.col)
             segments(x0 = a - 0.2, x1 = a + 0.2, y0 = p75.matrix, 
-                y1 = p75.matrix, lwd = line.width, col = line.col)
+                y1 = p75.matrix, lwd = lwd, col = line.col)
             segments(x0 = a, x1 = a, y0 = median.matrix, y1 = p25.matrix, 
-                lwd = line.width, col = line.col)
+                lwd = lwd, col = line.col)
             segments(x0 = a - 0.2, x1 = a + 0.2, y0 = p25.matrix, 
-                y1 = p25.matrix, lwd = line.width, col = line.col)
+                y1 = p25.matrix, lwd = lwd, col = line.col)
+        }
+        if (legend) {
+        legend (x = legend.site, legend = levels(factor(by[[1]])), fill = bar.col, bg = legend.bg)
         }
     }
     else {
+    if (any(lty == "auto")) lty <- rep(1, length(table(factor(by))))
         time <- by
         if (any(xlim == "auto")) 
-            xlim <- c(min(by, na.rm=TRUE),max(by, na.rm=TRUE))
-        xrange <- xlim[2]-xlim[1]
+            xlim <- c(min(by, na.rm = TRUE), max(by, na.rm = TRUE))
+        xrange <- xlim[2] - xlim[1]
         if (is.factor(time)) 
             stop("'time' must not be factor")
-#        if (is.logical(x)) 
-#            x <- x*1
-        x.is.factor.2.levels <- is.factor(x) & (length(levels(factor(x)))==2)
-        x.is.01 <- length(table(x))==2 & names(table(x))[1]=="0" & names(table(x))[2] == "1"
-        if (is.factor(x)){
-            if(length(levels(x)) == 2){ 
-            name.x <- deparse(substitute(x))
-            levels.x.2 <- levels(factor(x))[2]
-            x <- as.numeric(unclass(x)) - 1
-        }else{
-        stop("Not possible to aggregrate.plot factor of more than 2 levels")
-        }
-        }
-        if (length(error) == 1){
-            if (error != "none") {
-            error <- "ci"
+        x.is.factor.2.levels <- is.factor(x) & (length(levels(factor(x))) == 
+            2)
+        x.is.01 <- length(table(x)) == 2 & names(table(x))[1] == 
+            "0" & names(table(x))[2] == "1"
+        if (is.factor(x)) {
+            if (length(levels(x)) == 2) {
+                name.x <- deparse(substitute(x))
+                levels.x.2 <- levels(factor(x))[2]
+                x <- as.numeric(unclass(x)) - 1
+            }
+            else {
+                stop("Not possible to aggregrate.plot factor of more than 2 levels")
             }
         }
-        if(length(error) == 4) error <- "ci"   
+        if (length(error) == 1) {
+            if (error != "none") {
+                error <- "ci"
+            }
+        }
+        if (length(error) == 4) 
+            error <- "ci"
         if (min(table(time), na.rm = TRUE) > 3) {
             bin.time <- length(na.omit(table(time))) - 1
             time1 <- time
@@ -4717,7 +4738,7 @@ aggregate.plot <- function (x, by, grouping = NULL, FUN = c("mean", "median"),
             }
             else {
                 break.points <- quantile(time, prob = seq(0, 
-                  1, 1/(bin.time + 1)), na.rm=TRUE)
+                  1, 1/(bin.time + 1)), na.rm = TRUE)
             }
             midpoints <- ((break.points + c(NA, break.points[-length(break.points)]))[-1])/2
             time.gr <- cut(time, breaks = break.points, include.lowest = TRUE)
@@ -4797,100 +4818,126 @@ aggregate.plot <- function (x, by, grouping = NULL, FUN = c("mean", "median"),
                 line.col <- unclass(data1$grouping)
             for (i in 1:length(table(data1$grouping))) {
                 data1$time[data1$grouping == levels(data1$grouping)[i]] <- data1$time[data1$grouping == 
-                  levels(data1$grouping)[i]] + (i - 1) * 0.03 * 
-                  (max(data1$time, na.rm = TRUE) - min(data1$time, 
-                    na.rm = TRUE))/bin.time
+                  levels(data1$grouping)[i]] + (i - 1) * lagging * xrange
             }
             followup.plot(id = data1$grouping, time = data1$time, 
-                outcome = data1$mean.x, ylim = ylim, legend = legend, 
-                lwd = line.width, xlim = xlim, line.col = line.col, 
+                outcome = data1$mean.x, ylim = ylim, legend = legend, legend.site = legend.site, 
+                lwd = lwd, xlim = xlim, line.col = line.col, lty = lty, 
                 ...)
-            if (error == "ci") { 
+            if (error == "ci") {
                 segments(x0 = data1$time, y0 = data1$upperci, 
                   x1 = data1$time, y1 = data1$lowerci, col = line.col, 
-                  lwd = line.width)
-                segments (x0 = data1$time - cap.size/2*xrange, y0 = data1$upperci, 
-                  x1 = data1$time + cap.size/2*xrange, y1 = data1$upperci, col = line.col, lwd = line.width)
-                segments (x0 = data1$time - cap.size/2*xrange, y0 = data1$lowerci, 
-                  x1 = data1$time + cap.size/2*xrange, y1 = data1$lowerci, col = line.col, lwd = line.width)
-             }     
+                  lwd = lwd)
+                segments(x0 = data1$time - cap.size/2 * xrange, 
+                  y0 = data1$upperci, x1 = data1$time + cap.size/2 * 
+                    xrange, y1 = data1$upperci, col = line.col, 
+                  lwd = lwd)
+                segments(x0 = data1$time - cap.size/2 * xrange, 
+                  y0 = data1$lowerci, x1 = data1$time + cap.size/2 * 
+                    xrange, y1 = data1$lowerci, col = line.col, 
+                  lwd = lwd)
+            }
+        if (legend) {
+        legend (x = legend.site, legend = levels(factor(grouping)), 
+            lwd = lwd, col = line.col, bg = legend.bg, lty = lty)
+        }
         }
         else {
             if (any(line.col == "auto")) 
                 line.col <- 1
             followup.plot(id = rep(1, nrow(data1)), time = data1$time, 
                 outcome = data1$mean.x, ylim = ylim, legend = FALSE, 
-                lwd = line.width, xlim = xlim, line.col = line.col, 
+                lwd = lwd, xlim = xlim, line.col = line.col, legend.site = legend.site, 
                 ...)
-            if (error == "ci") { 
+            if (error == "ci") {
                 segments(x0 = data1$time, y0 = data1$upperci, 
-                  x1 = data1$time, y1 = data1$lowerci, lwd = line.width, 
+                  x1 = data1$time, y1 = data1$lowerci, lwd = lwd, 
                   col = line.col)
-                segments (x0 = data1$time - cap.size/2*xrange, y0 = data1$upperci, 
-                  x1 = data1$time + cap.size/2*xrange, y1 = data1$upperci, col = line.col, lwd = line.width)
-                segments (x0 = data1$time - cap.size/2*xrange, y0 = data1$lowerci, 
-                  x1 = data1$time + cap.size/2*xrange, y1 = data1$lowerci, col = line.col, lwd = line.width)
+                segments(x0 = data1$time - cap.size/2 * xrange, 
+                  y0 = data1$upperci, x1 = data1$time + cap.size/2 * 
+                    xrange, y1 = data1$upperci, col = line.col, 
+                  lwd = lwd)
+                segments(x0 = data1$time - cap.size/2 * xrange, 
+                  y0 = data1$lowerci, x1 = data1$time + cap.size/2 * 
+                    xrange, y1 = data1$lowerci, col = line.col, 
+                  lwd = lwd)
             }
         }
     }
     if (!is.null(main)) {
-        if (main == "auto"){
-            if(FUN[1] == "mean") {
+        if (main == "auto") {
+            if (FUN[1] == "mean") {
                 main.first <- "Mean"
-                if(length(levels(factor(x))) == 2){
-                if(is.logical(x)){
-                main.first <- paste("Prob. of ",deparse(substitute(x)))
-                }else{
-                if (x.is.factor.2.levels){
-                    main.first <- paste("Prob. of", 
-                        name.x, "=", levels.x.2)
-                    }else{
-                if(names(table(x))[2] == "1"){
-                    main.first <- paste("Prob. of", 
-                        deparse(substitute(x)))
-                }else{    
-                    main.first <- paste("Mean of", deparse(substitute(x)))
+                if (length(levels(factor(x))) == 2) {
+                  if (is.logical(x)) {
+                    main.first <- paste("Prob. of ", deparse(substitute(x)))
+                  }
+                  else {
+                    if (x.is.factor.2.levels) {
+                      main.first <- paste("Prob. of", name.x, 
+                        "=", levels.x.2)
                     }
+                    else {
+                      if (names(table(x))[2] == "1") {
+                        main.first <- paste("Prob. of", deparse(substitute(x)))
+                      }
+                      else {
+                        main.first <- paste("Mean of", deparse(substitute(x)))
+                      }
                     }
-                }}
-            }else{
-                main.first <- "Median"    
+                  }
+                }
             }
-            main.and <- paste("and",error[1])
-            if (!is.list(by) & main.and == "and se") main.and <- NULL
+            else {
+                main.first <- "Median"
+            }
+            main.and <- paste("and", error[1])
+            if (!is.list(by) & main.and == "and se") 
+                main.and <- NULL
             if (main.first == "Median") {
                 if (error[1] == "none") {
-                    main.and <- NULL
-                }else{
-                    main.and <- "and IQR"
+                  main.and <- NULL
                 }
-            }else{    
-                if (error[1] == "ci") {
-                    main.and <- paste("and ", as.character((1-alpha)*100),"% CI", sep="" )
+                else {
+                  main.and <- "and IQR"
                 }
-                if (error[1] == "none") main.and <- NULL
             }
-            if(is.list(by)){
+            else {
+                if (error[1] == "ci") {
+                  main.and <- paste("and ", as.character((1 - 
+                    alpha) * 100), "% CI", sep = "")
+                }
+                if (error[1] == "none") 
+                  main.and <- NULL
+            }
+            if (is.list(by)) {
+                if (length(names(by))==2) {
+                main.by1 <- paste(names(by)[1], "and", names(by)[2])
+                }else{
                 main.by1 <- names(by)[1]
-            }else{
+                }
+            }
+            else {
                 main.by1 <- deparse(substitute(by))
             }
-            if (is.null(grouping)){
+            if (is.null(grouping)) {
                 main.by2 <- NULL
-            }else{
+            }
+            else {
                 main.by2 <- paste("and", deparse(substitute(grouping)))
             }
-            if((error[1] == "ci") & (length(table(x))==2)){
-                title(main = paste(main.first, main.and,
-                    "by", main.by1, main.by2), cex.main = 1.2)
-                }else{
+            if ((error[1] == "ci") & (length(table(x)) == 2)) {
+                title(main = paste(main.first, main.and, "by", 
+                  main.by1, main.by2), cex.main = 1.2)
+            }
+            else {
                 title(main = paste(main.first, main.and, "of", 
-                    deparse(substitute(x)), "by", main.by1, main.by2), cex.main = 1.2)
-                }
+                  deparse(substitute(x)), "by", main.by1, main.by2), 
+                  cex.main = 1.2)
+            }
         }
-    }    
+    }
 }
-
 
 
 ## Confidence interval

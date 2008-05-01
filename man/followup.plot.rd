@@ -3,10 +3,10 @@
 \title{Longitudinal followup plot}
 \description{Plot longitudinal values of individuals with or without stratification}
 \usage{
-followup.plot(id, time, outcome, by = NULL, n.of.lines = NULL, 
-legend = TRUE, line.col = "auto", stress = NULL, 
-stress.labels = FALSE, label.col = 1, stress.col = NULL, 
-stress.width = NULL, stress.type = NULL, lwd = 1, ...)
+followup.plot(id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, 
+    legend.site = "topright", lty = "auto", line.col = "auto", 
+    stress = NULL, stress.labels = FALSE, label.col = 1, stress.col = NULL, 
+    stress.width = NULL, stress.type = NULL, lwd = 1, ...) 
 }
 \arguments{
 	\item{id}{idenfication variable of the same subject being followed up}
@@ -15,6 +15,8 @@ stress.width = NULL, stress.type = NULL, lwd = 1, ...)
 	\item{by}{stratification factor (if any)}
 	\item{n.of.lines}{number of lines (or number of subjects in the data frame) randomly chosen for drawing}
 	\item{legend}{whether a legend will be automatically included in the graph}
+  \item{legend.site}{a single character string indicating location of the legend. See details of ?legend}
+  \item{lty}{type of the "time" lines. See 'lty' in ?par}
 	\item{line.col}{line colour(s) for non-stratified plot}
   \item{stress}{subset of ids to draw stressed lines}
   \item{stress.labels}{whether the stressed lines should be labelled}
@@ -44,6 +46,7 @@ Values for 'stress.col', 'stress.width' and 'stress.type', if not NULL, should f
 \examples{
 use(Indometh)
 followup.plot(Subject, time, conc)
+followup.plot(Subject, time, conc, lty=1:6, line.col=rep("black",6))
 
 library(MASS)
 use(Sitka)
