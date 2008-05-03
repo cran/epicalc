@@ -8,7 +8,7 @@
     lty = "auto", line.col = "auto", bin.time = 4, bin.method = c("fixed", 
         "quantile"), legend = "auto", legend.site = "topright", 
     legend.bg = "white", xlim = "auto", ylim = "auto", bar.col = "auto", 
-    cap.size = 0.02, lagging = 0.007, main = "auto", ...) 
+    cap.size = 0.02, lagging = 0.007, main = "auto", return.output = FALSE, ...) 
 }
 \arguments{
        \item{x}{a numeric variable}
@@ -31,7 +31,8 @@
        \item{cap.size}{relative length of terminating cross-line compared to the range of X axis}
        \item{lagging}{lagging value of the error bars of two adjecant categories at the same time point. The value is result of dividing this distance with the range of X axis}
        \item{main}{main title of the graph}
-       \item{...}{additional graphic parameters passed on to other methods}
+       \item{return.output}{whether the dataframe resulted from aggregate should be returned}
+       \item{...}{additional graphic parameters passed on to other methods} 
 }
 \details{This function plots aggregated values of 'x' by a factor (barplot) or a continuous variable (time line graph).
 
@@ -45,7 +46,7 @@ Both types of plots have error arguments. Choices are 'se' and 'sd' for the bar 
 
 If 'legend = TRUE" (by default), a legend box is automatically drawn on the "topright" corner of the graph. This character string can be changed to others such as, "topleft", "center", etc (see examples).
 
-'cap.size' can be zero, if there is not error bar cap needed.
+'cap.size' can be assigned to zero to remove the error bar cap.
 }
 \author{Virasakdi Chongsuvivatwong
        \email{ <cvirasak@medicine.psu.ac.th>}
@@ -55,6 +56,7 @@ If 'legend = TRUE" (by default), a legend box is automatically drawn on the "top
 data(Compaq)
 use(Compaq)                                       
 aggregate.plot(x=year, by=list(HOSPITAL = hospital, STAGE = stage))
+aggregate.plot(x=year, by=list(HOSPITAL = hospital, STAGE = stage), return = TRUE)
 aggregate.plot(x=year, by=list(HOSPITAL = hospital, STAGE = stage), error="sd")
 aggregate.plot(x=year, by=list(HOSPITAL = hospital, STAGE = stage), error="ci")
 # moving legend and chaging bar colours
@@ -70,7 +72,7 @@ data(Sitka, package="MASS")
 use(Sitka)
 tab1(Time, graph=FALSE) # all frequencies > 3
 aggregate.plot(x=size, by=Time)
-aggregate.plot(x=size, by=Time, cap.size = 0) # Note change of error bars
+aggregate.plot(x=size, by=Time, cap.size = 0) # Note no cap on error bars
 aggregate.plot(x=size, by=Time, grouping=treat)
 # For with black and white presentation
 aggregate.plot(x=size, by=Time, grouping=treat, lty = 1:2, line.col = c(1,1))
@@ -96,7 +98,7 @@ title(main="Effect of age and salt adding on SBP", xlab="years",ylab="mm.Hg")
 points(age[saltadd=="no"], sbp[saltadd=="no"], col="blue")
 points(age[saltadd=="yes"], sbp[saltadd=="yes"], pch=18, col="green")
 
-## For a binary outcome variable
+## For a binary outcome variable, aggregrated probabilities is computed
 data(Outbreak)
 use(Outbreak)
 recode(vars = age, old.value = 99, new.value = NA)
