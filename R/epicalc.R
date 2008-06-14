@@ -3446,7 +3446,7 @@ tab1 <- function (x0, decimal = 1, sort.group = c(FALSE, "decreasing",
     "increasing"), cum.percent = !any(is.na(x0)), graph = TRUE, 
     missing = TRUE, bar.values = c("frequency", "percent", "none"), 
     horiz = FALSE, cex = 1, cex.names = 1, main = "auto", xlab = "auto", 
-    ylab = "auto", col = "auto", ...) 
+    ylab = "auto", col = "auto", gen.ind.vars = FALSE, ...) 
 {
     if (graph) {
         var1 <- deparse(substitute(x0))
@@ -3616,11 +3616,20 @@ tab1 <- function (x0, decimal = 1, sort.group = c(FALSE, "decreasing",
         options(warn = -1)
         first.line <- paste(deparse(substitute(x0)), ":", attr(get(search()[2]), 
             "var.labels")[attr(get(search()[2]), "names") == 
-            deparse(substitute(x0))], "\n", "\n")
+            deparse(substitute(x0))], "\n")
         options(warn = TRUE)
     }
     else {
         first.line <- paste(deparse(substitute(x0)), ":", "\n")
+    }
+    if (gen.ind.vars) {
+        if(!is.factor(x0)) {
+          warning(paste(as.character(substitute(x0)),"is not factor. Indicator variables have not been generated!"))
+        }else{  
+        mod.mat <- model.matrix (~ x0 -1)
+        for (i in 1:ncol(mod.mat)) {
+        assign (paste(deparse(substitute(x0)),substr(colnames(mod.mat)[i],3,nchar(colnames(mod.mat)[i])), sep=""), mod.mat[,i], pos=1)
+        }}
     }
     returns <- list(first.line = first.line, output.table = output)
     class(returns) <- c("tab1", "list")
@@ -3632,7 +3641,7 @@ tab1 <- function (x0, decimal = 1, sort.group = c(FALSE, "decreasing",
 ### Print tab1 results
 print.tab1 <- function(x, ...)
 {
-cat(x$first.line, "\n")
+cat(x$first.line)
 print(x$output.table, justify="right")
 }
 
@@ -4315,11 +4324,11 @@ function (id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, legend
 
 
 ## Subsetting .data
-keepData <- function (dataFrame = .data, sample = NULL, exclude = NULL, subset, select, 
-    drop = FALSE, ...) 
+keepData <-
+function (dataFrame = .data, sample = NULL, exclude = NULL, subset, 
+    select, drop = FALSE, refactor = c("subset.vars", "all", "none"), ...) 
 {
-
-dataName <- as.character(substitute(dataFrame))
+    dataName <- as.character(substitute(dataFrame))
     data1 <- dataFrame
     datalabel <- attr(data1, "datalabel")
     val.labels <- attr(data1, "val.labels")
@@ -4330,77 +4339,94 @@ dataName <- as.character(substitute(dataFrame))
             1 | (trunc(sample) != sample) & sample > 1) {
             stop("Size of sample must be a positive integer")
         }
-        if(sample < 1) {
-            sample0 <- sample; 
-            sample <- trunc(sample*nrow(data1))
-            cat("Keep only ", round(sample0*100,2),"% or ", sample, " of the total ", nrow(data1), " records","\n", sep="")
-            }
-        dataFrame <- dataFrame[sample(nrow(dataFrame), sample), ]
+        if (sample < 1) {
+            sample0 <- sample
+            sample <- trunc(sample * nrow(data1))
+            cat("Keep only ", round(sample0 * 100, 2), "% or ", 
+                sample, " of the total ", nrow(data1), " records", 
+                "\n", sep = "")
+        }
+        dataFrame <- dataFrame[sample(nrow(dataFrame), sample), 
+            ]
         data1 <- dataFrame
         attr(data1, "datalabel") <- paste(datalabel, "(subset)")
         attr(data1, "val.labels") <- val.labels
         attr(data1, "var.labels") <- var.labels
         attr(data1, "label.table") <- label.table
     }
-        if (missing(subset)) 
-            r <- TRUE
-        else {
-            e <- substitute(subset)
-            r <- eval(e, dataFrame, parent.frame())
-            if (!is.logical(r)) 
-                stop("'subset' must evaluate to logical")
-            r <- r & !is.na(r)
-        }
-        if (missing(select)) {
-            vars <- TRUE
-            if (suppressWarnings(!is.null(exclude))) {
-                nl <- as.list(1:ncol(dataFrame))
-                names(nl) <- names(dataFrame)
-                if ((length(grep(pattern = "[*]", as.character(substitute(exclude)))) == 
-                  1) | (length(grep(pattern = "[?]", as.character(substitute(exclude)))) == 
-                  1)) {
-                  vars <- -grep(pattern = glob2rx(as.character(substitute(exclude))), 
-                    names(dataFrame))
-                  if (length(vars) == 0) {
-                    stop(paste(as.character(substitute(exclude)), 
-                      "not matchable with any variable name."))
-                  }
-                }
-                else {
-                  vars <- -eval(substitute(exclude), nl, parent.frame())
-                }
-            }
-        }
-        else {
+    if (missing(subset)) 
+        r <- TRUE
+    else {
+        e <- substitute(subset)
+        r <- eval(e, dataFrame, parent.frame())
+        if (!is.logical(r)) 
+            stop("'subset' must evaluate to logical")
+        r <- r & !is.na(r)
+    }
+    if (missing(select)) {
+        vars <- TRUE
+        if (suppressWarnings(!is.null(exclude))) {
             nl <- as.list(1:ncol(dataFrame))
             names(nl) <- names(dataFrame)
-            if ((length(grep(pattern = "[*]", as.character(substitute(select)))) == 
-                1) | (length(grep(pattern = "[?]", as.character(substitute(select)))) == 
+            if ((length(grep(pattern = "[*]", as.character(substitute(exclude)))) == 
+                1) | (length(grep(pattern = "[?]", as.character(substitute(exclude)))) == 
                 1)) {
-                vars <- grep(pattern = glob2rx(as.character(substitute(select))), 
+                vars <- -grep(pattern = glob2rx(as.character(substitute(exclude))), 
                   names(dataFrame))
                 if (length(vars) == 0) {
-                  stop(paste(select, "not matchable with any variable name."))
+                  stop(paste(as.character(substitute(exclude)), 
+                    "not matchable with any variable name."))
                 }
             }
             else {
-                vars <- eval(substitute(select), nl, parent.frame())
+                vars <- -eval(substitute(exclude), nl, parent.frame())
             }
         }
-        data1 <- dataFrame[r, vars, drop = drop]
-        attr(data1, "datalabel") <- paste(datalabel, "(subset)")
-        attr(data1, "val.labels") <- val.labels[vars]
-        attr(data1, "var.labels") <- var.labels[vars]
-        attr(data1, "label.table") <- label.table[is.element(names(label.table), 
-            val.labels[vars])]
-
-    assign(dataName, data1, pos=1)
-    if(is.element(dataName, search())){
-      detach(pos=which(search() %in% dataName))
-      attach(data1, name=dataName, warn.conflicts = FALSE)
+    }
+    else {
+        nl <- as.list(1:ncol(dataFrame))
+        names(nl) <- names(dataFrame)
+        if ((length(grep(pattern = "[*]", as.character(substitute(select)))) == 
+            1) | (length(grep(pattern = "[?]", as.character(substitute(select)))) == 
+            1)) {
+            vars <- grep(pattern = glob2rx(as.character(substitute(select))), 
+                names(dataFrame))
+            if (length(vars) == 0) {
+                stop(paste(select, "not matchable with any variable name."))
+            }
+        }
+        else {
+            vars <- eval(substitute(select), nl, parent.frame())
+        }
+    }
+    data1 <- dataFrame[r, vars, drop = drop]
+    attr(data1, "datalabel") <- paste(datalabel, "(subset)")
+    attr(data1, "val.labels") <- val.labels[vars]
+    attr(data1, "var.labels") <- var.labels[vars]
+    attr(data1, "label.table") <- label.table[is.element(names(label.table), 
+        val.labels[vars])]
+    if(length(refactor)==3) refactor <- "subset.vars"
+    if(!missing(subset) & refactor == "all") {
+        for(i in 1:ncol(data1)) {
+            if(class(data1[,i]) == "factor") {
+                data1[,i] <- factor(data1[,i])
+            }
+        }
+    }
+    if(!missing(subset) & refactor == "subset.vars") {
+        for(i in 1:ncol(data1)) {
+            if(length(grep(names(data1)[i], deparse(substitute(subset)))) >0 
+                & class(data1[,i]) == "factor") {
+                    data1[,i] <- factor(data1[,i])
+            }
+        }
+    }
+    assign(dataName, data1, pos = 1)
+    if (is.element(dataName, search())) {
+        detach(pos = which(search() %in% dataName))
+        attach(data1, name = dataName, warn.conflicts = FALSE)
     }
 }
-
 
 
 ## Adjusted mean, proportion and rate

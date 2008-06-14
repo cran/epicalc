@@ -2,13 +2,13 @@
 \alias{tab1}
 \alias{print.tab1}
 \title{One-way tabulation}
-\description{One-way tabulation with automatic bar chart}
+\description{One-way tabulation with automatic bar chart and optional indicator variables generation}
 \usage{
 tab1(x0, decimal = 1, sort.group = c(FALSE, "decreasing", 
     "increasing"), cum.percent = !any(is.na(x0)), graph = TRUE, 
     missing = TRUE, bar.values = c("frequency", "percent", "none"), 
     horiz = FALSE, cex = 1, cex.names = 1, main = "auto", xlab = "auto", 
-    ylab = "auto", col = "auto", ...) 
+    ylab = "auto", col = "auto", gen.ind.vars = FALSE, ...) 
 
 \method{print}{tab1}(x, ...)
 }
@@ -27,6 +27,7 @@ tab1(x0, decimal = 1, sort.group = c(FALSE, "decreasing",
   \item{xlab}{label of X axis}
   \item{ylab}{label of Y axis}
   \item{col}{colours of the bar}
+  \item{gen.ind.vars}{whether the indicator variables will be generated}
   \item{x}{object of class 'tab1' obtained from saving 'tab1' results}
   \item{...}{further arguments passed to or used by other methods}
 }
@@ -35,12 +36,14 @@ tab1(x0, decimal = 1, sort.group = c(FALSE, "decreasing",
 The bar chart is vertical unless the number of categories is more than six \strong{and} any of the labels of the levels consists of more than 8 characters \strong{or} 'horiz' is set to TRUE.
 
 For table has less than categories, the automatic colour is "grey". Otherwise, the graph will be colourful. The argument, 'col' can be overwritten by the user.
+
+The argument 'gen.ind.vars' is effective only if x0 is factor.
 }
 \value{Output table}
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
 }
-\seealso{'tabpct', 'label.var', 'table', 'barplot'}
+\seealso{'tabpct', 'label.var', 'table', 'barplot', 'model.matrix'}
 \examples{
 tab1(state.division)
 tab1(state.division, bar.values ="percent")
@@ -76,5 +79,21 @@ print(a)
 a # same results
 attributes(a)
 a$output.table
+class(a$output.table) # "matrix" 
+# 'a$output.table' is ready for exporting to a .csv file by 
+# write.csv(a$output.table, file="table1.csv") 
+# "table1.csv" is now readable by a spreadsheet program
+
+
+# Generating indicator variables
+data(Compaq)
+use(Compaq)
+des()
+# Illustration of indicator variables
+head(cbind( ses, model.matrix(~ses -1)))
+tab1(ses, gen=TRUE) # indicator variables of 'ses' have been generated
+ls() # Four new names starting with 'ses'
+pack()
+des()
 }
 \keyword{aplot}

@@ -4,7 +4,7 @@
 \description{Keep only subset of variables or records in the default data frame '.data'}
 \usage{                                       
 keepData (dataFrame = .data, sample=NULL, exclude=NULL, subset, select, 
-		 drop = FALSE, ...)  
+		 drop = FALSE, refactor = c("subset.vars", "all", "none"), ...)  
 }
 \arguments{
 	\item{dataFrame}{a data frame}
@@ -13,6 +13,7 @@ keepData (dataFrame = .data, sample=NULL, exclude=NULL, subset, select,
 	\item{subset}{a logical expression indicating elements or rows to keep: missing values are taken as false.}
 	\item{select}{an expression indicating columns to select from a data frame.} 
 	\item{drop}{passed on to [ indexing operator.} 
+	\item{refactor}{after subsetting, whether the levels of variable(s) with zero count should be removed}
 	\item{...}{further arguments to be passed to or from other methods.} 
 }
 \details{'keepData' is the Epicalc version of 'subset.data.frame' which is a standard R function. It reduces the data frame to the specified subset and updates the search path accordingly.
@@ -20,6 +21,8 @@ keepData (dataFrame = .data, sample=NULL, exclude=NULL, subset, select,
 Using 'keepData' will retain descriptions of the data, and the remaining variables, ready to be used by other Epicalc functions that can exploit them such as 'des', 'codebook', 'summ', 'tab1' etc ...
 
 Since this command only affects the specified data frame (usually '.data'), any new variables created as free vectors will not be changed. The difference in length of variables may occur from the 'subset' argument. To avoid this, 'pack' or 'label.var' should be used to incoporate any relevant free vectors into the default data frame, '.data' so that all variables can be subsetted simultaneously, thus reducing the complications of the difference in variable lengths.
+
+The argument 'refactor' is effective only when the argument 'subset' is specified. By default, 'refactor' is set to "subset.vars" indicating that the levels of the variables used in subset criteria will be revised to eliminate levels with zero count. If refactor="all", all factor variables in the dataFrame will be affected.
 }
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
@@ -56,6 +59,15 @@ bmi <- wt/(ht/100)^2
 label.var(bmi, "Body mass index (kg/m2)")
 keepData(subset = ht > 120)
 .data # Which record is missing?
+
+use(Compaq)
+des()
+tab1(ses)
+ses1 <- ses 
+pack()
+keepData(subset=ses=="Rich")
+tab1(ses)
+tab1(ses1) # 'refactor' set to 'subset.vars' thus levels of ses1 not affected
 
 ## Reduction of variables
 ## Removal of consecutive variables
