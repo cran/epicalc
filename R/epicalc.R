@@ -3982,18 +3982,31 @@ if(pack){
 ### Recoding a variable or set of variables for the same final value
 recode <- function (vars, old.value, new.value, dataFrame = .data) 
 {
-        data1 <- dataFrame
-        nl <- as.list(1:ncol(data1))
-        names(nl) <- names(data1)
-            var.order <- eval(substitute(vars), nl, parent.frame())
-    if (is.numeric(old.value) | is.integer(old.value) | any(class(data1[,var.order]) == 
-        "POSIXt")) {
-        data1[, var.order][data1[, var.order] == old.value] <- new.value
+    data1 <- dataFrame
+    nl <- as.list(1:ncol(data1))
+    names(nl) <- names(data1)
+    var.order <- eval(substitute(vars), nl, parent.frame())
+    if (exists(names(data1)[var.order], where=1, inherit=FALSE)) warning ("Name(s) of vars duplicates with an object outside the dataFrame.")
+    tx <- cbind(old.value, new.value)
+    if (is.numeric(old.value) | is.integer(old.value) | any(class(data1[, 
+        var.order]) == "POSIXt")) {
+        if(length(old.value)==1){
+            data1[, var.order][data1[, var.order] == old.value] <- new.value
+        }else{
+            if(length(old.value) != length(new.value) & length(new.value) != 1) stop("Lengths of old and new values are not equal")
+            for (i in var.order) {
+                data1[, i] <- lookup(data1[, i, drop=TRUE], tx)
+            }
+        }
     }
     else for (i in var.order) {
         if (is.factor(data1[, i])) {
+            if (length(old.value) != length(new.value) & length(new.value) !=1) stop("Lengths of old.value and new.value are not equal")
             if (is.character(old.value)) {
-                levels(data1[, i])[levels(data1[, i]) == old.value] <- new.value
+            if (any(!is.element(old.value, levels(data1[, i])))) warning(paste("The old.value is/are not element of levels of '", names(data1)[i], "'", sep=""))
+            for (j in 1:nrow(tx)) {
+                levels(data1[, i])[levels(data1[, i])==tx[j, 1]] <- tx[j, 2]
+            }
             }
         }
     }
@@ -4009,12 +4022,14 @@ recode <- function (vars, old.value, new.value, dataFrame = .data)
             }
         }
     }
-    assign(as.character(substitute(dataFrame)), data1, pos=1)
-    if(is.element(as.character(substitute(dataFrame)), search())){
-      detach(pos=which(search() %in% as.character(substitute(dataFrame))))
-      attach(data1, name=as.character(substitute(dataFrame)), warn.conflicts = FALSE)
+    assign(as.character(substitute(dataFrame)), data1, pos = 1)
+    if (is.element(as.character(substitute(dataFrame)), search())) {
+        detach(pos = which(search() %in% as.character(substitute(dataFrame))))
+        attach(data1, name = as.character(substitute(dataFrame)), 
+            warn.conflicts = FALSE)
     }
 }
+
 
 ### Multinomial summary display
 mlogit.display <- function(multinom.model, decimal=2, alpha=.05) {
