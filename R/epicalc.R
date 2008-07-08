@@ -3980,34 +3980,59 @@ if(pack){
 }
 
 ### Recoding a variable or set of variables for the same final value
-recode <- function (vars, old.value, new.value, dataFrame = .data) 
+recode <- 
+function (vars, old.value, new.value, dataFrame = .data) 
 {
     data1 <- dataFrame
     nl <- as.list(1:ncol(data1))
     names(nl) <- names(data1)
     var.order <- eval(substitute(vars), nl, parent.frame())
-    if (exists(names(data1)[var.order], where=1, inherit=FALSE)) warning ("Name(s) of vars duplicates with an object outside the dataFrame.")
+    if (exists(names(data1)[var.order], where = 1, inherit = FALSE)) 
+        warning("Name(s) of vars duplicates with an object outside the dataFrame.")
     tx <- cbind(old.value, new.value)
     if (is.numeric(old.value) | is.integer(old.value) | any(class(data1[, 
         var.order]) == "POSIXt")) {
-        if(length(old.value)==1){
+        if (length(old.value) == 1) {
             data1[, var.order][data1[, var.order] == old.value] <- new.value
-        }else{
-            if(length(old.value) != length(new.value) & length(new.value) != 1) stop("Lengths of old and new values are not equal")
+        }
+        else {
+            if (length(old.value) != length(new.value) & length(new.value) != 
+                1) 
+                stop("Lengths of old and new values are not equal")
             for (i in var.order) {
-                data1[, i] <- lookup(data1[, i, drop=TRUE], tx)
+                data1[, i] <- lookup(data1[, i, drop = TRUE], 
+                  tx)
             }
         }
     }
     else for (i in var.order) {
         if (is.factor(data1[, i])) {
-            if (length(old.value) != length(new.value) & length(new.value) !=1) stop("Lengths of old.value and new.value are not equal")
+            if (length(old.value) != length(new.value) & length(new.value) != 
+                1) 
+                stop("Lengths of old.value and new.value are not equal")
             if (is.character(old.value)) {
-            if (any(!is.element(old.value, levels(data1[, i])))) warning(paste("The old.value is/are not element of levels of '", names(data1)[i], "'", sep=""))
-            for (j in 1:nrow(tx)) {
-                levels(data1[, i])[levels(data1[, i])==tx[j, 1]] <- tx[j, 2]
+                if (any(!is.element(old.value, levels(data1[, 
+                  i])))) 
+                  warning(paste("The old.value is/are not element of levels of '", 
+                    names(data1)[i], "'", sep = ""))
+                for (j in 1:nrow(tx)) {
+                  levels(data1[, i])[levels(data1[, i]) == tx[j, 
+                    1]] <- tx[j, 2]
+                }
             }
-            }
+        } 
+        if(is.character(data1[, i])){
+        if (length(old.value) == 1) {
+            data1[, var.order][data1[, var.order] == old.value] <- new.value
+        }
+        else {
+            if (length(old.value) != length(new.value) & length(new.value) != 
+                1) 
+                stop("Lengths of old and new values are not equal")
+                data1[, i] <- lookup(data1[, i, drop = TRUE], 
+                  tx)
+        }
+        
         }
     }
     if (length(old.value) == nrow(data1)) {
@@ -4029,7 +4054,6 @@ recode <- function (vars, old.value, new.value, dataFrame = .data)
             warn.conflicts = FALSE)
     }
 }
-
 
 ### Multinomial summary display
 mlogit.display <- function(multinom.model, decimal=2, alpha=.05) {
@@ -4083,7 +4107,7 @@ for(i in 1:length(pos.to.detach)){
 		search()!=".GlobalEnv" & search()!="Autoloads" & search()!="CheckExEnv"]
 	}
 }
-vector1 <-  setdiff(ls(envir= .GlobalEnv), lsf.str()[])
+vector1 <-  setdiff(ls(envir= .GlobalEnv), lsf.str(envir= .GlobalEnv)[])
 rm(list=vector1, pos=1)
 } 
 
@@ -5461,7 +5485,8 @@ alphaBest <- function (vars, standardized = FALSE, dataFrame = .data)
 
 
 ## Table stack
-tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, 
+tableStack <-
+function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, 
     means = TRUE, medians = FALSE, sds = TRUE, decimal = 1, dataFrame = .data, 
     total = TRUE, var.labels = TRUE, var.labels.trunc = 150, 
     reverse = FALSE, vars.to.reverse = NULL, by = NULL, vars.to.factor = NULL, 
@@ -5722,8 +5747,7 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
             dataFrame[, i] <- as.factor(dataFrame[, i])
             levels(dataFrame[, i]) <- c("No", "Yes")
         }
-        if (length(table(by1)) == 1 & !is.logical(dataFrame[, 
-            by.var, drop = TRUE])) 
+        if (length(table(by1)) == 1 ) 
             test <- FALSE
         name.test <- ifelse(test, name.test, FALSE)
         if (is.character(iqr)) {
@@ -5987,7 +6011,6 @@ tableStack <- function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE
         table2
     }
 }
-
 
 
 # Print tableStack 
