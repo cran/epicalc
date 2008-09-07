@@ -28,7 +28,8 @@
 .min <- "min.  "
 .max <- "max.  "
 
-codebook <- function (dataFrame = .data) 
+codebook <- 
+function (dataFrame = .data) 
 {
     cat("\n", attr(dataFrame, "datalabel"), "\n", "\n")
     x1 <- dataFrame[1, ]
@@ -51,6 +52,9 @@ codebook <- function (dataFrame = .data)
                 cat("A character vector", "\n")
             }
             else {
+                if (class(x2) == "difftime") {
+                  print(summary(x2))
+                  } else{
                 if (is.logical(x2)) 
                   x2 <- as.factor(x2)
                 if (any(class(x2) == "factor")) {
@@ -89,7 +93,7 @@ codebook <- function (dataFrame = .data)
                 else {
                   print(summ(dataFrame[, i], graph = FALSE))
                 }
-            }
+            }}
         }
         cat("\n", "==================", "\n")
     }
@@ -1920,7 +1924,7 @@ tableGlm <- function (model, modified.coeff.array, decimal)
         model1 <- glm(formula1, family=model$family, weights=model$prior.weights, offset=model$offset, data=model$model)
         }
         if(any(class(model)=="negbin")){
-        model1 <- glm.nb (as.formula(paste(names(model$model)[1], "~", paste(var.names[-i], collapse="+"))))
+        model1 <- glm.nb (as.formula(paste(names(model$model)[1], "~", ifelse(length(var.names)==1,"1",paste(var.names[-i], collapse="+")))))
         }
         if((length(var.names)==1 & names(model$coefficients)[1] != "(Intercept)")){
         lr.p.value <- "-"
@@ -2234,23 +2238,31 @@ print.noquote(oor.95ci)
 
 
 ### Summarize continous variable in the loaded data set
-summ <- function (x = .data, by = NULL, graph = TRUE, box = FALSE, pch = 18, ylab = "auto", main = "auto", cex.X.axis = 1, cex.Y.axis = 1, dot.col = "auto", ...) 
+summ <- 
+function (x = .data, by = NULL, graph = TRUE, box = FALSE, pch = 18, 
+    ylab = "auto", main = "auto", cex.X.axis = 1, cex.Y.axis = 1, 
+    dot.col = "auto", ...) 
 {
-if(!is.null(by)){
-if(length(dot.col)>1 & length(table(factor(by)))!=length(dot.col)){
-stop(paste("The argument 'dot.col' must either be \"auto\"","\n"," or number of colours equals to number of categories of 'by'."))
-}}
-else{if(dot.col=="auto") dot.col <- "blue"	
-}
+    if (!is.null(by)) {
+        if (length(dot.col) > 1 & length(table(factor(by))) != 
+            length(dot.col)) {
+            stop(paste("The argument 'dot.col' must either be \"auto\"", 
+                "\n", " or number of colours equals to number of categories of 'by'."))
+        }
+    }
+    else {
+        if (dot.col == "auto") 
+            dot.col <- "blue"
+    }
     if (all(is.na(x))) {
         stop("All elements of ", substitute(x), " have a missing value")
     }
     if (!is.atomic(x)) {
         graph = FALSE
     }
-        if (typeof(x) == "character") {
-            stop(paste(deparse(substitute(x)), "is a character vector"))
-        }
+    if (typeof(x) == "character") {
+        stop(paste(deparse(substitute(x)), "is a character vector"))
+    }
     if (graph) {
         var1 <- deparse(substitute(x))
         if (length(var1) > 1) {
@@ -2263,7 +2275,7 @@ else{if(dot.col=="auto") dot.col <- "blue"
             if (length(string2) == 0) {
                 string2 <- deparse(substitute(x))
             }
-            if (string2 == "") {                                            
+            if (string2 == "") {
                 string2 <- deparse(substitute(x))
             }
         }
@@ -2291,7 +2303,6 @@ else{if(dot.col=="auto") dot.col <- "blue"
             string5 <- paste(string3, "\n", titleString()$by, 
                 string4)
         }
-		## Defining pretty x ticking for date and time
         if (any(class(x) == "date")) {
             x <- as.Date(paste(date.mdy(x)$year, "-", date.mdy(x)$month, 
                 "-", date.mdy(x)$day, sep = ""))
@@ -2300,8 +2311,8 @@ else{if(dot.col=="auto") dot.col <- "blue"
             range.date <- difftime(summary(x)[6], summary(x)[1])
             numdate <- as.numeric(range.date)
             if (numdate < 1) {
-                date.pretty <- seq(from = summary(x)[1]-1, to = summary(x)[6]+1, 
-                  by = "day")
+                date.pretty <- seq(from = summary(x)[1] - 1, 
+                  to = summary(x)[6] + 1, by = "day")
                 format.time <- "%a%d%b"
             }
             if (numdate >= 1 & numdate < 10) {
@@ -2370,47 +2381,61 @@ else{if(dot.col=="auto") dot.col <- "blue"
                 character.length))
             par(mai = c(0.95625, left.offset, 0.76875, 0.39375))
             by3 <- as.numeric(by2)
-              if(any(dot.col=="auto")){
-  dot.col1 <- as.numeric(by2)
-  }else{
-  tx <- cbind(1:length(dot.col), dot.col)
-  dot.col1 <- lookup(as.numeric(by2), tx)
-  }
-
-            if(any(dot.col=="auto")) {col1 <- by3} else {col1 <- dot.col1}
+            if (any(dot.col == "auto")) {
+                dot.col1 <- as.numeric(by2)
+            }
+            else {
+                tx <- cbind(1:length(dot.col), dot.col)
+                dot.col1 <- lookup(as.numeric(by2), tx)
+            }
+            if (any(dot.col == "auto")) {
+                col1 <- by3
+            }
+            else {
+                col1 <- dot.col1
+            }
             y0 <- 1:length(x1)
             y <- suppressWarnings(y0 + as.numeric(by2) - 1)
             if (is.factor(x)) {
                 plot(as.numeric(x1), y, pch = pch, col = col1, 
-                  main = ifelse(main=="auto", string5, main), ylim = c(-1, max(y)), xlab = " ", 
-                  ylab = ifelse(ylab=="auto"," ",ylab), yaxt = "n", xaxt = "n", ...)
-                axis(1, at = 1:length(levels(x1)), labels = levels(x1), cex.axis=cex.X.axis)
+                  main = ifelse(main == "auto", string5, main), 
+                  ylim = c(-1, max(y)), xlab = " ", ylab = ifelse(ylab == 
+                    "auto", " ", ylab), yaxt = "n", xaxt = "n", 
+                  ...)
+                axis(1, at = 1:length(levels(x1)), labels = levels(x1), 
+                  cex.axis = cex.X.axis)
             }
             else if (any(class(x) == "POSIXt")) {
-                plot(x1, y, pch = pch, col = col1, main = ifelse(main=="auto", string5, main), 
-                  ylim = c(-1, max(y)), xlab = " ", ylab = ifelse(ylab=="auto"," ",ylab), 
-                  yaxt = "n", xaxt = "n", ...)
+                plot(x1, y, pch = pch, col = col1, main = ifelse(main == 
+                  "auto", string5, main), ylim = c(-1, max(y)), 
+                  xlab = " ", ylab = ifelse(ylab == "auto", " ", 
+                    ylab), yaxt = "n", xaxt = "n", ...)
                 axis(1, at = time.pretty, labels = as.character(time.pretty, 
-                  format = format.time), cex.axis=cex.X.axis)
+                  format = format.time), cex.axis = cex.X.axis)
             }
             else if (any(class(x) == "Date")) {
                 if (numdate < 700) {
-                  plot(x1, y, pch = pch, col = col1, main = ifelse(main=="auto", string5, main), 
-                    ylim = c(-1, max(y)), xlab = " ", ylab = ifelse(ylab=="auto"," ",ylab), 
-                    yaxt = "n", xaxt = "n", ...)
+                  plot(x1, y, pch = pch, col = col1, main = ifelse(main == 
+                    "auto", string5, main), ylim = c(-1, max(y)), 
+                    xlab = " ", ylab = ifelse(ylab == "auto", 
+                      " ", ylab), yaxt = "n", xaxt = "n", ...)
                   axis(1, at = date.pretty, labels = as.character(date.pretty, 
-                    format = format.time), cex.axis=cex.X.axis)
+                    format = format.time), cex.axis = cex.X.axis)
                 }
                 else {
-                  plot(x1, y, pch = pch, col = col1, main = ifelse(main=="auto", string5, main), 
-                    ylim = c(-1, (summary(y))[6]), xlab = " ", 
-                    ylab = ifelse(ylab=="auto"," ",ylab), yaxt = "n", cex.axis = cex.X.axis, ...)
+                  plot(x1, y, pch = pch, col = col1, main = ifelse(main == 
+                    "auto", string5, main), ylim = c(-1, (summary(y))[6]), 
+                    xlab = " ", ylab = ifelse(ylab == "auto", 
+                      " ", ylab), yaxt = "n", cex.axis = cex.X.axis, 
+                    ...)
                 }
             }
             else {
-                plot(x1, y, pch = pch, col = col1, main = ifelse(main=="auto", string5, main), 
-                  ylim = c(-1, max(y)), xlab = " ", ylab = ifelse(ylab=="auto"," ",ylab), 
-                  yaxt = "n", cex.axis = cex.X.axis, ...)
+                plot(x1, y, pch = pch, col = col1, main = ifelse(main == 
+                  "auto", string5, main), ylim = c(-1, max(y)), 
+                  xlab = " ", ylab = ifelse(ylab == "auto", " ", 
+                    ylab), yaxt = "n", cex.axis = cex.X.axis, 
+                  ...)
                 if (any(class(x) == "difftime")) {
                   unit <- attr(x, "unit")
                 }
@@ -2440,33 +2465,47 @@ else{if(dot.col=="auto") dot.col <- "blue"
             x1 <- x[order(x)]
             y <- 1:length(x1)
             if (is.factor(x1)) {
-                plot(as.numeric(x1), y, pch = pch, col = ifelse(dot.col=="auto","blue",dot.col), 
-                  main = ifelse(main=="auto", string3, main), xlab = " ", ylab = ifelse(ylab=="auto",.ylab.for.summ,ylab), 
-                  xaxt = "n", cex.axis=cex.Y.axis, ...)
-                axis(1, at = 1:length(levels(x1)), labels = levels(x1), cex.axis=cex.X.axis)
+                plot(as.numeric(x1), y, pch = pch, col = ifelse(dot.col == 
+                  "auto", "blue", dot.col), main = ifelse(main == 
+                  "auto", string3, main), xlab = " ", ylab = ifelse(ylab == 
+                  "auto", .ylab.for.summ, ylab), xaxt = "n", 
+                  cex.axis = cex.Y.axis, ...)
+                axis(1, at = 1:length(levels(x1)), labels = levels(x1), 
+                  cex.axis = cex.X.axis)
             }
             else if (any(class(x) == "POSIXt")) {
-                plot(x1, y, pch = pch, col = ifelse(dot.col=="auto","blue",dot.col), main = ifelse(main=="auto", string3, main), 
-                  xlab = " ", ylab = ifelse(ylab=="auto",.ylab.for.summ,ylab), xaxt = "n", cex.axis=cex.Y.axis, ...)
+                plot(x1, y, pch = pch, col = ifelse(dot.col == 
+                  "auto", "blue", dot.col), main = ifelse(main == 
+                  "auto", string3, main), xlab = " ", ylab = ifelse(ylab == 
+                  "auto", .ylab.for.summ, ylab), xaxt = "n", 
+                  cex.axis = cex.Y.axis, ...)
                 axis(1, at = time.pretty, labels = as.character(time.pretty, 
-                  format = format.time), cex.axis=cex.X.axis)
+                  format = format.time), cex.axis = cex.X.axis)
             }
             else if (any(class(x) == "Date")) {
                 if (numdate < 700) {
-                  plot(x1, y, pch = pch, col = ifelse(dot.col=="auto","blue",dot.col), main = ifelse(main=="auto", string3, main), 
-                    xlab = " ", ylab = ifelse(ylab=="auto",.ylab.for.summ,ylab), yaxt = "n", 
+                  plot(x1, y, pch = pch, col = ifelse(dot.col == 
+                    "auto", "blue", dot.col), main = ifelse(main == 
+                    "auto", string3, main), xlab = " ", ylab = ifelse(ylab == 
+                    "auto", .ylab.for.summ, ylab), yaxt = "n", 
                     xaxt = "n", ...)
                   axis(1, at = date.pretty, labels = as.character(date.pretty, 
-                    format = format.time), cex.axis=cex.X.axis)
+                    format = format.time), cex.axis = cex.X.axis)
                 }
                 else {
-                  plot(x1, y, pch = pch, col = ifelse(dot.col=="auto","blue",dot.col), main = ifelse(main=="auto", string3, main), 
-                    xlab = " ", ylab = ifelse(ylab=="auto",.ylab.for.summ,ylab), yaxt = "n", cex.axis = cex.X.axis, ...)
+                  plot(x1, y, pch = pch, col = ifelse(dot.col == 
+                    "auto", "blue", dot.col), main = ifelse(main == 
+                    "auto", string3, main), xlab = " ", ylab = ifelse(ylab == 
+                    "auto", .ylab.for.summ, ylab), yaxt = "n", 
+                    cex.axis = cex.X.axis, ...)
                 }
             }
             else {
-                plot(x1, y, pch = pch, col = ifelse(dot.col=="auto","blue",dot.col), main = ifelse(main=="auto", string3, main), 
-                  xlab = " ", ylab = ifelse(ylab=="auto",.ylab.for.summ,ylab), yaxt = "n", cex.axis = cex.X.axis, ...)
+                plot(x1, y, pch = pch, col = ifelse(dot.col == 
+                  "auto", "blue", dot.col), main = ifelse(main == 
+                  "auto", string3, main), xlab = " ", ylab = ifelse(ylab == 
+                  "auto", .ylab.for.summ, ylab), yaxt = "n", 
+                  cex.axis = cex.X.axis, ...)
                 if (any(class(x) == "difftime")) {
                   unit <- attr(x, "unit")
                 }
@@ -2612,6 +2651,11 @@ else{if(dot.col=="auto") dot.col <- "blue"
                   a[i, 5] <- NA
                   a[i, 2] <- length((x[[i]])[!is.na(x[[i]])])
                 }
+                else if (any(class(x[[i]]) == "difftime")) {
+                  a[i, c(3, 4, 6, 7)] <- c(summary(x[[i]])[c(4, 3, 1, 6)])
+                  a[i, 5] <- round(sd(x[[i]], na.rm=TRUE),2)
+                  a[i, 2] <- length((x[[i]])[!is.na(x[[i]])])
+                }
                 else if (suppressWarnings(is.integer(x[[i]]) || 
                   is.numeric(x[[i]]) | (is.logical(x[[i]]) & 
                   !is.na(mean(na.omit(as.numeric(x[[i]]))))))) {
@@ -2636,6 +2680,7 @@ else{if(dot.col=="auto") dot.col <- "blue"
                       ]))), max(na.omit(unclass(x[i][, ])))), 
                     3)
                 }
+                
             }
         }
     }
@@ -2665,7 +2710,6 @@ else{if(dot.col=="auto") dot.col <- "blue"
         }
     }
 }
-
 
 #### Print summ result
 
@@ -5485,7 +5529,7 @@ alphaBest <- function (vars, standardized = FALSE, dataFrame = .data)
 
 
 ## Table stack
-tableStack <-
+tableStack  <-
 function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, 
     means = TRUE, medians = FALSE, sds = TRUE, decimal = 1, dataFrame = .data, 
     total = TRUE, var.labels = TRUE, var.labels.trunc = 150, 
@@ -5747,17 +5791,23 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
             dataFrame[, i] <- as.factor(dataFrame[, i])
             levels(dataFrame[, i]) <- c("No", "Yes")
         }
-        if (length(table(by1)) == 1 ) 
+        if (length(table(by1)) == 1) 
             test <- FALSE
         name.test <- ifelse(test, name.test, FALSE)
         if (is.character(iqr)) {
             if (iqr == "auto") {
                 selected.iqr <- NULL
                 for (i in 1:length(selected)) {
+                  if (class(dataFrame[, selected[i]]) == "difftime") {
+                     dataFrame[, selected[i]] <- as.numeric(dataFrame[, selected[i]])
+                  }
                   if (is.integer(dataFrame[, selected[i]]) | 
                     is.numeric(dataFrame[, selected[i]])) {
                     if (length(table(by1)) > 1) {
                       if (nrow(dataFrame) < 5000) {
+                        if (nrow(dataFrame) < 3) { 
+                          selected.iqr <- c(selected.iqr, selected[i])
+                          } else
                         if (shapiro.test(lm(dataFrame[, selected[i]] ~ 
                           by1)$residuals)$p.value < 0.01 | bartlett.test(dataFrame[, 
                           selected[i]] ~ by1)$p.value < 0.01) {
@@ -5842,7 +5892,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                 if (test) {
                   E <- outer(sr, sc, "*")/sum(x0)
                   dim(E) <- NULL
-                  if ((sum(E < 5))/length(E) > 0.2) {
+                  if ((sum(E < 5))/length(E) > 0.2 & nrow(dataFrame) < 1000) {
                     test.method <- "Fisher's exact test"
                     p.value <- fisher.test(x0, simulate.p.value = TRUE)$p.value
                   }
