@@ -1,15 +1,22 @@
 \name{recode}
 \alias{recode}
+\alias{recode.default}
+\alias{recode.is.na}
 \title{Recode variable(s)}
 \description{Change value(s) of variable(s) in the default data frame}
 \usage{
-recode(vars, old.value, new.value, dataFrame = .data)  
+recode(vars, ...)
+
+\method{recode}{default}(vars, old.value, new.value, dataFrame = .data, ...)  
+
+\method{recode}{is.na}(vars, new.value = 0, dataFrame = .data, ...)
 }
 \arguments{
 	\item{vars}{a variable or variables with the same recoding scheme}
 	\item{old.value}{original values or a condition}
 	\item{new.value}{new values for all variables listed}
   \item{dataFrame}{a data frame}
+  \item{...}{further arguments passed to or used by other methods.}
 }
 \details{'recode' is very useful for recoding missing values but can also be used for other purposes.
 
@@ -22,6 +29,8 @@ The argument 'old.value' can be also be a condition for recoding the 'vars' into
 Note that changing the value label of a variable's levels can be done with 'levels(var)[levels(var)=="old name"] <- "new name"'. However, Epicalc 'recode' is more efficient in changing several factors using the same scheme. See example. 
 
 All the 'recode'd vars are automatically 'pack'ed into the default data frame which is synchronize with the one in the search path.
+
+'recode.is.na' is used to recode any missing value of one or more variable to a common 'new.value', which is zero by default.
 }
 \author{Virasakdi Chongsuvivatwong
 	\email{ <cvirasak@medicine.psu.ac.th>}
@@ -68,6 +77,17 @@ des()
 table(A16); table(A17); table(A18)
 recode(vars=A16:A18,  c("willing","willing if have money"), "willing")
 table(A16); table(A17); table(A18)
+# Recode two last categories to missing
+recode(A16:A18, c("not relevant","not answer"), NA)
+table(A16); table(A17); table(A18)
+
+# Use 'recode.is.na' to recode NA to "missing data"
+recode.is.na(vars=A16:A18, "missing data")
+table(A16); table(A17); table(A18)
+recode(vars=A4:A5, 999, NA)
+summ()
+# recode back from NA to 0
+recode.is.na(vars=A4:A5) # Note that new value is 0 by default
 
 # Swaping
 data(Hakimi)
@@ -77,5 +97,6 @@ summ()
 table(treatment)
 recode(treatment, c(1,2), c(2,1))
 table(treatment)
+
 }
 \keyword{database}

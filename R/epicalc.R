@@ -3099,6 +3099,476 @@ if(nrow(x$table) < 6){
 print(x$table)
 }}
 
+### n for Cluster RCT
+n.for.cluster.2p <-
+function (p1, p2, alpha = 0.05, power = 0.8, ratio = 1, 
+          mean.cluster.size = 10, previous.mean.cluster.size = NULL, previous.sd.cluster.size = NULL, 
+          max.cluster.size = NULL, min.cluster.size = NULL, icc = 0.1)
+{   if (any(p1 < 1) & any(p2 < 1)) {
+        r1 <- ratio + 1
+        pbar <- (p1 + ratio * p2)/r1
+        sqrt1 <- sqrt(r1 * pbar * (1 - pbar))
+        sqrt2 <- sqrt(ratio * (p1 * (1 - p1)) + p2 * (1 - p2))
+        n0 <- (((qnorm(1 - alpha/2) * sqrt1) - (qnorm(1 - power) * sqrt2))^2)/(ratio * ((p2 - p1)^2))
+        n1 <- (n0/4) * (1 + sqrt(1 + 2 * r1/(n0 * ratio * abs(p1 - p2))))^2
+        n1 <- trunc(n1) + 1
+        n2 <- trunc(ratio * n1)
+    }
+    else {
+        stop("Both p1 and p2 must be less than 1")
+    }
+    if (length(alpha) > 1) {
+        alpha1 <- alpha
+    }
+    else {
+        alpha1 <- NULL
+    }
+    if (length(power) > 1) {
+        power1 <- power
+    }
+    else {
+        power1 <- NULL
+    }
+    if (length(ratio) > 1) {
+        ratio1 <- ratio
+    }
+    else {
+        ratio1 <- NULL
+    }
+########## Adjustment for unequal cluster size
+    if (icc <= 0 | icc >= 1 ){
+        stop("Intracluster correlation value must be between zero and one")
+    }
+    if (is.null(previous.mean.cluster.size) + is.null(previous.sd.cluster.size) + is.null(max.cluster.size) + is.null(min.cluster.size) > 2){
+        stop("Choose (previous.mean.cluster.size and previous.sd.cluster.size) OR (max.cluster.size and min.cluster.size)")
+    }
+    if (!is.null(previous.mean.cluster.size) + !is.null(previous.sd.cluster.size) + !is.null(max.cluster.size) + !is.null(min.cluster.size) == FALSE){
+        stop("Choose (previous.mean.cluster.size and previous.sd.cluster.size) or (max.cluster.size and min.cluster.size)")
+    }
+    cv1 <- previous.sd.cluster.size/previous.mean.cluster.size    
+    cv3 <- ((max.cluster.size - min.cluster.size)/4)/mean.cluster.size 
+    if ((is.null(max.cluster.size)) & is.null(min.cluster.size)) {
+        cv3 <- NULL
+    }
+    if (is.null(previous.mean.cluster.size) & is.null(previous.sd.cluster.size)){
+        cv1 <- NULL
+    }
+    if (((is.null(previous.mean.cluster.size)) + (is.null(previous.sd.cluster.size))) == 1){
+        stop("Both previous.mean.cluster.size and previous.sd.cluster.size are required")
+    }    
+    if (((is.null(max.cluster.size)) + (is.null(min.cluster.size))) == 1){
+        stop("Both max.cluster.size and min.cluster.size are required")
+    }
+    else {      
+        deff.unadjusted <- (1 + (mean.cluster.size - 1) * icc)
+        deff.adj1  <- 1 + (((1 + cv1^2) * mean.cluster.size) - 1) * icc
+        deff.adj3  <- 1 + (((1 + cv3^2) * mean.cluster.size) - 1) * icc
+    }
+    if (n1 == n2){
+        n.unadjusted    <- round(deff.unadjusted * n1)
+        n.unadjusted.clus.no <- round(n.unadjusted/mean.cluster.size)
+        n.adj1          <- round(deff.adj1 * n1)
+        n.adj1.clus.no  <- round(n.adj1/mean.cluster.size)
+        n.adj3          <- round(deff.adj3 * n1)
+        n.adj3.clus.no  <- round(n.adj3/mean.cluster.size)
+        n1.unadjusted   <- NULL
+        n1.unadjusted.clus.no <- NULL
+        n1.adj1         <- NULL
+        n1.adj1.clus.no <- NULL
+        n1.adj3         <- NULL
+        n1.adj3.clus.no <- NULL
+        n2.unadjusted   <- NULL
+        n2.unadjusted.clus.no <- NULL
+        n2.adj1         <- NULL
+        n2.adj1.clus.no <- NULL
+        n2.adj3         <- NULL
+        n2.adj3.clus.no <- NULL
+    }
+    else {
+        n1.unadjusted         <- round(deff.unadjusted * n1)
+        n1.unadjusted.clus.no <- round(n1.unadjusted/mean.cluster.size) 
+        n1.adj1               <- round(deff.adj1 * n1)
+        n1.adj1.clus.no       <- round(n1.adj1/mean.cluster.size)
+        n1.adj3               <- round(deff.adj3 * n1)
+        n1.adj3.clus.no       <- round(n1.adj3/mean.cluster.size)
+        n2.unadjusted         <- round(deff.unadjusted * n2)
+        n2.unadjusted.clus.no <- round(n2.unadjusted/mean.cluster.size)
+        n2.adj1               <- round(deff.adj1 * n2)
+        n2.adj1.clus.no       <- round(n2.adj1/mean.cluster.size)
+        n2.adj3               <- round(deff.adj3 * n2)
+        n2.adj3.clus.no       <- round(n2.adj3/mean.cluster.size)
+        n.unadjusted          <- NULL
+        n.unadjusted.clus.no  <- NULL
+        n.adj1                <- NULL
+        n.adj1.clus.no        <- NULL
+        n.adj3                <- NULL
+        n.adj3.clus.no        <- NULL
+    }  
+####To create output table
+    table1 <- rbind(p1, p2, n1, n2, alpha, power, ratio, mean.cluster.size, previous.mean.cluster.size,previous.sd.cluster.size, max.cluster.size, min.cluster.size, icc, deff.unadjusted, n.unadjusted, n.unadjusted.clus.no, deff.adj1, n.adj1, n.adj1.clus.no, deff.adj3, n.adj3,n.adj3.clus.no, n1.unadjusted, n1.unadjusted.clus.no, n1.adj1, n1.adj1.clus.no, n1.adj3, n1.adj3.clus.no,n2.unadjusted, n2.unadjusted.clus.no, n2.adj1,n2.adj1.clus.no, n2.adj3, n2.adj3.clus.no)
+    rownames(table1)[rownames(table1) == "alpha1"] <- "alpha"
+    rownames(table1)[rownames(table1) == "power1"] <- "power"
+    rownames(table1)[rownames(table1) == "ratio1"] <- "n2/n1"
+    rownames(table1)[rownames(table1) == "ratio"]  <- "n2/n1"
+    returns <- list(
+              p1 = p1, p2 = p2, n1 = n1, n2 = n2, alpha = alpha, 
+              power = power, ratio = n2/n1,
+              previous.mean.cluster.size = previous.mean.cluster.size, previous.sd.cluster.size = previous.sd.cluster.size,
+              mean.cluster.size = mean.cluster.size,
+              max.cluster.size = max.cluster.size, min.cluster.size = min.cluster.size, icc = icc,
+              deff.unadjusted = deff.unadjusted, n.unadjusted = n.unadjusted, 
+              n.unadjusted.clus.no = n.unadjusted.clus.no, 
+              deff.adj1 = deff.adj1, n.adj1 = n.adj1, n.adj1.clus.no = n.adj1.clus.no,
+              deff.adj3 = deff.adj3, n.adj3 = n.adj3, n.adj3.clus.no = n.adj3.clus.no,
+              n1.unadjusted = n1.unadjusted, n1.unadjusted.clus.no = n1.unadjusted.clus.no,
+              n1.adj1 = n1.adj1, n1.adj1.clus.no = n1.adj1.clus.no,
+              n1.adj3 = n1.adj3, n1.adj3.clus.no = n1.adj3.clus.no,
+              n2.unadjusted = n2.unadjusted, n2.unadjusted.clus.no = n2.unadjusted.clus.no,
+              n2.adj1 = n2.adj1, n2.adj1.clus.no = n2.adj1.clus.no,
+              n2.adj3 = n2.adj3, n2.adj3.clus.no = n2.adj3.clus.no,
+              table = as.data.frame(table1))
+    class(returns) <- c("n.for.cluster.2p", "list")
+    returns    
+}    
+
+# Print n.for.cluster.2p
+print.n.for.cluster.2p <- function (x, ...) 
+{
+    if (nrow(x$table) < 22) {
+       cat("\n")
+#Print source of literature used for this sample size calculation
+#Print assumptions 
+        #Assumptions for alpha,power,p1,p2,n2/n1,mean cluster size and icc
+        cat(" Estimation of sample size in a cluster radomized controlled trial", "\n") 
+        cat(" for testing Ho: p1==p2", "\n", "\n")
+        cat(" Assumptions:", "\n", "\n")
+        cat("                                alpha =", x$alpha, "\n")
+        cat("                                power =", x$power, "\n")
+        cat("                                   p1 =", x$p1, "\n")
+        cat("                                   p2 =", x$p2, "\n")
+        cat("                         n2/n1(ratio) =", x$ratio, "\n")
+        cat("            Current mean cluster size =", x$mean.cluster.size, "\n")
+        cat("Intra-cluster correlation coefficient =", x$icc, "\n")
+        #Assumptions - mean(sd) of cluster size from previous study for design effect 
+        if(!is.null(x$previous.mean.cluster.size)){
+        cat("  Cluster size of previous study:Mean =", x$previous.mean.cluster.size, "\n")
+        cat("    Cluster size of previous study:SD =", x$previous.sd.cluster.size, "\n")  
+        cat("             Design Effect:Unadjusted =", x$deff.unadjusted,"\n")
+        cat("               Design Effect:Adjusted =", x$deff.adj1,"\n","\n")
+        }
+        #Assumptions - expected max and min cluster size for design effect
+        else{
+        cat("        Maximum expected cluster size =", x$max.cluster.size, "\n")
+        cat("        Minimum expected cluster size =", x$min.cluster.size, "\n")    
+        cat("             Design Effect:Unadjusted =", x$deff.unadjusted,"\n")       
+        cat("               Design Effect:Adjusted =", x$deff.adj3, "\n","\n")
+        }
+#Print results
+        #Results for equal ratio (n2/n1)                     
+        if (x$ratio == 1){
+        cat(" Estimated required sample size:", "\n", "\n")
+        cat("     When design effect is unadjusted for unequal cluster sizes", "\n")
+        cat("                                   n1 =", x$n.unadjusted, "\n")
+        cat("            Number of clusters for n1 =", x$n.unadjusted.clus.no, "\n")
+        cat("                                   n2 =", x$n.unadjusted, "\n")
+        cat("            Number of clusters for n2 =", x$n.unadjusted.clus.no,"\n")
+        cat("                              n1 + n2 =", x$n.unadjusted + x$n.unadjusted,"\n")
+        cat("             Total number of clusters =", x$n.unadjusted.clus.no + x$n.unadjusted.clus.no,"\n", "\n")
+        cat("     When design effect is adjusted for unequal cluster sizes", "\n")
+                  if(is.null(x$max.cluster.size)){ 
+        cat("                                   n1 =", x$n.adj1, "\n")
+        cat("            Number of clusters for n1 =", x$n.adj1.clus.no, "\n")
+        cat("                                   n2 =", x$n.adj1, "\n")
+        cat("            Number of clusters for n2 =", x$n.adj1.clus.no,"\n")
+        cat("                              n1 + n2 =", x$n.adj1 + x$n.adj1, "\n")   
+        cat("             Total number of clusters =", x$n.adj1.clus.no + x$n.adj1.clus.no,"\n", "\n")
+                  }
+                  else{
+        cat("                                   n1 =", x$n.adj3, "\n")
+        cat("            Number of clusters for n1 =", x$n.adj3.clus.no, "\n")
+        cat("                                   n2 =", x$n.adj3, "\n")
+        cat("            Number of clusters for n2 =", x$n.adj3.clus.no,"\n")
+        cat("                              n1 + n2 =", x$n.adj3 + x$n.adj3, "\n")   
+        cat("             Total number of clusters =", x$n.adj3.clus.no + x$n.adj3.clus.no,"\n", "\n")
+                  }
+        }
+        #Results for unequal ratio (ratio!=1) 
+        else{
+        cat(" Estimated required sample size:", "\n", "\n")
+        cat("    When design effect is unadjusted for unequal cluster sizes", "\n")
+        cat("                                   n1 =", x$n1.unadjusted, "\n")
+        cat("            Number of clusters for n1 =", x$n1.unadjusted.clus.no, "\n")
+        cat("                                   n2 =", x$n2.unadjusted, "\n")
+        cat("            Number of clusters for n2 =", x$n2.unadjusted.clus.no,"\n")
+        cat("                              n1 + n2 =", x$n1.unadjusted + x$n2.unadjusted,"\n")
+        cat("             Total number of clusters =", x$n1.unadjusted.clus.no + x$n2.unadjusted.clus.no,"\n", "\n")
+        cat("    When design effect is adjusted for unequal cluster sizes", "\n")
+                  if(is.null(x$max.cluster.size)){
+        cat("                                   n1 =", x$n1.adj1, "\n")
+        cat("            Number of clusters for n1 =", x$n1.adj1.clus.no, "\n")
+        cat("                                   n2 =", x$n2.adj1, "\n")
+        cat("            Number of clusters for n2 =", x$n2.adj1.clus.no,"\n")
+        cat("                              n1 + n2 =", x$n1.adj1 + x$n2.adj1, "\n")   
+        cat("             Total number of clusters =", x$n1.adj1.clus.no + x$n2.adj1.clus.no,"\n", "\n")
+                  }
+                  else{
+        cat("                                   n1 =", x$n1.adj3, "\n")
+        cat("            Number of clusters for n1 =", x$n1.adj3.clus.no, "\n")
+        cat("                                   n2 =", x$n2.adj3, "\n")
+        cat("            Number of clusters for n2 =", x$n2.adj3.clus.no,"\n")
+        cat("                              n1 + n2 =", x$n1.adj3+ x$n2.adj3, "\n")   
+        cat("             Total number of clusters =", x$n1.adj3.clus.no + x$n2.adj3.clus.no,"\n", "\n") 
+                  }
+        }
+  }
+        #If nrow of xtable is not less than 22        
+else {
+        cat(" Assumptions:", "\n", "\n")
+        if (length(x$alpha) == 1) 
+            cat("     alpha =", x$alpha, "\n")
+        if (length(x$power) == 1) 
+            cat("     power =", x$power, "\n")
+        if (length(x$ratio) == 1) 
+            cat("     n2/n1 =", x$ratio, "\n")            
+        cat("\n")
+        print(x$table)
+    }
+        
+}
+
+
+## n.for.cluster.2means
+n.for.cluster.2means <- function (mu1, mu2, sd1, sd2, alpha = 0.05, power = 0.8, ratio = 1, 
+          mean.cluster.size = 10, previous.mean.cluster.size = NULL, previous.sd.cluster.size = NULL, 
+          max.cluster.size = NULL, min.cluster.size = NULL, icc = 0.1)
+{
+    n1 <- (sd1^2 + sd2^2/ratio) * (qnorm(1 - alpha/2) - qnorm(1 - 
+        power))^2/(mu1 - mu2)^2
+    n1 <- round(n1)
+    n2 <- ratio * n1
+    if (length(alpha) == 1) {
+        alpha1 <- NULL
+    }
+    else {
+        alpha1 <- alpha
+    }
+    if (length(power) == 1) {
+        power1 <- NULL
+    }
+    else {
+        power1 <- power
+    }
+    if (length(ratio) == 1) {
+        ratio1 <- NULL
+    }
+    else {
+        ratio1 <- ratio
+    }
+    ########## Adjustment for unequal cluster size
+    if (icc <= 0 | icc >= 1 ){
+        stop("Intracluster correlation value must be between zero and one")
+    }
+    if (is.null(previous.mean.cluster.size) + is.null(previous.sd.cluster.size) + is.null(max.cluster.size) + is.null(min.cluster.size) > 2){
+        stop("Choose (previous.mean.cluster.size and previous.sd.cluster.size) OR (max.cluster.size and min.cluster.size)")
+    }
+    if (!is.null(previous.mean.cluster.size) + !is.null(previous.sd.cluster.size) + !is.null(max.cluster.size) + !is.null(min.cluster.size) == FALSE){
+        stop("Choose (previous.mean.cluster.size and previous.sd.cluster.size) or (max.cluster.size and min.cluster.size)")
+    }
+    cv1 <- previous.sd.cluster.size/previous.mean.cluster.size    
+    cv3 <- ((max.cluster.size - min.cluster.size)/4)/mean.cluster.size 
+    if ((is.null(max.cluster.size)) & is.null(min.cluster.size)) {
+        cv3 <- NULL
+    }
+    if (is.null(previous.mean.cluster.size) & is.null(previous.sd.cluster.size)){
+        cv1 <- NULL
+    }
+    if (((is.null(previous.mean.cluster.size)) + (is.null(previous.sd.cluster.size))) == 1){
+        stop("Both previous.mean.cluster.size and previous.sd.cluster.size are required")
+    }    
+    if (((is.null(max.cluster.size)) + (is.null(min.cluster.size))) == 1){
+        stop("Both max.cluster.size and min.cluster.size are required")
+    }
+    else {      
+        deff.unadjusted <- (1 + (mean.cluster.size - 1) * icc)
+        deff.adj1  <- 1 + (((1 + cv1^2) * mean.cluster.size) - 1) * icc
+        deff.adj3  <- 1 + (((1 + cv3^2) * mean.cluster.size) - 1) * icc
+    }
+    if (n1 == n2){
+        n.unadjusted          <- round(deff.unadjusted * n1)
+        n.unadjusted.clus.no  <- round(n.unadjusted/mean.cluster.size)
+        n.adj1                <- round(deff.adj1 * n1)
+        n.adj1.clus.no        <- round(n.adj1/mean.cluster.size)
+        n.adj3                <- round(deff.adj3 * n1)
+        n.adj3.clus.no        <- round(n.adj3/mean.cluster.size)
+        n1.unadjusted         <- NULL
+        n1.unadjusted.clus.no <- NULL
+        n1.adj1               <- NULL
+        n1.adj1.clus.no       <- NULL
+        n1.adj3               <- NULL
+        n1.adj3.clus.no       <- NULL
+        n2.unadjusted         <- NULL
+        n2.unadjusted.clus.no <- NULL
+        n2.adj1               <- NULL
+        n2.adj1.clus.no       <- NULL
+        n2.adj3               <- NULL
+        n2.adj3.clus.no       <- NULL
+    }
+    else {
+        n1.unadjusted         <- round(deff.unadjusted * n1)
+        n1.unadjusted.clus.no <- round(n1.unadjusted/mean.cluster.size) 
+        n1.adj1               <- round(deff.adj1 * n1)
+        n1.adj1.clus.no       <- round(n1.adj1/mean.cluster.size)
+        n1.adj3               <- round(deff.adj3 * n1)
+        n1.adj3.clus.no       <- round(n1.adj3/mean.cluster.size)
+        n2.unadjusted         <- round(deff.unadjusted * n2)
+        n2.unadjusted.clus.no <- round(n2.unadjusted/mean.cluster.size)
+        n2.adj1               <- round(deff.adj1 * n2)
+        n2.adj1.clus.no       <- round(n2.adj1/mean.cluster.size)
+        n2.adj3               <- round(deff.adj3 * n2)
+        n2.adj3.clus.no       <- round(n2.adj3/mean.cluster.size)
+        n.unadjusted          <- NULL
+        n.unadjusted.clus.no  <- NULL
+        n.adj1                <- NULL
+        n.adj1.clus.no        <- NULL
+        n.adj3                <- NULL
+        n.adj3.clus.no        <- NULL
+    }  
+####To create output table
+    table1 <- rbind(mu1, mu2, sd1, sd2, n1, n2, alpha, power, ratio, mean.cluster.size, previous.mean.cluster.size,previous.sd.cluster.size, max.cluster.size, min.cluster.size, icc, deff.unadjusted, n.unadjusted, n.unadjusted.clus.no, deff.adj1, n.adj1, n.adj1.clus.no, deff.adj3, n.adj3,n.adj3.clus.no, n1.unadjusted, n1.unadjusted.clus.no, n1.adj1, n1.adj1.clus.no, n1.adj3, n1.adj3.clus.no,n2.unadjusted, n2.unadjusted.clus.no, n2.adj1,n2.adj1.clus.no, n2.adj3, n2.adj3.clus.no)
+    rownames(table1)[rownames(table1) == "alpha1"] <- "alpha"
+    rownames(table1)[rownames(table1) == "power1"] <- "power"
+    rownames(table1)[rownames(table1) == "ratio1"] <- "n2/n1"
+    rownames(table1)[rownames(table1) == "ratio"]  <- "n2/n1"
+    returns <- list(
+              mu1 = mu1, mu2 = mu2, sd1 = sd1, sd2 = sd2, n1 = n1, n2 = n2, 
+              alpha = alpha, power = power, ratio = n2/n1,
+              previous.mean.cluster.size = previous.mean.cluster.size, previous.sd.cluster.size = previous.sd.cluster.size,
+              mean.cluster.size = mean.cluster.size,
+              max.cluster.size = max.cluster.size, min.cluster.size = min.cluster.size, icc = icc,
+              deff.unadjusted = deff.unadjusted, n.unadjusted = n.unadjusted, 
+              n.unadjusted.clus.no = n.unadjusted.clus.no, 
+              deff.adj1 = deff.adj1, n.adj1 = n.adj1, n.adj1.clus.no = n.adj1.clus.no,
+              deff.adj3 = deff.adj3, n.adj3 = n.adj3, n.adj3.clus.no = n.adj3.clus.no,
+              n1.unadjusted = n1.unadjusted, n1.unadjusted.clus.no = n1.unadjusted.clus.no,
+              n1.adj1 = n1.adj1, n1.adj1.clus.no = n1.adj1.clus.no,
+              n1.adj3 = n1.adj3, n1.adj3.clus.no = n1.adj3.clus.no,
+              n2.unadjusted = n2.unadjusted, n2.unadjusted.clus.no = n2.unadjusted.clus.no,
+              n2.adj1 = n2.adj1, n2.adj1.clus.no = n2.adj1.clus.no,
+              n2.adj3 = n2.adj3, n2.adj3.clus.no = n2.adj3.clus.no,
+              table = as.data.frame(table1))
+    class(returns) <- c("n.for.2means.cluster.RCT", "list")
+    returns    
+}    
+
+# Print n.for.cluster.2means
+print.n.for.cluster.2means <- function (x, ...) 
+{
+    if (nrow(x$table) < 39) {
+       cat("\n")
+#Print assumptions 
+        #Assumptions for alpha,power,p1,p2,n2/n1,mean cluster size and icc
+        cat(" Estimation of sample size in a cluster radomized controlled trial", "\n") 
+        cat(" for testing Ho: mu1==mu2", "\n", "\n")
+        cat(" Assumptions:", "\n", "\n")
+        if (length(x$alpha) == 1) 
+        cat("                                alpha =", x$alpha, "\n")
+        if (length(x$power) == 1) 
+        cat("                                power =", x$power, "\n")
+        cat("                                  mu1 =", x$mu1, "\n")
+        cat("                                  mu2 =", x$mu2, "\n")
+        cat("                                  sd1 =", x$sd1, "\n")
+        cat("                                  sd2 =", x$sd2, "\n")
+        if (length(x$ratio) == 1)
+        cat("                         n2/n1(ratio) =", x$ratio, "\n")
+        cat("           Expected mean cluster size =", x$mean.cluster.size, "\n")
+        cat("Intra-cluster correlation coefficient =", x$icc, "\n")
+        #Assumptions - mean(sd) of cluster size from previous study for design effect 
+        if(!is.null(x$previous.mean.cluster.size)){
+        cat("  Cluster size of previous study:Mean =", x$previous.mean.cluster.size, "\n")
+        cat("    Cluster size of previous study:SD =", x$previous.sd.cluster.size, "\n")  
+        cat("             Design Effect:Unadjusted =", x$deff.unadjusted,"\n")
+        cat("               Design Effect:Adjusted =", x$deff.adj1,"\n","\n")
+        }
+        #Assumptions - expected max and min cluster size for design effect
+        else{
+        cat("        Maximum expected cluster size =", x$max.cluster.size, "\n")
+        cat("        Minimum expected cluster size =", x$min.cluster.size, "\n")    
+        cat("             Design Effect:Unadjusted =", x$deff.unadjusted,"\n")       
+        cat("               Design Effect:Adjusted =", x$deff.adj3, "\n","\n")
+        }
+#Print results
+        #Results for equal ratio (n2/n1)                     
+        if (x$ratio == 1){
+        cat(" Estimated required sample size:", "\n", "\n")
+        cat("     When design effect is unadjusted for unequal cluster sizes", "\n")
+        cat("                                   n1 =", x$n.unadjusted, "\n")
+        cat("            Number of clusters for n1 =", x$n.unadjusted.clus.no, "\n")
+        cat("                                   n2 =", x$n.unadjusted, "\n")
+        cat("            Number of clusters for n2 =", x$n.unadjusted.clus.no,"\n")
+        cat("                              n1 + n2 =", x$n.unadjusted + x$n.unadjusted,"\n")
+        cat("             Total number of clusters =", x$n.unadjusted.clus.no + x$n.unadjusted.clus.no,"\n", "\n")
+        cat("     When design effect is adjusted for unequal cluster sizes", "\n")
+                  if(is.null(x$max.cluster.size)){ 
+        cat("                                   n1 =", x$n.adj1, "\n")
+        cat("            Number of clusters for n1 =", x$n.adj1.clus.no, "\n")
+        cat("                                   n2 =", x$n.adj1, "\n")
+        cat("            Number of clusters for n2 =", x$n.adj1.clus.no,"\n")
+        cat("                              n1 + n2 =", x$n.adj1 + x$n.adj1, "\n")   
+        cat("             Total number of clusters =", x$n.adj1.clus.no + x$n.adj1.clus.no,"\n", "\n")
+                  }
+                  else{
+        cat("                                   n1 =", x$n.adj3, "\n")
+        cat("            Number of clusters for n1 =", x$n.adj3.clus.no, "\n")
+        cat("                                   n2 =", x$n.adj3, "\n")
+        cat("            Number of clusters for n2 =", x$n.adj3.clus.no,"\n")
+        cat("                              n1 + n2 =", x$n.adj3 + x$n.adj3, "\n")   
+        cat("             Total number of clusters =", x$n.adj3.clus.no + x$n.adj3.clus.no,"\n", "\n")
+                  }
+        }
+        #Results for unequal ratio (ratio!=1) 
+        else{
+        cat(" Estimated required sample size:", "\n", "\n")
+        cat("    When design effect is unadjusted for unequal cluster sizes", "\n")
+        cat("                                   n1 =", x$n1.unadjusted, "\n")
+        cat("            Number of clusters for n1 =", x$n1.unadjusted.clus.no, "\n")
+        cat("                                   n2 =", x$n2.unadjusted, "\n")
+        cat("            Number of clusters for n2 =", x$n2.unadjusted.clus.no,"\n")
+        cat("                              n1 + n2 =", x$n1.unadjusted + x$n2.unadjusted,"\n")
+        cat("             Total number of clusters =", x$n1.unadjusted.clus.no + x$n2.unadjusted.clus.no,"\n", "\n")
+        cat("    When design effect is adjusted for unequal cluster sizes", "\n")
+                  if(is.null(x$max.cluster.size)){
+        cat("                                   n1 =", x$n1.adj1, "\n")
+        cat("            Number of clusters for n1 =", x$n1.adj1.clus.no, "\n")
+        cat("                                   n2 =", x$n2.adj1, "\n")
+        cat("            Number of clusters for n2 =", x$n2.adj1.clus.no,"\n")
+        cat("                              n1 + n2 =", x$n1.adj1 + x$n2.adj1, "\n")   
+        cat("             Total number of clusters =", x$n1.adj1.clus.no + x$n2.adj1.clus.no,"\n", "\n")
+                  }
+                  else{
+        cat("                                   n1 =", x$n1.adj3, "\n")
+        cat("            Number of clusters for n1 =", x$n1.adj3.clus.no, "\n")
+        cat("                                   n2 =", x$n2.adj3, "\n")
+        cat("            Number of clusters for n2 =", x$n2.adj3.clus.no,"\n")
+        cat("                              n1 + n2 =", x$n1.adj3+ x$n2.adj3, "\n", "\n")   
+        cat("             Total number of clusters =", x$n1.adj3.clus.no + x$n2.adj3.clus.no,"\n", "\n") 
+                  }
+        }
+  }
+        #If nrow of xtable is not less than 39        
+else {       
+        cat("\n")
+        print(x$table)
+    }
+        
+}
+
+
+             
+                                  
+
+
+
+
 ### sample size for survey
 n.for.survey <- function(p, delta = "auto", popsize=NULL, deff=1, alpha = .05){
 q <- 1-p
@@ -3277,6 +3747,83 @@ if(nrow(x$table) < 6){
 cat("\n")
 print(x$table)
 }}
+
+## Sample size for equivalent trial
+n.for.equi.2p <- function (p, sig.diff, alpha=.05, power=.8 ) {
+  n <- (qnorm(alpha/2) + qnorm(1-power))^2 * 2*p*(1-p)/sig.diff^2
+  n <- trunc(n) + 1
+  table1 <- cbind(p, n, sig.diff, alpha, power)
+  colnames(table1)[colnames(table1)=="alpha"] <- "alpha"
+  colnames(table1)[colnames(table1)=="power"] <- "power"
+  colnames(table1)[colnames(table1)=="sig.diff"] <- "sig.diff"
+  returns <- list(p=p, n=n, sig.diff=sig.diff, alpha=alpha, power=power,  
+    table = as.data.frame(table1))
+  class(returns) <- c("n.for.equi.2p", "list")
+  returns
+}
+
+## print n.for.equi.2p
+print.n.for.equi.2p <- function(x, ...){
+if(nrow(x$table) < 6){
+	cat("\n")
+	cat("Estimation of sample size for testing Ho: p1==p2==p", "\n")
+	cat("Assumptions:", "\n", "\n")
+	cat("     alpha =", x$alpha, "\n")
+	cat("     power =", x$power, "\n")
+	cat("         p =", x$p, "\n")
+	cat("  sig.diff =", x$sig.diff, "\n", "\n")
+	cat("Estimated required sample size:", "\n", "\n")
+	cat("         n =",x$n,"\n")
+	cat("   Total n =",x$n*2,"\n","\n")
+}else{
+	cat("Assumptions:", "\n", "\n")
+	if(length(x$alpha)==1) cat("     alpha =", x$alpha, "\n")
+	if(length(x$power)==1) cat("     power =", x$power, "\n")
+  if(length(x$ratio)==1) cat("     n2/n1 =", x$ratio, "\n")
+  cat("\n")
+print(x$table)
+}
+}
+
+
+#  n.for.noninferior.2p
+
+n.for.noninferior.2p <- function (p, sig.inferior, alpha=.05, power=.8 ) {
+  n <- (qnorm(alpha) + qnorm(1-power))^2 * 2*p*(1-p)/sig.inferior^2
+  n <- trunc(n) + 1
+  table1 <- cbind(p, n, sig.inferior, alpha, power)
+  colnames(table1)[colnames(table1)=="alpha"] <- "alpha"
+  colnames(table1)[colnames(table1)=="power"] <- "power"
+  colnames(table1)[colnames(table1)=="sig.inferior"] <- "sig.inferior"
+  returns <- list(p=p, n=n, sig.inferior=sig.inferior, alpha=alpha, power=power,
+    table = as.data.frame(table1))
+  class(returns) <- c("n.for.noninferior.2p", "list")
+  returns
+}
+
+## print n.for.noninferior.2p
+print.n.for.noninferior.2p <- function(x, ...){
+if(nrow(x$table) < 6){
+	cat("\n")
+	cat("Estimation of sample size for testing Ho: p1==p2 == p", "\n")
+	cat("Assumptions:", "\n", "\n")
+	cat("         alpha =", x$alpha, "\n")
+	cat("         power =", x$power, "\n")
+	cat("             p =", x$p, "\n")
+	cat("  sig.inferior =", x$sig.inferior, "\n", "\n")
+	cat("Estimated required sample size:", "\n", "\n")
+	cat("         n =",x$n,"\n")
+	cat("   Total n =",x$n*2,"\n","\n")
+}else{
+	cat("Assumptions:", "\n", "\n")
+	if(length(x$alpha)==1) cat("     alpha =", x$alpha, "\n")
+	if(length(x$power)==1) cat("     power =", x$power, "\n")
+  if(length(x$ratio)==1) cat("     n2/n1 =", x$ratio, "\n")
+  cat("\n")
+print(x$table)
+}
+}
+
 
 ### Pack all related variables into the existing .data
 pack <- function (dataFrame = .data) 
@@ -4024,8 +4571,11 @@ if(pack){
 }
 
 ### Recoding a variable or set of variables for the same final value
-recode <- 
-function (vars, old.value, new.value, dataFrame = .data) 
+recode <- function(vars, ...){
+UseMethod("recode")
+}
+recode.default <- 
+function (vars, old.value, new.value, dataFrame = .data, ...) 
 {
     data1 <- dataFrame
     nl <- as.list(1:ncol(data1))
@@ -4095,6 +4645,30 @@ function (vars, old.value, new.value, dataFrame = .data)
     if (is.element(as.character(substitute(dataFrame)), search())) {
         detach(pos = which(search() %in% as.character(substitute(dataFrame))))
         attach(data1, name = as.character(substitute(dataFrame)), 
+            warn.conflicts = FALSE)
+    }
+}
+# For 'recode'ing missing values of one or more variables into a new value
+recode.is.na <-
+function (vars, new.value=0, dataFrame = .data, ...){
+    data1 <- dataFrame
+    nl <- as.list(1:ncol(data1))
+    names(nl) <- names(data1)
+    var.order <- eval(substitute(vars), nl, parent.frame())
+    if (exists(names(data1)[var.order], where = 1, inherit = FALSE))
+        warning("Name(s) of vars duplicates with an object outside the dataFrame.")
+    for (i in var.order) {
+        temp.vector <- data1[, i, drop=TRUE]
+        if (is.factor(temp.vector)){
+          levels(temp.vector) <- c(levels(temp.vector), new.value)
+        }
+        temp.vector[is.na(temp.vector)] <- new.value
+        temp.vector -> data1[, i]
+    }
+        assign(as.character(substitute(dataFrame)), data1, pos = 1)
+    if (is.element(as.character(substitute(dataFrame)), search())) {
+        detach(pos = which(search() %in% as.character(substitute(dataFrame))))
+        attach(data1, name = as.character(substitute(dataFrame)),
             warn.conflicts = FALSE)
     }
 }

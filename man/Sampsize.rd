@@ -1,18 +1,26 @@
 \name{sampsize}
 \alias{n.for.survey}
 \alias{n.for.2means}
+\alias{n.for.cluster.2means}
 \alias{n.for.2p}
+\alias{n.for.cluster.2p}
+\alias{n.for.equi.2p}
+\alias{n.for.noninferior.2p}
 \alias{n.for.lqas}
 \title{Sample size calculation}
 \description{Sample size calculations for epidemiological studies}
 \usage{
 n.for.survey (p, delta = "auto", popsize = NULL, deff = 1, alpha = 0.05) 
 n.for.2means (mu1, mu2, sd1, sd2, ratio = 1, alpha = 0.05, power = 0.8) 
+n.for.cluster.2means (mu1, mu2, sd1, sd2, alpha = 0.05, power = 0.8, ratio = 1, mean.cluster.size = 10, previous.mean.cluster.size = NULL, previous.sd.cluster.size = NULL, max.cluster.size = NULL, min.cluster.size = NULL, icc = 0.1)
 n.for.2p (p1, p2, alpha = 0.05, power = 0.8, ratio = 1) 
+n.for.cluster.2p (p1, p2, alpha = 0.05, power = 0.8, ratio = 1, mean.cluster.size = 10, previous.mean.cluster.size = NULL, previous.sd.cluster.size = NULL, max.cluster.size = NULL, min.cluster.size = NULL, icc = 0.1) 
+n.for.equi.2p(p, sig.diff, alpha=.05, power=.8)
+n.for.noninferior.2p (p, sig.inferior, alpha = 0.05, power = 0.8)
 n.for.lqas (p0, q = 0, N = 10000, alpha = 0.05, exact = FALSE) 
 }
 \arguments{
-	\item{p}{estimated prevalence}
+	\item{p}{estimated probability}
 	\item{delta}{difference between the estimated prevalence and one side of the 95 percent confidence limit (precision)}
 	\item{popsize}{size of the finite population}
 	\item{deff}{design effect for cluster sampling}
@@ -20,8 +28,14 @@ n.for.lqas (p0, q = 0, N = 10000, alpha = 0.05, exact = FALSE)
 	\item{mu1, mu2}{estimated means of the two populations}
 	\item{sd1, sd2}{estimated standard deviations of the two populations}
 	\item{ratio}{n2/n1}
+  \item{mean.cluster.size}{mean of the cluster size planned in the current study}
+  \item{previous.mean.cluster.size, previous.sd.cluster.size}{mean and sd of cluster size from a previous study}
+  \item{max.cluster.size, min.cluster.size}{maximum and minimum of cluster size in the current study}
+  \item{icc}{intraclass correlation coefficient}
 	\item{p1, p2}{estimated probabilities of the two populations}
 	\item{power}{power of the study}
+	\item{sig.diff}{level of difference consider as being clinically significant}
+  \item{sig.inferior}{level of reduction of effectiveness as being clinically significant}
 	\item{p0}{critical proportion beyond which the lot will be rejected}
 	\item{q}{critical number of faulty pieces found in the sample, beyond which the lot will be rejected}
 	\item{N}{lot size}
@@ -35,7 +49,13 @@ When cluster sampling is employed, the design effect (deff) has to be taken into
 
 'n.for.2means' is used to compute the sample size needed for testing the hypothesis that the difference of two population means is zero.
 
+'n.for.cluster.2means' and 'n.for.cluster.2p' are for cluster (usually randomized) controlled trial.
+
 'n.for.2p'  is used to the compute the sample size needed for testing the hypothesis that the difference of two population proportions is zero.
+
+'n.for.equi.2p' is used for equivalent trial with equal probability of success or fail being p for both groups. 'sig.diff' is a difference in probability considered as being clinically significant. If both sides of limits of 95 percent CI of the difference are within +sig.diff or -sig.diff, there would be neither evidence of inferiority nor of superiority of any arm. 
+
+'n.for.noninferior.2p' is similar to 'n.for.equi.2p' except if the lower limit of 95 percent CI of the difference is higher than the sig.inferior level, the hypothesis of inferiority would be rejected.
 
 For a case control study, p1 and p2 are the proportions of exposure among cases and controls.
 
@@ -64,6 +84,13 @@ Each type of returned values consists of vectors of various parameters in the fo
 	\email{ <cvirasak@medicine.psu.ac.th>}
 }
 \seealso{'power.for.2means', 'power.for.2p'}
+\references{
+Eldridge SM, Ashby D, Kerry S. 2006 
+Sample size for cluster randomized trials:
+effect of coefficient of variation of cluster size and analysis method.
+\emph{Int J Epidemiol} \bold{35(5)}: 1292-300.
+}
+
 \examples{
 # In a standard survey to determine the coverage of immunization needed using 
 # a cluster sampling technique on a population of approximately 500000, and
@@ -87,6 +114,25 @@ n.for.2p(p1=.9, p2=.8) # 219 subjects needed in each arm.
 
 # To see the effect of p1 on sample size
 n.for.2p(p1=seq(1,9,.5)/10, p2=.5) # A table output
+
+# The same randomized trial to check whether the new treatment is 5 percent
+# different from the standard treatment assuming both arms has a common
+# cure rate of 85 percent would be
+
+n.for.equi.2p(p=.85, sig.diff=0.05)  # 801 each.
+
+# If inferior arm is not allow to be lower than -0.05 (5 percent less effective)
+n.for.noninferior.2p(p=.85, sig.inferior=0.05)  # 631 each.
+
+# A cluster randomized controlled trial to test whether training of village
+# volunteers would result in reduction of prevalence of a disease from 50 percent
+# in control villages to 30 percent in the study village with a cluster size
+# varies from 250 to 500 eligible subjects per village (mean of 350) and the
+# intraclass correlation is assumed to be 0.15
+
+n.for.cluster.2p(p1=.5, p2=.3, mean.cluster.size = 350, max.cluster.size = 500, 
+min.cluster.size = 250, icc = 0.15)
+
 
 
 # A quality assurance to check whether the coding of ICD-10 is faulty 
