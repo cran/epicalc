@@ -40,7 +40,7 @@ make2x2(caseexp, controlex, casenonex, controlnonex)
 
 'cci' is a variant of 'cc' where four numbers are entered manually.  
 
-'cs' is for cohort and cross-sectional studies. It computes the absolute risk, risk difference, and risk ratio. When the exposure is a risk factor, the attributable fraction exposure and attributable fraction population are also displayed in the output. When the exposure is a protective factor, protective efficacy or percent of risk reduced and number needed to treat (NNT) are displayed instead. 
+'cs' is for cohort and cross-sectional studies. It computes the absolute risk, risk difference, and risk ratio. When the exposure is a risk factor, the attributable fraction exposure, attributable fraction population and number needed to harm (NNH) are also displayed in the output. When the exposure is a protective factor, protective efficacy or percent of risk reduced and number needed to treat (NNT) are displayed instead. 
 
 'csi' is a variant of 'cs' where four numbers are entered manually.
 

@@ -801,20 +801,25 @@ if(risk.ratio < 1) {
   nnt.lower <- round(-1/(risk.diff*(1+(qnorm(1-.05/2)/sqrt(chi2)))),decimal)
   nnt.upper <- round(-1/(risk.diff*(1-(qnorm(1-.05/2)/sqrt(chi2)))),decimal) 	
 	risk.names <- c("Risk difference (Re - Rne)","Risk ratio","Protective efficacy =(Rne-Re)/Rne*100  ", "  or percent of risk reduced", 
-		"Number needed to treat (NNT)"  )
+		"Number needed to treat (NNT)", "  or -1/(risk difference)"  )
 	risk.table <- cbind(risk.names, 
-      c(round(risk.diff,decimal), risk.ratio,      protective.efficacy,       " ", nnt),
-  		c(risk.diff.lower,          risk.ratio.lower,protective.efficacy.lower, " ", nnt.lower),
-      c(risk.diff.upper,          risk.ratio.upper,protective.efficacy.upper, " ", nnt.upper))
+      c(round(risk.diff,decimal), risk.ratio,      protective.efficacy,       " ", nnt, ""),
+  		c(risk.diff.lower,          risk.ratio.lower,protective.efficacy.lower, " ", nnt.lower, ""),
+      c(risk.diff.upper,          risk.ratio.upper,protective.efficacy.upper, " ", nnt.upper, ""))
 }else{
 	attributable.frac.exp <- round(risk.diff/risk[2], decimal) 
 	pop.risk.diff <- risk[3] - risk[1]
 	attributable.frac.pop <- round((risk[3] - risk[1])/risk[3]*100, decimal)
+	nnh <- round(1/risk.diff,decimal)
+  nnh.lower <- round(1/(risk.diff*(1+(qnorm(1-.05/2)/sqrt(chi2)))),decimal)
+  nnh.upper <- round(1/(risk.diff*(1-(qnorm(1-.05/2)/sqrt(chi2)))),decimal) 	
 	cat("\n")
 	risk.names <- c("Risk difference (attributable risk)","Risk ratio","Attr. frac. exp. -- (Re-Rne)/Re",
-		"Attr. frac. pop. -- (Rt-Rne)/Rt*100 %  ")
-	risk.table <- cbind(risk.names, c(round(risk.diff,decimal), risk.ratio, attributable.frac.exp,
-	attributable.frac.pop), c(risk.diff.lower,risk.ratio.lower,"",""),c(risk.diff.upper,risk.ratio.upper,"",""))
+		"Attr. frac. pop. -- (Rt-Rne)/Rt*100 %  ", "Number needed to harm (NNH)", "  or 1/(risk difference)")
+	risk.table <- cbind(risk.names, 
+      c(round(risk.diff,decimal), risk.ratio,    attributable.frac.exp, attributable.frac.pop, nnh, ""), 
+      c(risk.diff.lower,          risk.ratio.lower,"","", nnh.lower, ""),
+      c(risk.diff.upper,          risk.ratio.upper,"","", nnh.upper, ""))
 }
 	row.names(risk.table) <- rep("",nrow(risk.table))
 	colnames(risk.table) <- c("","Estimate","Lower95ci","Upper95ci")
@@ -4015,9 +4020,10 @@ p.value <- pchisq(chisq, df, lower.tail=FALSE)
 return(list(results="Goodness-of-fit test for Poisson assumption",chisq=chisq, df=df, p.value=p.value))
 }
 ### Sort data set and related vector
-sortBy <- function(..., dataFrame = .data) {
+sortBy <- function(..., dataFrame = .data, inclusive=TRUE) {
 data1 <- dataFrame
 data1 <- data1[order(...),]
+if(inclusive){
 y <- setdiff(lsNoFunction(), as.character(ls.str(mode="list")[]))
 if (length(y)>0){
 for(i in 1:length(y)){
@@ -4025,6 +4031,7 @@ for(i in 1:length(y)){
 	nam <- y[i]
 	assign (nam, (get(y[i]))[order(...)], env = .GlobalEnv)
 	}
+}
 }
 }
     detachAllData()

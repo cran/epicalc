@@ -1,6 +1,6 @@
 Package: epicalc
-Version: 2.7.2.3
-Date: 2008-10-08
+Version: 2.8.0.0
+Date: 2008-11-30
 Title: Epidemiological calculator
 Author: Virasakdi Chongsuvivatwong <cvirasak@medicine.psu.ac.th>
 Maintainer: Virasakdi Chongsuvivatwong <cvirasak@medicine.psu.ac.th>
@@ -9,4 +9,4 @@ Suggests:
 Description: Functions making R easy for epidemiological calculation.
 License: GPL (>= 2)
 URL: http://CRAN.R-project.org/
-Packaged: Wed Oct  8 00:42:44 2008; com
+Packaged: Sun Nov 30 17:12:46 2008; com
