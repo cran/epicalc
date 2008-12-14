@@ -55,7 +55,7 @@ tab1(eclair)
 
 # Defining missing value
 recode(eclair, eclair>20, NA) 
-pieces.of.eclair <- cut(eclair, c(0,1,2,20))
+pieces.of.eclair <- cut(eclair, c(0,1,2,20), include.lowest=TRUE, right=FALSE)
 tabpct(pieces.of.eclair, diarrhea) 
 }
 \keyword{datasets}

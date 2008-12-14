@@ -1477,7 +1477,7 @@ colnames(table1) <- c("Coeff", paste("lower0", 100 - 100 * alpha,
     if(length(grep(":", var.names[i]))>0){
     var.name.interact <- unlist(strsplit(var.names[i], ":"))
       if(any(names(model$xlevels)==var.name.interact[1])){
-      level1 <- length(unlist(model$xlev>els[var.name.interact[1]]))-1
+      level1 <- length(unlist(model$xlevels[var.name.interact[1]]))-1
       }else{
       level1 <- 1
       }
@@ -6670,4 +6670,27 @@ data1[,i] <- unclass(data1[,i])
       detach(pos=which(search() %in% as.character(substitute(dataFrame))))
       attach(data1, name=as.character(substitute(dataFrame)), warn.conflicts = FALSE)
     }
+}
+
+## Merge with var.labels maintained
+merge.lab <- function(x, y, ...){
+if(!is.data.frame(x) | !is.data.frame(y)) stop("Both object must be in class data frame")
+if(is.null(attr(x, "var.labels"))) {
+array1 <- cbind(names(x), "")
+}else{
+array1 <- cbind(names(x),attr(x, "var.labels"))
+}
+
+if(is.null(attr(y, "var.labels"))) {
+array2 <- cbind(names(y), "")
+}else{
+array2 <- cbind(names(y),attr(y, "var.labels"))
+}
+
+array12 <- rbind(array1, array2)
+array12 <- array12[!duplicated(array12[,1]),]
+newdata <- merge(x, y, ...)
+attr(newdata, "var.labels") <- rep("", nrow(newdata))
+attr(newdata, "var.labels") <- lookup(names(newdata), lookup.array=array12)
+newdata
 }
