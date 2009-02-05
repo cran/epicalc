@@ -13,6 +13,5 @@
        \email{ <cvirasak@medicine.psu.ac.th>}
 }
 \seealso{'n.for.cluster.2means'}
-}
 \keyword{database}                                                                            
 

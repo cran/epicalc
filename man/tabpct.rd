@@ -28,7 +28,7 @@ tabpct(row, column, decimal = 1, percent = c("both", "col",
 
 3: always vertical.
 }
-}
+
 \details{'tabpct' gives column and row percent cross-tabulation as well as mosaic plot. 
 
 The width of the bar in the plot denotes the relative proportion of the row variable.
