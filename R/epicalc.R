@@ -3866,60 +3866,123 @@ pack <- function (dataFrame = .data)
 
 
 ### Power calcuation
-power.for.2means <- function (mu1, mu2, n1, n2, sd1, sd2, alpha=.05) {
-	if(mu1 >mu2) stop("Please make mu2 > m1")
-	cat("\n")
-	cat("     alpha =", alpha, "\n")
-	cat("       mu1 =", mu1, "\n")
-	cat("       mu2 =", mu2, "\n")
-	cat("        n1 =", n1, "\n")
-	cat("        n2 =", n2, "\n")
-	cat("       sd1 =", sd1, "\n")
-	cat("       sd2 =", sd2, "\n")
-	pooled.sd <- sqrt(sd1^2/n1 + sd2^2/n2)
-	power     <- pnorm((mu2-mu1)/pooled.sd - qnorm(1-alpha/2))
-	cat("\n","     power =", round(power,4), "\n")
-	diffmu <- seq(-2*pooled.sd,2*pooled.sd+(mu2-mu1), by=.01*(mu2-mu1))
-	h0 <- dnorm(diffmu, mean=0, sd =	pooled.sd)
-	ha <- dnorm(diffmu, mean=(mu2-mu1), sd = pooled.sd)
-	plot(diffmu, h0, type = "l", xlim=c(-2*pooled.sd, 2*pooled.sd+(mu2-mu1)),
-		main=paste("Power =", round(power,4)), ylab="", xlab="mu2-mu1")
-	lines(diffmu, ha, type = "l")
-	check.point <- qnorm(1-alpha/2)*pooled.sd
-	for(i in seq(from=check.point, to=2*pooled.sd+(mu2-mu1), 
-		by=(max(diffmu)-min(diffmu))/50)) {
-	lines(c(i,i),
-		c(0, dnorm(i, mean=(mu2-mu1), sd = pooled.sd)),
-		col="blue")
-	}
-	text(max(diffmu),max(h0),paste("mu1 = ",mu1,", mu2 = ",mu2, sep=""),pos=2)
-	text(max(diffmu),.9*max(h0),paste("sd1 = ",sd1,", sd2 = ", sd2, sep=""),pos=2)
-	text(max(diffmu),.8*max(h0),paste("n1 = ",n1, ", n2 = ",n2, sep=""),pos=2)
-	text(0,.5*max(h0), paste("Ho: mu2-mu1=0"), col="brown", font=4)
-	text(mu2-mu1, .4*max(h0), paste("Ha: mu2 - mu1 =", mu2-mu1), col="brown", font=4)
+power.for.2means <-
+function (mu1, mu2, n1, n2, sd1, sd2, alpha = 0.05) 
+{
+        mu3 <- mu1
+        mu4 <- mu2
+        n3 <- n1
+        n4 <- n2
+        sd3 <- sd1
+        sd4 <- sd2
+    mu1 <- ifelse (mu3 > mu4, mu4, mu3)
+    mu2 <- ifelse (mu3 > mu4, mu3, mu4)
+    n1 <- ifelse (mu3 > mu4, n4, n3)
+    n2 <- ifelse (mu3 > mu4, n3, n4)
+    sd1 <- ifelse(mu3 > mu4, sd4, sd3)
+    sd2 <- ifelse(mu3 > mu4, sd3, sd4)
+    ratio <- n2/n1
+    pooled.sd <- sqrt(sd1^2/n1 + sd2^2/n2)
+    power <- pnorm((mu2 - mu1)/pooled.sd - qnorm(1 - alpha/2))
+    if(length(power) ==1){
+    diffmu <- seq(-2 * pooled.sd, 2 * pooled.sd + (mu2 - mu1), 
+        by = 0.01 * (mu2 - mu1))
+    h0 <- dnorm(diffmu, mean = 0, sd = pooled.sd)
+    ha <- dnorm(diffmu, mean = (mu2 - mu1), sd = pooled.sd)
+    plot(diffmu, h0, type = "l", xlim = c(-2 * pooled.sd, 2 * 
+        pooled.sd + (mu2 - mu1)), main = paste("Power =", round(power, 
+        4)), ylab = "", xlab = "mu2-mu1")
+    lines(diffmu, ha, type = "l")
+    check.point <- qnorm(1 - alpha/2) * pooled.sd
+    for (i in seq(from = check.point, to = 2 * pooled.sd + (mu2 - 
+        mu1), by = (max(diffmu) - min(diffmu))/50)) {
+        lines(c(i, i), c(0, dnorm(i, mean = (mu2 - mu1), sd = pooled.sd)), 
+            col = "blue")
+    }
+    text(max(diffmu), max(h0), paste("mu1 = ", mu1, ", mu2 = ", 
+        mu2, sep = ""), pos = 2)
+    text(max(diffmu), 0.9 * max(h0), paste("sd1 = ", sd1, ", sd2 = ", 
+        sd2, sep = ""), pos = 2)
+    text(max(diffmu), 0.8 * max(h0), paste("n1 = ", n1, ", n2 = ", 
+        n2, sep = ""), pos = 2)
+    text(0, 0.5 * max(h0), paste("Ho: mu2-mu1=0"), col = "brown", 
+        font = 4)
+    text(mu2 - mu1, 0.4 * max(h0), paste("Ha: mu2 - mu1 =", mu2 - 
+        mu1), col = "brown", font = 4)
+    }
+
+    table1 <- cbind(mu3, mu4, n3, n4, sd3, sd3, alpha, round(power, 2))
+    colnames(table1)[1:6] <- c("mu1","mu2","n1","n2","sd1","sd2")
+    colnames(table1)[8] <- "power"
+    returns <- list(mu1 = mu3, mu2 = mu4, n1 = n3, n2=n4, sd1 = sd3, sd2=sd4, 
+    power=power, alpha=alpha, table = as.data.frame(table1))
+    class(returns) <- c("power.for.2means", "list")
+    returns
 }
 
-power.for.2p <- function (p1, p2, n1, n2, alpha=.05) {
-	cat("\n")
-	cat("     alpha =", alpha, "\n")
-	cat("        p1 =", p1, "\n")
-	cat("        p2 =", p2, "\n")
-	cat("        n1 =", n1, "\n")
-	cat("        n2 =", n2, "\n", "\n")
-	if(p1 >p2) { # Swapping
-		p3 <- p1; p1 <- p2; p2 <- p3
-		n3 <- n1; n1 <- n2; n2 <- n3
-	}
-	ratio <- n2/n1
-	r1   <- ratio +1
-	pbar <- (p1 + ratio*p2)/r1
-	n0   <- (n1- r1/(2*ratio*(p2-p1)))^2/n1
-	zb   <- ((p2-p1)*sqrt(ratio*n0) -
-		qnorm(1-alpha/2)*sqrt(r1*pbar*(1-pbar)))/
-		sqrt(ratio*p1*(1-p1)+p2*(1-p2))
-	power<- pnorm(zb)
-	cat("\n","     power =", round(power,4), "\n", "\n")
+print.power.for.2means <- function (x, ...) 
+{
+        cat("\n")
+        cat("Power for comparison of 2 means.", "\n")
+    if (nrow(x$table) < 6) {
+        cat("  mu1            =", x$mu1, "\n")
+        cat("  mu2            =", x$mu2, "\n")
+        cat("  sd1            =", x$sd1, "\n")
+        cat("  sd2            =", x$sd2, "\n")
+        cat("  n1             =", x$n1 , "\n")
+        cat("  n2             =", x$n2, "\n")
+        cat("  alpha          =", x$alpha, "\n")
+        cat("  power          =", round(x$power,3), "\n")
+    }
+    else {
+        print(x$table, rownames = FALSE)
+    }
 }
+
+power.for.2p <- function (p1, p2, n1, n2, alpha = 0.05) 
+{
+        p3 <- p1
+        p4 <- p2
+        n3 <- n1
+        n4 <- n2
+    p1 <- ifelse (p3 > p4, p4, p3)
+    p2 <- ifelse (p3 > p4, p3, p4)
+    n1 <- ifelse (p3 > p4, n4, n3)
+    n2 <- ifelse (p3 > p4, n3, n4)
+    ratio <- n2/n1
+    r1 <- ratio + 1
+    pbar <- (p1 + ratio * p2)/r1
+    n0 <- (n1 - r1/(2 * ratio * (p2 - p1)))^2/n1
+    zb <- ((p2 - p1) * sqrt(ratio * n0) - qnorm(1 - alpha/2) * 
+        sqrt(r1 * pbar * (1 - pbar)))/sqrt(ratio * p1 * (1 - 
+        p1) + p2 * (1 - p2))
+    power <- pnorm(zb)
+    table1 <- cbind(p3, p4, n3, n4, alpha, round(power, 3))
+    colnames(table1)[1:4] <- c("p1","p2","n1","n2") 
+    colnames(table1)[6] <- "power"
+    returns <- list(p1 = p3, p2 = p4, n1 = n3, n2 = n4, 
+    power=power, alpha=alpha, table = as.data.frame(table1))
+    class(returns) <- c("power.for.2p", "list")
+    returns
+}
+
+print.power.for.2p <- function (x, ...) 
+{
+        cat("\n")
+        cat("Power for comparison of 2 proportions.", "\n")
+    if (nrow(x$table) < 6) {
+        cat("  p1            =", x$p1, "\n")
+        cat("  p2            =", x$p2, "\n")
+        cat("  n1            =", x$n1 , "\n")
+        cat("  n2            =", x$n2, "\n")
+        cat("  alpha         =", x$alpha, "\n")
+        cat("  power         =", round(x$power, 3), "\n")
+    }
+    else {
+        print(x$table, rownames = FALSE)
+    }
+}
+
 
 ### Quantile normal plot with Shapiro-Wilk test result
 shapiro.qqnorm <- function(x, ...){
