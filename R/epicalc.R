@@ -2104,6 +2104,7 @@ tableGlm <- function (model, modified.coeff.array, decimal)
         table1 <- rbind(table1, label.row, cbind(table0, ""), cbind(blank.row,""))
       }
     }
+    table1
 }
 
 
