@@ -6758,3 +6758,74 @@ attr(newdata, "var.labels") <- rep("", nrow(newdata))
 attr(newdata, "var.labels") <- lookup(names(newdata), lookup.array=array12)
 newdata
 }
+
+## Longitudinal data management
+# Area under curve
+auc <- function(conc, time, id=NULL) {
+auc <- 0
+for(i in 2:(length(time))){
+auc <- auc + (time[i] - time[i-1])*(conc[i] + conc[i-1])/2
+}
+if (!is.null(id)){
+subject <- NULL
+auc <- NULL
+for(i in 1: length(table(id))) {
+  if ((is.ordered(id) & is.factor(id))) {
+  subject.integer <- as.integer(id)[order(id)]
+  }else{
+  subject.integer <- id
+  }
+  subject <- c(subject, subject.integer[id==i][1])
+  auc.individual <- 0
+  for(j in 2:(length(time[id==i]))){
+    auc.individual <- auc.individual + (time[id==i][j] - time[id==i][j-1])*(conc[id==i][j] + conc[id==i][j-1])/2
+  }
+auc <- c(auc, auc.individual)
+}
+auc <- data.frame (subject=subject, auc=auc)
+names(auc)[1] <- as.character(substitute(id))
+auc
+}
+auc
+}
+
+# Mark visits of followup by id and time
+markVisits <- function (id, time) {
+if(length(id) !=length(time)) stop("The length of these two variables must be equal")
+if(any(duplicated(paste(id,time)))) stop("The combination of id and time must be unique")
+original.order <- 1:length(id)
+if(any(data.frame(id, time) != data.frame(id[order(id, time)], time[order(id,time)]))){
+  new.order <- original.order[order(id,time)]
+  id <- id[order(id,time)]
+  time <- time[order(id,time)]
+}
+list1 <- rle(as.vector(id))
+unlist(sapply(X=list1$lengths, FUN=function(x) 1:x, simplify=FALSE)) -> visit
+visit[order(original.order)]
+}
+
+# Creating lag and next measurement
+lagVar <- function (var, id, time, lag.unit=1) {
+if(!is.integer(lag.unit)) lag.unit <- as.integer(lag.unit)
+if(length(id) !=length(time)) stop("The length of these two variables must be equal")
+if(any(duplicated(paste(id,time)))) stop("The combination of id and time must be unique")
+original.order <- 1:length(id)
+if(any(data.frame(id, time) != data.frame(id[order(id, time)], time[order(id,time)]))){
+  new.order <- original.order[order(id,time)]
+  id <- id[order(id,time)]
+  time <- time[order(id,time)]
+}
+var.lag <- var
+id.lag <- id
+if(lag.unit >=1) {
+var.lag [length(id):(lag.unit+1)] <- var[(length(id)-lag.unit):1] 
+var.lag [1:lag.unit] <- NA
+id.lag [length(id):(lag.unit+1)] <- id[(length(id)-lag.unit):1] 
+}else{
+var.lag [1:(length(id)+lag.unit)] <- var[(-lag.unit+1):length(id)]
+var.lag [length(id):(length(id)+lag.unit+1)] <- NA
+id.lag [1:(length(id)+lag.unit)] <- id[(-lag.unit+1):length(id)]
+}
+var.lag[id != id.lag] <- NA
+var.lag[order(original.order)]
+}
