@@ -5,7 +5,9 @@
 \usage{markVisits(id, time)
 }
 \details{
-Visit numbers are essential in longitudinal data analysis. This function make it easy for R user to do so
+Visit numbers are essential in longitudinal data analysis. This function make it easy for R user to do so.
+
+If visits marked by this function is going to be further used for calculation of lag difference, there must not be any missing visit in the data set.
  }
 \note{This was created from combination of the functions 'rle' and 'sapply'}
 \arguments{

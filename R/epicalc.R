@@ -6805,27 +6805,46 @@ visit[order(original.order)]
 }
 
 # Creating lag and next measurement
-lagVar <- function (var, id, time, lag.unit=1) {
-if(!is.integer(lag.unit)) lag.unit <- as.integer(lag.unit)
-if(length(id) !=length(time)) stop("The length of these two variables must be equal")
-if(any(duplicated(paste(id,time)))) stop("The combination of id and time must be unique")
-original.order <- 1:length(id)
-if(any(data.frame(id, time) != data.frame(id[order(id, time)], time[order(id,time)]))){
-  new.order <- original.order[order(id,time)]
-  id <- id[order(id,time)]
-  time <- time[order(id,time)]
-}
-var.lag <- var
-id.lag <- id
-if(lag.unit >=1) {
-var.lag [length(id):(lag.unit+1)] <- var[(length(id)-lag.unit):1] 
-var.lag [1:lag.unit] <- NA
-id.lag [length(id):(lag.unit+1)] <- id[(length(id)-lag.unit):1] 
-}else{
-var.lag [1:(length(id)+lag.unit)] <- var[(-lag.unit+1):length(id)]
-var.lag [length(id):(length(id)+lag.unit+1)] <- NA
-id.lag [1:(length(id)+lag.unit)] <- id[(-lag.unit+1):length(id)]
-}
-var.lag[id != id.lag] <- NA
-var.lag[order(original.order)]
+lagVar <- function (var, id, visit, lag.unit = 1) 
+{
+    if (!is.integer(lag.unit)) 
+        lag.unit <- as.integer(lag.unit)
+    if (length(id) != length(visit)) 
+        stop("The length of these two variables must be equal")
+    if (any(duplicated(paste(id, visit)))) 
+        stop("The combination of id and visit must be unique")
+    if (any(data.frame(id, visit) != data.frame(id[order(id, 
+        visit)], visit[order(id, visit)]))) {
+        new.order <- order(id, visit)
+        var <- var[new.order]
+        id <- id[new.order]
+        visit <- visit[new.order]
+    }
+    var.lag <- var
+    id.lag <- id
+    visit.lag <- visit
+    if (lag.unit >= 1) {
+        var.lag[length(id):(lag.unit + 1)] <- var[(length(id) - 
+            lag.unit):1]
+        var.lag[1:lag.unit] <- NA
+        id.lag[length(id):(lag.unit + 1)] <- id[(length(id) - 
+            lag.unit):1]
+        visit.lag[length(id):(lag.unit + 1)] <- visit[(length(id) - 
+            lag.unit):1]
+    }
+    else {
+        var.lag[1:(length(id) + lag.unit)] <- var[(-lag.unit + 
+            1):length(id)]
+        var.lag[length(id):(length(id) + lag.unit + 1)] <- NA
+        id.lag[1:(length(id) + lag.unit)] <- id[(-lag.unit + 
+            1):length(id)]
+        visit.lag[1:(length(id) + lag.unit)] <- visit[(-lag.unit + 
+            1):length(id)]
+    }
+    var.lag[id != id.lag] <- NA
+    var.lag[visit - visit.lag != lag.unit] <- NA
+    if(exists("new.order")){
+        var.lag <- var.lag[order(new.order)]
+    }
+var.lag
 }
