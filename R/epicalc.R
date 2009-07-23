@@ -4430,7 +4430,11 @@ if(any(class(x)=="Date")){
 	value <- as.numeric(value) 
 }
 
+if(is.integer(x)) {
+xgr <- value 
+}else{
 xgr <- cut(value, breaks=bin, labels=FALSE, include.lowest=TRUE)
+}
 if(!is.null(xmax) & !is.null(xmin)){
 original.lim <- c(min(value), max(value))
 xgr.lim <- c(min(xgr), max(xgr))
