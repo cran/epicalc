@@ -2742,63 +2742,81 @@ print(x$object)
 
 
 #### ROC curve from Logistic Regression
-lroc <- function (logistic.model, graph=TRUE, add=FALSE, title=FALSE, 
-    line.col="red", auc.coords=NULL, ...) {
-if(add){
-  title <- FALSE
-}
-table(logistic.model$fitted.values,logistic.model$y) -> firsttable
-colnames(firsttable) <- c("Non-diseased","Diseased")
-rownames(firsttable) <- substr(rownames(firsttable), 1,6)
-firsttable1 <- cbind(as.numeric(rownames(firsttable)),firsttable)
-rownames(firsttable1) <- rep("",nrow(firsttable1))
-colnames(firsttable1)[1]<- "predicted.prob"
-secondtable <- firsttable
-for(i in 1:length(secondtable[,1]))
-	{
-	secondtable[i,1]<-(sum(firsttable[,1])-sum(firsttable[(1:i),1]))/
-			sum(firsttable[,1])
-	secondtable[i,2]<-(sum(firsttable[,2])-sum(firsttable[(1:i),2]))/
-			sum(firsttable[,2])
-	rownames(secondtable)[i] <- paste(">",rownames(secondtable)[i])
-	}
-secondtable <- rbind((c(1,1)),secondtable)
-colnames(secondtable) <- c("1-Specificity","Sensitivity")
-## Model description
-model.des <- paste("logit (", deparse(logistic.model$formula),")",sep="")
-## Area under the curve
-auc <- 0
-for(i in 1:(nrow(secondtable)-1)) {
-	auc <- auc+ (secondtable[i,1]-secondtable[(i+1),1])*
-		.5*(secondtable[i,2]+secondtable[(i+1),2])
-	}
-if(graph){
-if(!add){
-plot(secondtable[,1],secondtable[,2], xlab="1-Specificity",
-		ylab="Sensitivity", xlim=(c(0,1)), 
-		ylim=(c(0,1)), asp=1, col=line.col, type="l", ...)
-if(title){
-  title(main =model.des, ...)
-}
-lines(x=c(0,1),y=c(0,1), lty=2, col="blue")
-abline(v=0, lty=2, col="blue")
-abline(v=.2, lty=2, col="blue")
-abline(v=.4, lty=2, col="blue")
-abline(v=.6, lty=2, col="blue")
-abline(v=.8, lty=2, col="blue")
-abline(v=1, lty=2, col="blue")
-abline(h=0, lty=2, col="blue")
-abline(h=.2, lty=2, col="blue")
-abline(h=.4, lty=2, col="blue")
-abline(h=.6, lty=2, col="blue")
-abline(h=.8, lty=2, col="blue")
-abline(h=1, lty=2, col="blue")
-auclabel <- paste("Area under the curve =", round(auc, 3))
-  if(!is.null(auc.coords)){text(x=auc.coords[1],y=auc.coords[2], pos=4, labels=auclabel, ...)}
+lroc <- 
+function (logistic.model, graph = TRUE, add = FALSE, title = FALSE, 
+    line.col = "red", auc.coords = NULL, ...) 
+{
+    if (add) {
+        title <- FALSE
+    }
+if(length(grep("cbind", names(model.frame(logistic.model))))>0){
+firsttable1 <- cbind(logistic.model$fitted.values, model.frame(logistic.model)[,1][,2:1])
+firsttable1 <- firsttable1[order(firsttable1[,1]),]
 }else{
-lines(secondtable[,1],secondtable[,2], col=line.col, ...)
-}}
-list(model.description=model.des, auc=auc, predicted.table=firsttable1, diagnostic.table=secondtable)
+if(length(grep("(weights)", names(model.frame(logistic.model))))>0){
+firsttable <- xtabs(as.vector(model.frame(logistic.model)[,ncol(model.frame(logistic.model))]) ~ logistic.model$fitted.values + logistic.model$y)
+}else{
+    firsttable <- table(logistic.model$fitted.values, logistic.model$y)
+}
+    colnames(firsttable) <- c("Non-diseased", "Diseased")
+    rownames(firsttable) <- substr(rownames(firsttable), 1, 6)
+    firsttable1 <- cbind(as.numeric(rownames(firsttable)), firsttable)
+}
+    rownames(firsttable1) <- rep("", nrow(firsttable1))
+    colnames(firsttable1)[1] <- "predicted.prob"
+firsttable <- firsttable1[,2:3]
+    secondtable <- firsttable
+    for (i in 1:length(secondtable[, 1])) {
+        secondtable[i, 1] <- (sum(firsttable[, 1]) - sum(firsttable[(1:i), 
+            1]))/sum(firsttable[, 1])
+        secondtable[i, 2] <- (sum(firsttable[, 2]) - sum(firsttable[(1:i), 
+            2]))/sum(firsttable[, 2])
+        rownames(secondtable)[i] <- paste(">", rownames(secondtable)[i])
+    }
+    secondtable <- rbind((c(1, 1)), secondtable)
+    colnames(secondtable) <- c("1-Specificity", "Sensitivity")
+model.des <- deparse(logistic.model$formula)
+    auc <- 0
+    for (i in 1:(nrow(secondtable) - 1)) {
+        auc <- auc + (secondtable[i, 1] - secondtable[(i + 1), 
+            1]) * 0.5 * (secondtable[i, 2] + secondtable[(i + 
+            1), 2])
+    }
+    if (graph) {
+        if (!add) {
+            plot(secondtable[, 1], secondtable[, 2], xlab = "1-Specificity", 
+                ylab = "Sensitivity", xlim = (c(0, 1)), ylim = (c(0, 
+                  1)), asp = 1, col = line.col, type = "l", ...)
+            if (title) {
+                title(main = model.des, ...)
+            }
+            lines(x = c(0, 1), y = c(0, 1), lty = 2, col = "blue")
+            abline(v = 0, lty = 2, col = "blue")
+            abline(v = 0.2, lty = 2, col = "blue")
+            abline(v = 0.4, lty = 2, col = "blue")
+            abline(v = 0.6, lty = 2, col = "blue")
+            abline(v = 0.8, lty = 2, col = "blue")
+            abline(v = 1, lty = 2, col = "blue")
+            abline(h = 0, lty = 2, col = "blue")
+            abline(h = 0.2, lty = 2, col = "blue")
+            abline(h = 0.4, lty = 2, col = "blue")
+            abline(h = 0.6, lty = 2, col = "blue")
+            abline(h = 0.8, lty = 2, col = "blue")
+            abline(h = 1, lty = 2, col = "blue")
+            auclabel <- paste("Area under the curve =", round(auc, 
+                3))
+            if (!is.null(auc.coords)) {
+                text(x = auc.coords[1], y = auc.coords[2], pos = 4, 
+                  labels = auclabel, ...)
+            }
+        }
+        else {
+            lines(secondtable[, 1], secondtable[, 2], col = line.col, 
+                ...)
+        }
+    }
+    list(model.description = model.des, auc = auc, predicted.table = firsttable1, 
+        diagnostic.table = secondtable)
 }
 
 ### ROC curve from a table
