@@ -4667,13 +4667,14 @@ if(pack){
 recode <- function(vars, ...){
 UseMethod("recode")
 }
-recode.default <- 
+recode.default <-
 function (vars, old.value, new.value, dataFrame = .data, ...) 
 {
     data1 <- dataFrame
     nl <- as.list(1:ncol(data1))
     names(nl) <- names(data1)
     var.order <- eval(substitute(vars), nl, parent.frame())
+    if(all(var.order < 0)) var.order <- (1:ncol(dataFrame))[var.order]
     if (exists(names(data1)[var.order], where = 1, inherit = FALSE)) 
         warning("Name(s) of vars duplicates with an object outside the dataFrame.")
     tx <- cbind(old.value, new.value)
@@ -4707,19 +4708,18 @@ function (vars, old.value, new.value, dataFrame = .data, ...)
                     1]] <- tx[j, 2]
                 }
             }
-        } 
-        if(is.character(data1[, i])){
-        if (length(old.value) == 1) {
-            data1[, var.order][data1[, var.order] == old.value] <- new.value
         }
-        else {
-            if (length(old.value) != length(new.value) & length(new.value) != 
-                1) 
-                stop("Lengths of old and new values are not equal")
+        if (is.character(data1[, i])) {
+            if (length(old.value) == 1) {
+                data1[, var.order][data1[, var.order] == old.value] <- new.value
+            }
+            else {
+                if (length(old.value) != length(new.value) & 
+                  length(new.value) != 1) 
+                  stop("Lengths of old and new values are not equal")
                 data1[, i] <- lookup(data1[, i, drop = TRUE], 
                   tx)
-        }
-        
+            }
         }
     }
     if (length(old.value) == nrow(data1)) {
@@ -4741,6 +4741,7 @@ function (vars, old.value, new.value, dataFrame = .data, ...)
             warn.conflicts = FALSE)
     }
 }
+
 # For 'recode'ing missing values of one or more variables into a new value
 recode.is.na <-
 function (vars, new.value=0, dataFrame = .data, ...){
@@ -6241,7 +6242,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
         }
     }
     for (i in selected) {
-        if (class(dataFrame[, i]) == "integer" & !is.null(by)) {
+        if ((class(dataFrame[, i]) == "integer" | class(dataFrame[, i]) == "numeric") & !is.null(by)) {
             if (any(selected.to.factor == i)) {
                 dataFrame[, i] <- factor(dataFrame[, i])
             }
@@ -6466,18 +6467,20 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                 selected.iqr <- NULL
                 for (i in 1:length(selected)) {
                   if (class(dataFrame[, selected[i]]) == "difftime") {
-                     dataFrame[, selected[i]] <- as.numeric(dataFrame[, selected[i]])
+                    dataFrame[, selected[i]] <- as.numeric(dataFrame[, 
+                      selected[i]])
                   }
                   if (is.integer(dataFrame[, selected[i]]) | 
                     is.numeric(dataFrame[, selected[i]])) {
                     if (length(table(by1)) > 1) {
                       if (nrow(dataFrame) < 5000) {
-                        if (nrow(dataFrame) < 3) { 
+                        if (nrow(dataFrame) < 3) {
                           selected.iqr <- c(selected.iqr, selected[i])
-                          } else
-                        if (shapiro.test(lm(dataFrame[, selected[i]] ~ 
-                          by1)$residuals)$p.value < 0.01 | bartlett.test(dataFrame[, 
-                          selected[i]] ~ by1)$p.value < 0.01) {
+                        }
+                        else if (shapiro.test(lm(dataFrame[, 
+                          selected[i]] ~ by1)$residuals)$p.value < 
+                          0.01 | bartlett.test(dataFrame[, selected[i]] ~ 
+                          by1)$p.value < 0.01) {
                           selected.iqr <- c(selected.iqr, selected[i])
                         }
                       }
@@ -6559,7 +6562,8 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                 if (test) {
                   E <- outer(sr, sc, "*")/sum(x0)
                   dim(E) <- NULL
-                  if ((sum(E < 5))/length(E) > 0.2 & nrow(dataFrame) < 1000) {
+                  if ((sum(E < 5))/length(E) > 0.2 & nrow(dataFrame) < 
+                    1000) {
                     test.method <- "Fisher's exact test"
                     p.value <- fisher.test(x0, simulate.p.value = TRUE)$p.value
                   }
@@ -6728,7 +6732,6 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
         table2
     }
 }
-
 
 # Print tableStack 
 

@@ -51,6 +51,34 @@ title(main="Comparison of two logistic regression models")
 lrtest(model1, model2) 
 # Number of induced abortions is associated with increased risk for infertility
 
+# Various form of logistic regression
+# Case by case data
+data(ANCdata)
+use(ANCdata)
+glm1 <- glm(death ~ anc + clinic, binomial, data=.data)
+lroc(glm1)
+
+# Frequency format
+data(ANCtable)
+ANCtable
+use(ANCtable)
+death <- factor (death)
+levels (death) <- c("no","yes")
+anc <- factor (anc)
+levels (anc) <- c("old","new")
+clinic <- factor (clinic)
+levels (clinic) <- c("A","B")
+pack()
+glm2 <- glm(death ~ anc + clinic, binomial, weights=Freq, data=.data)
+lroc(glm2)
+
+# yes/no format
+.data$condition <- c(1,1,2,2,3,3,4,4)
+data2 <- reshape (.data, timevar="death", v.name="Freq", idvar="condition", direction="wide")
+data2
+glm3 <- glm(cbind(Freq.yes, Freq.no) ~ anc + clinic, family=binomial, data=data2)
+lroc(glm3)
+
 
 # ROC from a diagnostic table
 table1 <- as.table(cbind(c(1,27,56,15,1),c(0,0,10,69,21)))

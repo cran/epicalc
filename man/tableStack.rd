@@ -115,5 +115,15 @@ tableStack(vars=3:4, by=outc, percent="none")
 tableStack(vars=3:4, by=outc, prevalence = TRUE)
 tableStack(vars=3:4, by=outc, name.test = FALSE)
 
-## Beware of small sample sizes in the last command}
+## Variable in numeric or factor
+data(Outbreak)
+use(Outbreak)
+des()
+# Comparison of exposure to food items between the two gender
+tableStack(vars=5:8, by=sex) # as continuous varaibles
+tableStack(vars=5:8, by=sex, vars.to.factor = 5:8) # as factors
+}
+
+
+
 \keyword{aplot}
