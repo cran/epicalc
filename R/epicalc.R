@@ -697,8 +697,8 @@ hici  <-rep(NA, ncol(cctable))
 for(i in 1:ncol(cctable)) {r[i] <- cctable[2,i]/colSums(cctable)[i]}
 rr[1] <- 1
 for(i in 2:ncol(cctable)){rr[i] <- (cctable[2,i]/colSums(cctable)[i])/(cctable[2,1]/colSums(cctable)[1])}
-for(i in 2:ncol(cctable)){lowci[i] <- rr[i]^(1-qnorm(1-.05)/sqrt(suppressWarnings(chisq.test(cbind(cctable[,1],cctable[,i])))$statistic))}
-for(i in 2:ncol(cctable)){hici[i] <- rr[i]^(1+qnorm(1-.05)/sqrt(suppressWarnings(chisq.test(cbind(cctable[,1],cctable[,i])))$statistic))}
+for(i in 2:ncol(cctable)){lowci[i] <- rr[i]^(1-qnorm(1-.05/2)/sqrt(suppressWarnings(chisq.test(cbind(cctable[,1],cctable[,i])))$statistic))}
+for(i in 2:ncol(cctable)){hici[i] <- rr[i]^(1+qnorm(1-.05/2)/sqrt(suppressWarnings(chisq.test(cbind(cctable[,1],cctable[,i])))$statistic))}
 row4 <- as.character(round(r,decimal))
 row5 <- as.character(round(rr,decimal)); row5[1] <- "1"
 row6 <- as.character(round(lowci,decimal)); row6[1] <- " "
@@ -715,7 +715,9 @@ cat("\n")
 cat("Chi-squared =", round(chisq.test(cctable)$statistic,3), ",",
 	chisq.test(cctable)$parameter,"d.f.,",
 	"P value =",round(chisq.test(cctable, correct=FALSE)$p.value,decimal+1),"\n")
+if(sum(chisq.test(cctable)$expected < 5)/sum(chisq.test(cctable)$expected > 0) > .2){
 cat("Fisher's exact test (2-sided) P value =",round(fisher.test(cctable)$p.value,decimal+1),"\n")
+}
 cat("\n")
 
 	if(any(cctable<5)) {
