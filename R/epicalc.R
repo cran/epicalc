@@ -6875,3 +6875,25 @@ lagVar <- function (var, id, visit, lag.unit = 1)
     }
 var.lag
 }
+
+# fill in missing records
+fillin <- function(dataFrame=.data, select, fill=NA)
+{
+if(missing(select)) select=1:ncol(dataFrame)
+  nl <- as.list(1:ncol(dataFrame))
+  names(nl) <- names(dataFrame)
+  vars <- eval(substitute(select), nl, parent.frame())            
+  x <- data.frame(table(dataFrame[,vars]))
+  x0 <- subset(x, Freq==0)[,-length(x)]
+
+  if(nrow(x0)==0){
+    dataFrame
+    warning("Nothing to fill")}
+  else{
+    z <- as.data.frame(dataFrame[1:nrow(x0), -vars, drop=FALSE])
+    if(dim(z)[2]==1)
+       names(z) <- names(dataFrame)[-vars]
+    z[,] <- fill
+    rbind(dataFrame, cbind(x0, z))
+  }
+}
