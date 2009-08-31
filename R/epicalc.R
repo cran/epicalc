@@ -4543,7 +4543,7 @@ if(is.null(by)){
 if(dot.col=="auto") dot.col <- "black"	
 	xgr <- sort(xgr)
 	freq <- rep(1, length(value))
-	for(i in 1:max(xgr)){
+	for(i in min(xgr):max(xgr)){
 		freq[xgr==i] <- 1:sum(xgr==i) 
 	}
 	if(max(freq)<20){
@@ -4570,7 +4570,7 @@ if(is.factor(by0)){
 	for(i in 1:length(levels(by1))){
 		yline <- c(yline, add.i)
 		col.j <- NULL
-		for(j in 1:max(xgr[by1==levels(by1)[i]])){
+		for(j in min(xgr[by1==levels(by1)[i]]):max(xgr[by1==levels(by1)[i]])){
 			y[xgr==j & by1==(levels(by1))[i]] <- (1:sum(xgr==j & by1==(levels(by1))[i])) + add.i 
 		}
 		add.i <- max(y, na.rm=TRUE) +2
