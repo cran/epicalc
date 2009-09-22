@@ -4937,14 +4937,30 @@ pyramid <- function (age, sex, binwidth = 5, inputTable = NULL, printTable = FAL
 
 ## Followup plot
 followup.plot <- 
-function (id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, legend.site = "topright",
-    lty = "auto", line.col = "auto", stress = NULL, stress.labels = FALSE, 
-    label.col = 1, stress.col = NULL, stress.width = NULL, stress.type = NULL, 
-    lwd = 1, ...) 
+function (id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, 
+    legend.site = "topright", lty = "auto", line.col = "auto", 
+    stress = NULL, stress.labels = FALSE, label.col = 1, stress.col = NULL, 
+    stress.width = NULL, stress.type = NULL, lwd = 1, xlab, ylab, ...) 
 {
-    plot(time, outcome, xlab = " ", ylab = " ", type = "n", lwd = lwd, 
+if(missing(xlab)) {
+xlab <- as.character(substitute(time))
+if(class(get(search()[2]))=="data.frame"){
+if(any(attr(get(search()[2]),"names") == substitute(xlab))){
+xlab <- attr(get(search()[2]),"var.labels")[attr(get(search()[2]), "names") == substitute(xlab)]                       
+}                      
+}}
+if(missing(ylab)) {
+ylab <- as.character(substitute(outcome))
+if(class(get(search()[2]))=="data.frame"){
+if(any(attr(get(search()[2]),"names") == substitute(ylab))){
+ylab <- attr(get(search()[2]),"var.labels")[attr(get(search()[2]), "names") == substitute(ylab)]                       
+}                      
+}}
+
+    plot(time, outcome, xlab=xlab, ylab=ylab,type = "n", lwd = lwd, 
         ...)
-    if(any(lty == "auto")) lty <- rep(1, length(id))
+    if (any(lty == "auto")) 
+        lty <- rep(1, length(id))
     id1 <- id
     time1 <- time
     by1 <- by
@@ -4969,7 +4985,7 @@ function (id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, legend
                 }
             }
             if (legend) {
-                legend(x=legend.site, legend = levels(factor(by)), 
+                legend(x = legend.site, legend = levels(factor(by)), 
                   col = line.col, bg = "white", lty = 1:length(levels(factor(by))), 
                   lwd = lwd)
             }
@@ -4988,7 +5004,7 @@ function (id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, legend
                     col = line.col[j], lwd = lwd, lty = lty[j])
                 }
                 if (legend) {
-                  legend(x=legend.site, legend = levels(factor(id[order(id1)])), 
+                  legend(x = legend.site, legend = levels(factor(id[order(id1)])), 
                     col = line.col[1:length(levels(factor(id)))], 
                     bg = "white", lty = lty, lwd = lwd)
                 }
@@ -5033,7 +5049,7 @@ function (id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, legend
                 }
             }
             if (legend) {
-                legend(x=legend.site, legend = levels(factor(by)), 
+                legend(x = legend.site, legend = levels(factor(by)), 
                   col = line.col[1:length(levels(factor(by)))], 
                   lty = 1:length(levels(factor(by))), bg = "white", 
                   lwd = lwd)

@@ -36,7 +36,7 @@ make2x2(caseexp, controlex, casenonex, controlnonex)
 	\item{casenonex}{Number of cases not exosed}
 	\item{controlnonex}{Number of controls not exposed}
 }
-\details{'cc' computes odds ratios and 95 percent confidence intervals from outcome and exposure variables of a case-control study. The results are based on the exact method.
+\details{'cc' computes odds ratios and 95 percent confidence intervals from outcome and exposure variables. The results are based on the exact method.
 
 'cci' is a variant of 'cc' where four numbers are entered manually.  
 

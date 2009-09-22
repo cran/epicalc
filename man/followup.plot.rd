@@ -6,7 +6,7 @@
 followup.plot(id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, 
     legend.site = "topright", lty = "auto", line.col = "auto", 
     stress = NULL, stress.labels = FALSE, label.col = 1, stress.col = NULL, 
-    stress.width = NULL, stress.type = NULL, lwd = 1, ...) 
+    stress.width = NULL, stress.type = NULL, lwd = 1, xlab, ylab, ...) 
 }
 \arguments{
 	\item{id}{idenfication variable of the same subject being followed up}
@@ -25,6 +25,8 @@ followup.plot(id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE,
   \item{stress.width}{relative width of the stressed line}
   \item{stress.type}{line type code for the stressed line}
   \item{lwd}{line width}
+  \item{xlab}{label for X axis}
+  \item{ylab}{label for Y axis}
   \item{...}{other graphic parameters}
 }
 \details{'followup.plot' plots outcome over time of the individual subjects.
