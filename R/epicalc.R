@@ -4936,29 +4936,45 @@ pyramid <- function (age, sex, binwidth = 5, inputTable = NULL, printTable = FAL
 }
 
 ## Followup plot
-followup.plot <- 
+followup.plot  <-
 function (id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE, 
     legend.site = "topright", lty = "auto", line.col = "auto", 
     stress = NULL, stress.labels = FALSE, label.col = 1, stress.col = NULL, 
-    stress.width = NULL, stress.type = NULL, lwd = 1, xlab, ylab, ...) 
+    stress.width = NULL, stress.type = NULL, lwd = 1, xlab, ylab, 
+    ...) 
 {
-if(missing(xlab)) {
-xlab <- as.character(substitute(time))
-if(class(get(search()[2]))=="data.frame"){
-if(any(attr(get(search()[2]),"names") == substitute(xlab))){
-xlab <- attr(get(search()[2]),"var.labels")[attr(get(search()[2]), "names") == substitute(xlab)]                       
-}                      
-}}
-if(missing(ylab)) {
-ylab <- as.character(substitute(outcome))
-if(class(get(search()[2]))=="data.frame"){
-if(any(attr(get(search()[2]),"names") == substitute(ylab))){
-ylab <- attr(get(search()[2]),"var.labels")[attr(get(search()[2]), "names") == substitute(ylab)]                       
-}                      
-}}
-
-    plot(time, outcome, xlab=xlab, ylab=ylab,type = "n", lwd = lwd, 
-        ...)
+    if (missing(xlab)) {
+        xlab <- as.character(substitute(time))
+        if (class(get(search()[2])) == "data.frame") {
+            if (any(attr(get(search()[2]), "names") == as.character(substitute(xlab)))) {
+            if (!is.null(attr(get(search()[2]), "var.labels")[attr(get(search()[2]), 
+                  "names") == as.character(substitute(xlab))])) {
+                  if(attr(get(search()[2]), "var.labels")[attr(get(search()[2]), 
+                  "names") == as.character(substitute(xlab))] !=""
+                  ){
+                xlab <- attr(get(search()[2]), "var.labels")[attr(get(search()[2]), 
+                  "names") == as.character(substitute(xlab))]
+                  }}
+            }
+        }
+    }
+    if (missing(ylab)) {
+        ylab <- as.character(substitute(outcome))
+        if (class(get(search()[2])) == "data.frame") {
+            if (any(attr(get(search()[2]), "names") == as.character(substitute(ylab)))) {
+            if (!is.null(attr(get(search()[2]), "var.labels")[attr(get(search()[2]), 
+                  "names") == as.character(substitute(ylab))])) {
+                  if(attr(get(search()[2]), "var.labels")[attr(get(search()[2]), 
+                  "names") == as.character(substitute(ylab))] !=""
+                  ){
+                ylab <- attr(get(search()[2]), "var.labels")[attr(get(search()[2]), 
+                  "names") == as.character(substitute(ylab))]
+                  }}
+            }
+        }
+    }
+    plot(time, outcome, xlab = xlab, ylab = ylab, type = "n", 
+        lwd = lwd, ...)
     if (any(lty == "auto")) 
         lty <- rep(1, length(id))
     id1 <- id
@@ -6771,6 +6787,7 @@ names(nl) <- names(data1)
 selected <- eval(substitute(vars), nl, parent.frame())
 for(i in selected){
 data1[,i] <- unclass(data1[,i])
+attributes(data1[, i]) <- NULL
 }
     assign(as.character(substitute(dataFrame)), data1, pos=1)
     if(is.element(as.character(substitute(dataFrame)), search())){
