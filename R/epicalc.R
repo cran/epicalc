@@ -5391,19 +5391,22 @@ if(length(FUN)==0)
 }
 
 ## Aggregate plot
-aggregate.plot <- 
+aggregate.plot <-
 function (x, by, grouping = NULL, FUN = c("mean", "median"), 
-    error = c("se", "ci", "sd", "none"), alpha = 0.05, lwd = 1, lty = "auto",
-    line.col = "auto", bin.time = 4, bin.method = c("fixed", 
-        "quantile"), legend = "auto", legend.site = "topright", legend.bg = "white", xlim = "auto", ylim = "auto", 
-    bar.col = "auto", cap.size = 0.02, lagging = 0.007, main = "auto", return.output = FALSE, ...) 
+    error = c("se", "ci", "sd", "none"), alpha = 0.05, lwd = 1, 
+    lty = "auto", line.col = "auto", bin.time = 4, bin.method = c("fixed", 
+        "quantile"), legend = "auto", legend.site = "topright", 
+    legend.bg = "white", xlim = "auto", ylim = "auto", bar.col = "auto", 
+    cap.size = 0.02, lagging = 0.007, main = "auto", return.output = FALSE, 
+    ...) 
 {
     p25 <- function(xx) quantile(xx, prob = 0.25, na.rm = TRUE)
     p75 <- function(xx) quantile(xx, prob = 0.75, na.rm = TRUE)
     x.is.factor.2.levels <- is.factor(x) & (length(levels(factor(x))) == 
-            2)
-    if(is.integer(x) | is.numeric(x) | is.logical(x))
-    x.is.01 <- length(table(x)) == 2 & min(x, na.rm=TRUE)==0 & max(x, na.rm=TRUE) == 1
+        2)
+    if (is.integer(x) | is.numeric(x) | is.logical(x)) 
+        x.is.01 <- length(table(x)) == 2 & min(x, na.rm = TRUE) == 
+            0 & max(x, na.rm = TRUE) == 1
     if (length(FUN) == 2 | any(FUN == "mean")) {
         FUN1 <- c("mean", "sd", "sum", "count")
     }
@@ -5411,7 +5414,8 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
         FUN1 <- c("median", "p25", "p75")
     }
     if (is.list(by)) {
-        if (any(bar.col == "auto"))  bar.col <- grey.colors(length(levels(factor(by[[1]])))) 
+        if (any(bar.col == "auto")) 
+            bar.col <- grey.colors(length(levels(factor(by[[1]]))))
         if (length(by) > 2) 
             stop("The argument 'by' cannot have more than 2 elements!")
         if (legend == "auto") 
@@ -5450,17 +5454,24 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
             means.data.frame <- as.data.frame.table(mean.matrix)
             sd.data.frame <- as.data.frame.table(sd.matrix)
             count.data.frame <- as.data.frame.table(count.matrix)
-            if(x.is.01){
-                ci.data.frame <- ci.binomial(sum.data.frame[,ncol(sum.data.frame)], count.data.frame[,ncol(count.data.frame)], alpha=alpha)
-                se.data.frame <- means.data.frame[, -ncol(means.data.frame), drop=FALSE]
+            if (x.is.01) {
+                ci.data.frame <- ci.binomial(sum.data.frame[, 
+                  ncol(sum.data.frame)], count.data.frame[, ncol(count.data.frame)], 
+                  alpha = alpha)
+                se.data.frame <- means.data.frame[, -ncol(means.data.frame), 
+                  drop = FALSE]
                 se.data.frame$se <- ci.data.frame$se
-                error.matrix <- xtabs(se ~ ., data=se.data.frame)
-                lowerCI.data.frame <- means.data.frame[, -ncol(means.data.frame), drop=FALSE]
-                lowerCI.data.frame$lowerCI <- ci.data.frame[,5]
-                lowerCI.matrix <- xtabs(lowerCI ~ ., data=lowerCI.data.frame)  
-                upperCI.data.frame <- means.data.frame[, -ncol(means.data.frame), drop=FALSE]
-                upperCI.data.frame$upperCI <- ci.data.frame[,6]
-                upperCI.matrix <- xtabs(upperCI ~ ., data=upperCI.data.frame)  
+                error.matrix <- xtabs(se ~ ., data = se.data.frame)
+                lowerCI.data.frame <- means.data.frame[, -ncol(means.data.frame), 
+                  drop = FALSE]
+                lowerCI.data.frame$lowerCI <- ci.data.frame[, 
+                  5]
+                lowerCI.matrix <- xtabs(lowerCI ~ ., data = lowerCI.data.frame)
+                upperCI.data.frame <- means.data.frame[, -ncol(means.data.frame), 
+                  drop = FALSE]
+                upperCI.data.frame$upperCI <- ci.data.frame[, 
+                  6]
+                upperCI.matrix <- xtabs(upperCI ~ ., data = upperCI.data.frame)
             }
             if (error == "ci") {
                 if (x.is.01) {
@@ -5482,35 +5493,43 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
                   1)], "se")
                 error.matrix <- xtabs(se ~ ., data = error.data.frame)
             }
-            if (any(ylim == "auto"))  ylim <- c(0, 1.01 * max(mean.matrix + error.matrix))
+            if (any(ylim == "auto")) 
+                ylim <- c(0, 1.01 * max(mean.matrix + error.matrix))
             a <- barplot.default(mean.matrix, beside = TRUE, 
-                ylim = ylim, 
-                col = bar.col, ...)
-            if (x.is.01){
-                if(error == "ci"){
-                    segments(x0 = a, x1 = a, y0 = lowerCI.matrix, y1 = upperCI.matrix, lwd = lwd, col = line.col)
-                    segments(x0 = a-0.2, x1 = a+0.2, y0=lowerCI.matrix, y1=lowerCI.matrix, lwd = lwd, col = line.col)
-                    segments(x0 = a-0.2, x1 = a+0.2, y0=upperCI.matrix, y1=upperCI.matrix, lwd = lwd, col = line.col)
-                }else{
-            segments(x0 = a, x1 = a, y0 = mean.matrix, y1 = mean.matrix + 
-                error.matrix, lwd = lwd, col = line.col)
-            segments(x0 = a - 0.2, x1 = a + 0.2, y0 = mean.matrix + 
-                error.matrix, y1 = mean.matrix + error.matrix, 
-                lwd = lwd, col = line.col)
+                ylim = ylim, col = bar.col, ...)
+            if (x.is.01) {
+                if (error == "ci") {
+                  segments(x0 = a, x1 = a, y0 = lowerCI.matrix, 
+                    y1 = upperCI.matrix, lwd = lwd, col = line.col)
+                  segments(x0 = a - 0.2, x1 = a + 0.2, y0 = lowerCI.matrix, 
+                    y1 = lowerCI.matrix, lwd = lwd, col = line.col)
+                  segments(x0 = a - 0.2, x1 = a + 0.2, y0 = upperCI.matrix, 
+                    y1 = upperCI.matrix, lwd = lwd, col = line.col)
                 }
-            }else{
-            segments(x0 = a, x1 = a, y0 = mean.matrix, y1 = mean.matrix + 
-                error.matrix, lwd = lwd, col = line.col)
-            segments(x0 = a - 0.2, x1 = a + 0.2, y0 = mean.matrix + 
-                error.matrix, y1 = mean.matrix + error.matrix, 
-                lwd = lwd, col = line.col)
-            if (error == "ci") {
-                segments(x0 = a, x1 = a, y0 = mean.matrix, y1 = mean.matrix - 
+                else {
+                  segments(x0 = a, x1 = a, y0 = mean.matrix, 
+                    y1 = mean.matrix + error.matrix, lwd = lwd, 
+                    col = line.col)
+                  segments(x0 = a - 0.2, x1 = a + 0.2, y0 = mean.matrix + 
+                    error.matrix, y1 = mean.matrix + error.matrix, 
+                    lwd = lwd, col = line.col)
+                }
+            }
+            else {
+                segments(x0 = a, x1 = a, y0 = mean.matrix, y1 = mean.matrix + 
                   error.matrix, lwd = lwd, col = line.col)
-                segments(x0 = a - 0.2, x1 = a + 0.2, y0 = mean.matrix - 
-                  error.matrix, y1 = mean.matrix - error.matrix, 
+                segments(x0 = a - 0.2, x1 = a + 0.2, y0 = mean.matrix + 
+                  error.matrix, y1 = mean.matrix + error.matrix, 
                   lwd = lwd, col = line.col)
-            }}
+                if (error == "ci") {
+                  segments(x0 = a, x1 = a, y0 = mean.matrix, 
+                    y1 = mean.matrix - error.matrix, lwd = lwd, 
+                    col = line.col)
+                  segments(x0 = a - 0.2, x1 = a + 0.2, y0 = mean.matrix - 
+                    error.matrix, y1 = mean.matrix - error.matrix, 
+                    lwd = lwd, col = line.col)
+                }
+            }
         }
         if (FUN == "median") {
             if (length(levels(factor(x1))) == 2) {
@@ -5521,9 +5540,11 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
             median.matrix <- tapply(x1, by, FUN = "median", na.rm = TRUE)
             p25.matrix <- tapply(x1, by, FUN = "p25")
             p75.matrix <- tapply(x1, by, FUN = "p75")
-            midpoints.matrix <- median.matrix 
-            if (any(ylim == "auto"))  ylim <- c(0, 1.01 * max(p75.matrix))
-            a <- barplot(median.matrix, beside = TRUE, ylim = ylim, col = bar.col, ...)
+            midpoints.matrix <- median.matrix
+            if (any(ylim == "auto")) 
+                ylim <- c(0, 1.01 * max(p75.matrix))
+            a <- barplot(median.matrix, beside = TRUE, ylim = ylim, 
+                col = bar.col, ...)
             segments(x0 = a, x1 = a, y0 = median.matrix, y1 = p75.matrix, 
                 lwd = lwd, col = line.col)
             segments(x0 = a - 0.2, x1 = a + 0.2, y0 = p75.matrix, 
@@ -5534,31 +5555,41 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
                 y1 = p25.matrix, lwd = lwd, col = line.col)
         }
         if (legend) {
-        legend (x = legend.site, legend = levels(factor(by[[1]])), fill = bar.col, bg = legend.bg)
+            legend(x = legend.site, legend = levels(factor(by[[1]])), 
+                fill = bar.col, bg = legend.bg)
         }
-    if (FUN == "median") {
-    output <- as.data.frame.table(median.matrix)
-    names(output)[length(names(output))] <- "median"
-    output$p25 <- as.data.frame.table(p25.matrix)[,ncol(as.data.frame.table(p25.matrix))] 
-    output$p75 <- as.data.frame.table(p75.matrix)[,ncol(as.data.frame.table(p75.matrix))]
-    }else{
-    output <- as.data.frame.table(mean.matrix)
-    names(output)[length(names(output))] <- "mean"
-    if (error == "se" | error == "sd"){
-    output$error <- as.data.frame.table(error.matrix)[, ncol(as.data.frame.table(error.matrix))]
-    names(output)[length(names(output))] <- error
-    }else{
-    if (error == "ci")
-    output$lowerCI <- ci.data.frame0[,ncol(ci.data.frame0)-1]
-    names(output)[ncol(output)] <- names(ci.data.frame0)[ncol(ci.data.frame0) -1] 
-    output$upperCI <- ci.data.frame0[,ncol(ci.data.frame0)]
-    names(output)[ncol(output)] <- names(ci.data.frame0)[ncol(ci.data.frame0)] 
-    if(x.is.factor.2.levels | x.is.01 | is.logical(x)) 
-        names(output)[ncol(output)-2] <- paste("prob.",ifelse(x.is.factor.2.levels, name.x, deparse(substitute(x))), sep="")
-    }}
+        if (FUN == "median") {
+            output <- as.data.frame.table(median.matrix)
+            names(output)[length(names(output))] <- "median"
+            output$p25 <- as.data.frame.table(p25.matrix)[, ncol(as.data.frame.table(p25.matrix))]
+            output$p75 <- as.data.frame.table(p75.matrix)[, ncol(as.data.frame.table(p75.matrix))]
+        }
+        else {
+            output <- as.data.frame.table(mean.matrix)
+            names(output)[length(names(output))] <- "mean"
+            if (error == "se" | error == "sd") {
+                output$error <- as.data.frame.table(error.matrix)[, 
+                  ncol(as.data.frame.table(error.matrix))]
+                names(output)[length(names(output))] <- error
+            }
+            else {
+                if (error == "ci") 
+                  output$lowerCI <- ci.data.frame0[, ncol(ci.data.frame0) - 
+                    1]
+                names(output)[ncol(output)] <- names(ci.data.frame0)[ncol(ci.data.frame0) - 
+                  1]
+                output$upperCI <- ci.data.frame0[, ncol(ci.data.frame0)]
+                names(output)[ncol(output)] <- names(ci.data.frame0)[ncol(ci.data.frame0)]
+                if (x.is.factor.2.levels | x.is.01 | is.logical(x)) 
+                  names(output)[ncol(output) - 2] <- paste("prob.", 
+                    ifelse(x.is.factor.2.levels, name.x, deparse(substitute(x))), 
+                    sep = "")
+            }
+        }
     }
     else {
-    if (any(lty == "auto")) lty <- rep(1, length(table(factor(by))))
+        if (any(lty == "auto")) 
+            lty <- rep(1, length(table(factor(by))))
         time <- by
         if (any(xlim == "auto")) 
             xlim <- c(min(by, na.rm = TRUE), max(by, na.rm = TRUE))
@@ -5622,7 +5653,7 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
                 data1$p75.x <- as.data.frame.table(tapply(x, 
                   list(grouping = grouping, time = time1), FUN = "p75"))[, 
                   3]
-output <- data1
+                output <- data1
             }
             else {
                 data1 <- aggregate.numeric(x, by = list(grouping = grouping, 
@@ -5637,7 +5668,7 @@ output <- data1
                   list(time = time1), FUN = "p25"))[, 2]
                 data1$p75.x <- as.data.frame.table(tapply(x, 
                   list(time = time1), FUN = "p75"))[, 2]
-output <- data1
+                output <- data1
             }
             else {
                 data1 <- aggregate.numeric(x, by = list(time = time1), 
@@ -5648,31 +5679,34 @@ output <- data1
             data1$mean.x <- data1$median.x
             data1$lowerci <- data1$p25.x
             data1$upperci <- data1$p75.x
-output <- data1[, -ncol(data1):-(ncol(data1)-2)]
-       }
+            output <- data1[, -ncol(data1):-(ncol(data1) - 2)]
+        }
         else {
             if (error[1] == "ci") {
                 if (x.is.factor.2.levels | is.logical(x) | x.is.01) {
-                  data.ci <- ci.binomial(data1$sum.x, data1$count.x, alpha=alpha)
+                  data.ci <- ci.binomial(data1$sum.x, data1$count.x, 
+                    alpha = alpha)
                 }
                 else {
                   data.ci <- ci.numeric(data1$mean.x, data1$count.x, 
-                    data1$sd.x, alpha=alpha)
+                    data1$sd.x, alpha = alpha)
                 }
                 data1$lowerci <- data.ci[, 5]
                 data1$upperci <- data.ci[, 6]
-output <- data1[, -(ncol(data1)-2:4)]
-if (x.is.factor.2.levels | is.logical(x) | x.is.01)                
-    names(output)[names(output)=="mean.x"] <- paste("prob.",ifelse(x.is.factor.2.levels, name.x, as.character(substitute(x))),sep="")
-    else
-        names(output)[names(output)=="mean.x"] <- paste("mean.", as.character(substitute(x)), sep="")
-names(output)[names(output)=="lowerci"] <- names(data.ci)[5]
-names(output)[names(output)=="upperci"] <- names(data.ci)[6]
+                output <- data1[, -(ncol(data1) - 2:4)]
+                if (x.is.factor.2.levels | is.logical(x) | x.is.01) 
+                  names(output)[names(output) == "mean.x"] <- paste("prob.", 
+                    ifelse(x.is.factor.2.levels, name.x, as.character(substitute(x))), 
+                    sep = "")
+                else names(output)[names(output) == "mean.x"] <- paste("mean.", 
+                  as.character(substitute(x)), sep = "")
+                names(output)[names(output) == "lowerci"] <- names(data.ci)[5]
+                names(output)[names(output) == "upperci"] <- names(data.ci)[6]
             }
         }
         if (any(ylim == "auto")) {
             if (error[1] == "ci") {
-                ylim0 <- c(min(data1[, ncol(data1)-1], na.rm = TRUE), 
+                ylim0 <- c(min(data1[, ncol(data1) - 1], na.rm = TRUE), 
                   max(data1[, ncol(data1)], na.rm = TRUE))
                 ylim <- ylim0 + c(-1, 1) * 0.2 * (ylim0[2] - 
                   ylim0[1])
@@ -5689,12 +5723,13 @@ names(output)[names(output)=="upperci"] <- names(data.ci)[6]
                 line.col <- unclass(data1$grouping)
             for (i in 1:length(table(data1$grouping))) {
                 data1$time[data1$grouping == levels(data1$grouping)[i]] <- data1$time[data1$grouping == 
-                  levels(data1$grouping)[i]] + (i - 1) * lagging * xrange
+                  levels(data1$grouping)[i]] + (i - 1) * lagging * 
+                  xrange
             }
             followup.plot(id = data1$grouping, time = data1$time, 
-                outcome = data1$mean.x, ylim = ylim, legend = legend, legend.site = legend.site, 
-                lwd = lwd, xlim = xlim, line.col = line.col, lty = lty, 
-                ...)
+                outcome = data1$mean.x, ylim = ylim, legend = legend, 
+                legend.site = legend.site, lwd = lwd, xlim = xlim, 
+                line.col = line.col, lty = lty, xlab="", ylab="", ...)
             if (error == "ci") {
                 segments(x0 = data1$time, y0 = data1$upperci, 
                   x1 = data1$time, y1 = data1$lowerci, col = line.col, 
@@ -5708,18 +5743,19 @@ names(output)[names(output)=="upperci"] <- names(data.ci)[6]
                     xrange, y1 = data1$lowerci, col = line.col, 
                   lwd = lwd)
             }
-        if (legend) {
-        legend (x = legend.site, legend = levels(factor(grouping)), 
-            lwd = lwd, col = line.col, bg = legend.bg, lty = lty)
-        }
+            if (legend) {
+                legend(x = legend.site, legend = levels(factor(grouping)), 
+                  lwd = lwd, col = line.col, bg = legend.bg, 
+                  lty = lty)
+            }
         }
         else {
             if (any(line.col == "auto")) 
                 line.col <- 1
             followup.plot(id = rep(1, nrow(data1)), time = data1$time, 
                 outcome = data1$mean.x, ylim = ylim, legend = FALSE, 
-                lwd = lwd, xlim = xlim, line.col = line.col, legend.site = legend.site, 
-                ...)
+                lwd = lwd, xlim = xlim, line.col = line.col, 
+                legend.site = legend.site, xlab = "", ylab="", ...)
             if (error == "ci") {
                 segments(x0 = data1$time, y0 = data1$upperci, 
                   x1 = data1$time, y1 = data1$lowerci, lwd = lwd, 
@@ -5782,10 +5818,11 @@ names(output)[names(output)=="upperci"] <- names(data.ci)[6]
                   main.and <- NULL
             }
             if (is.list(by)) {
-                if (length(names(by))==2) {
-                main.by1 <- paste(names(by)[1], "and", names(by)[2])
-                }else{
-                main.by1 <- names(by)[1]
+                if (length(names(by)) == 2) {
+                  main.by1 <- paste(names(by)[1], "and", names(by)[2])
+                }
+                else {
+                  main.by1 <- names(by)[1]
                 }
             }
             else {
@@ -5808,7 +5845,8 @@ names(output)[names(output)=="upperci"] <- names(data.ci)[6]
             }
         }
     }
-if(return.output) output
+    if (return.output) 
+        output
 }
 
 
