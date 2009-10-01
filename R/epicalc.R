@@ -2532,6 +2532,9 @@ function (x = .data, by = NULL, graph = TRUE, box = FALSE, pch = 18,
             }
         }
     }
+    if (is.numeric(x) | is.integer(x)){
+    attributes(x) <- NULL
+    }
     if (is.data.frame(x)) {
         heading <- paste(attr(x, "datalabel"), "\n", .No.of.observations, 
             nrow(x), "\n", "\n", sep = "")
@@ -4356,44 +4359,76 @@ lookup <- function (x, lookup.array)
 	}
 }
 ### Use various file formats
-use <- function(filename, dataFrame = .data, clear=TRUE, tolower=TRUE) {
-if(clear){
-	detachAllData()
+use <-
+function (filename, dataFrame = .data, clear = TRUE, spss.missing = TRUE, tolower = TRUE) 
+{
+    if (clear) {
+        detachAllData()
+    }
+    library(foreign)
+    if (is.character(filename)) {
+        ext <- tolower(substring(filename, first = nchar(filename) - 
+            3, last = nchar(filename)))
+        if (ext == ".dta") {
+            data1 <- read.dta(filename)
+        }
+        else {
+            if (ext == ".dbf") {
+                data1 <- read.dbf(filename)
+                if (tolower) 
+                  names(data1) <- tolower(names(data1))
+            }
+            else {
+                if (ext == ".rec") {
+                  data1 <- read.epiinfo(filename)
+                  if (tolower) 
+                    names(data1) <- tolower(names(data1))
+                }
+                else {
+                  if (ext == ".sav") {
+                    data0 <- read.spss(filename)
+                    var.labels <- attr(data0, "variable.labels")
+data1 <- read.spss(filename, to.data.frame=TRUE, trim.factor.names=TRUE)
+data1 <- data1[1:nrow(data1), 1:ncol(data1)]
+                    attr(data1, "var.labels") <- var.labels
+if(spss.missing){
+for(i in 1:ncol(data1)){
+if(!is.null(attr(data0, "missing")[[i]]$value)){
+data1[,i] <- ifelse((data1[,i] %in% attr(data0, "missing")[[i]]$value),NA,data1[,i])
 }
-library(foreign)
-if(is.character(filename)){
-  ext <- tolower(substring(filename,first=nchar(filename)-3, last=nchar(filename)) )
-  if( ext == ".dta") {
-    data1 <- read.dta(filename)
-    }else{
-  if( ext == ".dbf") {
-    data1 <- read.dbf(filename)
-    if(tolower)	  names(data1) <- tolower(names(data1))    
-    }else{
-  if( ext == ".rec") {
-	  data1 <- read.epiinfo(filename)
-    if(tolower)	  names(data1) <- tolower(names(data1))
-    }else{
-    if( ext == ".sav") {
-	 data1 <- read.spss(filename)
-	 var.labels <- attr(data1, "variable.labels")
-    if(tolower)	 names(data1) <- tolower(names(data1))
-   data1 <- as.data.frame(data1)
-	 attr(data1, "var.labels") <- var.labels
-   }else{
-  if( substring(filename,first=nchar(filename)-3, last=nchar(filename))==".csv") {
-	 data1 <- read.csv(filename, header=TRUE, sep=",")
-   }else{
-   stop("This type of file cannot be 'use'd.")
-   }
-}}}}
-}else{
-if(is.data.frame(filename)){
-  data1 <- filename
-  }else{stop("The argument is not a data frame or no such file")}
+if(!is.null(attributes(data0[[i]])$value.labels)){
+data1[,i] <- ifelse((data1[,i] %in% attributes(data0[[i]])$value.labels),NA,data1[,i])
 }
-assign(as.character(substitute(dataFrame)), data1, pos=1)
-attach(data1, name=as.character(substitute(dataFrame)), warn.conflicts = FALSE)
+}
+}
+                    if (tolower) 
+                      names(data1) <- tolower(names(data1))
+                  }
+                  else {
+                    if (substring(filename, first = nchar(filename) - 
+                      3, last = nchar(filename)) == ".csv") {
+                      data1 <- read.csv(filename, header = TRUE, 
+                        sep = ",")
+                    }
+                    else {
+                      stop("This type of file cannot be 'use'd.")
+                    }
+                  }
+                }
+            }
+        }
+    }
+    else {
+        if (is.data.frame(filename)) {
+            data1 <- filename
+        }
+        else {
+            stop("The argument is not a data frame or no such file")
+        }
+    }
+    assign(as.character(substitute(dataFrame)), data1, pos = 1)
+    attach(data1, name = as.character(substitute(dataFrame)), 
+        warn.conflicts = FALSE)
 }
 
 ### Dot plot
