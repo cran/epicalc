@@ -7003,3 +7003,37 @@ if(missing(select)) select=1:ncol(dataFrame)
     rbind(dataFrame, cbind(x0, z))
   }
 }
+
+addMissingRecords <- 
+function(dataFrame=.data, id, visit, check.present=TRUE, present.varname ="present")
+{
+id.varname <- as.character(substitute(id))
+visit.varname <- as.character(substitute(visit))
+unique.id <- unique(dataFrame[, id.varname])
+unique.visit <- unique(dataFrame[, visit.varname])
+if(any(table(dataFrame[,id.varname], dataFrame[,visit.varname]) > 1))
+  {
+    stop(paste("\n", "Missing records cannot be added because the combination of IDs and visits are not unique"))
+  }
+index.col <- which( names(dataFrame)  %in% c(id.varname, visit.varname))
+if(check.present) 
+  {
+    dataFrame <- merge.lab(dataFrame, data.frame(present.varname=1), all=TRUE)
+    names(dataFrame)[ncol(dataFrame)] <- present.varname
+  }
+long <- data.frame(id.varname=rep(unique.id, rep(length(unique.visit), length(unique.id))), visit.varname = rep(unique(unique.visit),length(unique(id.varname))))
+names(long) <- c(id.varname, visit.varname)
+new.data <- merge.lab(long, dataFrame, all=TRUE)
+var.to.fill <- 3:ncol(new.data)
+if(check.present) var.to.fill <- var.to.fill[-length(var.to.fill)] 
+for(i in var.to.fill)
+  {         
+    if( all(rowSums(table(dataFrame[,id.varname], dataFrame[,names(new.data)[i]])>0)==1))
+      {
+        unique((dataFrame)[,c(id.varname, names(new.data)[i])]) -> unique.array
+        new.data[, i] <- rep(unique.array[,2], times=rep(length(table(dataFrame[,visit.varname])),length(table(dataFrame[,id.varname]))))
+      }
+  }
+if(check.present) new.data[,ncol(new.data)] [is.na(new.data[,ncol(new.data)])] <- 0
+new.data
+}
