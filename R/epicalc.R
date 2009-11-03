@@ -7004,10 +7004,11 @@ if(missing(select)) select=1:ncol(dataFrame)
   }
 }
 
-addMissingRecords <- 
-function (dataFrame = .data, id, visit, check.present = TRUE, 
+addMissingRecords <-
+function (dataFrame = .data, id, visit, outcome, check.present = TRUE, 
     present.varname = "present", update.visit.related.vars = TRUE) 
 {
+    if(missing(outcome)) stop("Outcome variable(s) must be specified")
     id.varname <- as.character(substitute(id))
     visit.varname <- as.character(substitute(visit))
     unique.id <- unique(dataFrame[, id.varname])
@@ -7030,7 +7031,10 @@ function (dataFrame = .data, id, visit, check.present = TRUE,
     var.to.fill <- 3:ncol(new.data)
     if (check.present) 
         var.to.fill <- var.to.fill[-length(var.to.fill)]
-    for (i in var.to.fill) {
+   nl <- as.list(1:ncol(new.data))
+   names(nl) <- names(new.data)
+   vars.outcome <- eval(substitute(outcome), nl, parent.frame())
+    for (i in setdiff(var.to.fill,vars.outcome)) {
         if (all(rowSums(table(dataFrame[, id.varname], dataFrame[, 
             names(new.data)[i]]) > 0) == 1)) {
             unique.array <- unique((dataFrame)[, c(id.varname, 
@@ -7042,16 +7046,19 @@ function (dataFrame = .data, id, visit, check.present = TRUE,
     if (check.present) 
         new.data[, ncol(new.data)][is.na(new.data[, ncol(new.data)])] <- 0
     if (update.visit.related.vars) {
-        var.to.check.update <- 3:(ncol(new.data)-1)
+        var.to.check.update <- 3:(ncol(new.data) - 1)
         for (i in var.to.check.update) {
-            if (all(rowSums(table(new.data[,2],new.data[,i])>1)==1)) {
-                tx <- unique(data.frame(new.data[,2],new.data[,i]))
-                tx <- tx[!is.na(tx[,1]) & !is.na(tx[,2]),]
-                for(j in 1:nrow(tx)){
-                new.data[ new.data[,2]==tx[j,1],i] <- tx[j, 2]
+            if (all(rowSums(table(new.data[, 2], new.data[, i]) > 
+                1) == 1)) {
+                tx <- unique(data.frame(new.data[, 2], new.data[, 
+                  i]))
+                tx <- tx[!is.na(tx[, 1]) & !is.na(tx[, 2]), ]
+                for (j in 1:nrow(tx)) {
+                  new.data[new.data[, 2] == tx[j, 1], i] <- tx[j, 
+                    2]
                 }
             }
-        }     
+        }
     }
     new.data
 }

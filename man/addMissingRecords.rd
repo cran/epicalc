@@ -1,24 +1,25 @@
-\name{Add missing records to a longitudinal data set)}
+\name{addMissingRecords}
 \alias{addMissingRecords}
 \title{Add missing records to a longitudinal data set}
 \description{Add missing records to a longitudinal data set, complete the fixed parts of covariates those missings and add a variable to indicate whether the subject was present in that schedule visit}
 \usage{
-addMissingRecords(dataFrame = .data, id, visit, check.present = TRUE, 
+addMissingRecords(dataFrame = .data, id, visit, outcome, check.present = TRUE, 
     present.varname = "present", update.visit.related.vars = TRUE) 
 }
 \arguments{
 	\item{dataFrame}{Source data frame}
   \item{id}{identification variable}
   \item{visit}{index visit}
+  \item{outcome}{outcome variable(s)}
   \item{check.present}{whether a new variable should be added to indicate the presence of the subject in the particular visit}
   \item{present.varname}{name of the new variable indicating the presence of the subject}
   \item{update.visit.related.vars}{whether visit related variables among the added records should be updated}
 }
-\details{This function is used with a longitudinal data set where id and visit must be specified.
+\details{This function is used with a longitudinal data set where id, visit and outcome must be specified.
 
 If there is any duplicated visit, the function will prompt error and stop.
 
-The records of missing visits are added together with the fixed covariates (which do not change over time in each subject) filled up. By default, a new variable "present" is annexed on the last column of the output data frame.
+The records of missing visits are added together with the fixed non-outcome covariates (which do not change over time in each subject) filled up. By default, a new variable "present" is annexed on the last column of the output data frame.
 
 Like all other Epicalc data management functions, variable descriptions are kept.
 }
@@ -31,7 +32,7 @@ Like all other Epicalc data management functions, variable descriptions are kept
 data(bacteria, package="MASS")
 des(bacteria)
 head(bacteria, 10) # week 6 X01 and week 4 of X02 were missing
-addMissingRecords(dataFrame=bacteria, id=ID, visit=week) -> bacteria.new
+addMissingRecords(dataFrame=bacteria, id=ID, visit=week, outcome=y) -> bacteria.new
 head(bacteria.new, 10)
 # Note that the missing weeks are now added 'ap', 'hilo' and 'trt' which are fixed to id
 # were automatically updated.
@@ -42,7 +43,7 @@ rm(bacteria.new)
 data(Xerop)
 Xerop$time[500:501] <- 5:6  # Correct the error in the dataset
 Xerop[1:25,] # Note Record 19 & 20, id 121140 had only two visits
-Xerop.new <- addMissingRecords(dataFrame=Xerop, id=id, visit=time)
+Xerop.new <- addMissingRecords(dataFrame=Xerop, id=id, visit=time, outcome=xerop)
 des(Xerop.new)
 Xerop.new[19:24,]
 rm(Xerop.new) 
