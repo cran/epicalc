@@ -677,7 +677,7 @@ if(is.null(cctable.dimnames)){
 			string2 <- cctable.dimnames[1]
 		}
 names(attr(cctable,"dimnames")) <-c(string2, string4)
-suppressWarnings(return(cctable, caseexp=cctable[2,2], controlex=cctable[1,2], casenonex=cctable[2,1], controlnonex=cctable[1,1]))
+suppressWarnings(return(list(cctable, caseexp=cctable[2,2], controlex=cctable[1,2], casenonex=cctable[2,1], controlnonex=cctable[1,1])))
 }
 
 #### Cohort tabulation from a dataset
