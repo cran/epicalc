@@ -41,7 +41,7 @@ function (dataFrame = .data)
                 " have a missing value", "\n"))
         }
         else {
-            if (class(x1) == "data.frame") {
+            if (any(class(x1) == "data.frame")) {
                 x2 <- x1[, i]
             }
             else {
@@ -52,7 +52,7 @@ function (dataFrame = .data)
                 cat("A character vector", "\n")
             }
             else {
-                if (class(x2) == "difftime") {
+                if (any (class(x2) == "difftime")) {
                   print(summary(x2))
                   } else{
                 if (is.logical(x2)) 
@@ -4980,7 +4980,7 @@ function (id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE,
 {
     if (missing(xlab)) {
         xlab <- as.character(substitute(time))
-        if (class(get(search()[2])) == "data.frame") {
+        if (any(class(get(search()[2])) == "data.frame")) {
             if (any(attr(get(search()[2]), "names") == as.character(substitute(xlab)))) {
             if (!is.null(attr(get(search()[2]), "var.labels")[attr(get(search()[2]), 
                   "names") == as.character(substitute(xlab))])) {
@@ -4995,7 +4995,7 @@ function (id, time, outcome, by = NULL, n.of.lines = NULL, legend = TRUE,
     }
     if (missing(ylab)) {
         ylab <- as.character(substitute(outcome))
-        if (class(get(search()[2])) == "data.frame") {
+        if (any (class(get(search()[2])) == "data.frame")) {
             if (any(attr(get(search()[2]), "names") == as.character(substitute(ylab)))) {
             if (!is.null(attr(get(search()[2]), "var.labels")[attr(get(search()[2]), 
                   "names") == as.character(substitute(ylab))])) {
