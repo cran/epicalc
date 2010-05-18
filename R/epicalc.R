@@ -437,209 +437,315 @@ returns <- list(table.row.percent=rpercent, table.column.percent=cpercent)
 } 
 
 ####
-cci <- function(caseexp, controlex, casenonex, controlnonex, cctable=NULL, decimal=2, graph=TRUE, design="cohort") {
-
-if(is.null(cctable)){
-	frame <- cbind(Outcome<-c(1,0,1,0),Exposure<- c(1,1,0,0),Freq <- c(caseexp,controlex, casenonex, controlnonex))
-	Exposure <- factor(Exposure)
-	expgrouplab <- c("Non-exposed","Exposed") 
-	levels(Exposure) <- expgrouplab
-	Outcome <- factor(Outcome)
-	outcomelab <- c("Negative", "Positive")
-	levels(Outcome) <- outcomelab
-	table <- xtabs(Freq ~ Outcome + Exposure, data=frame)
-}else{
-	table <- as.table(get("cctable"))
-}
-
-fisher.test(table) -> fisher
-cat( "\n")
-table2 <- addmargins(table)
-rownames(table2)[nrow(table2)] <- "Total"
-colnames(table2)[ncol(table2)] <- "Total"
-print(table2)
-cat( "\n")
-cat(c("OR = ", round(fisher$estimate, decimal)), "\n");
-cat(c("95% CI =", round(fisher$conf.int,decimal)), "\n");
-cat(c("Chi-squared =", round(summary(table)$statistic,decimal), ", ",
-	summary(table)$parameter, "d.f. ,", "P value =", 
-	round(summary(table)$p.value,decimal+1),  "\n"))
-cat(c("Fisher's exact test (2-sided) P value =", 
-	round(fisher$p.value,decimal+1),  "\n"))
-cat( "\n")
-	if(graph==TRUE)
-	{
-	if(design=="prospective"||design=="cohort"||design=="cross-sectional"){
-	
-	graph.prospective(caseexp, controlex, casenonex, controlnonex)
-	}
-	else
-	graph.casecontrol(caseexp, controlex, casenonex, controlnonex)
-	
-}
+cci <- 
+function (caseexp, controlex, casenonex, controlnonex, cctable = NULL, 
+    decimal = 2, graph = TRUE, design = "cohort", 
+   main, xlab, ylab, xaxis, yaxis)
+{
+    if (is.null(cctable)) {
+        frame <- cbind(Outcome <- c(1, 0, 1, 0), Exposure <- c(1, 
+            1, 0, 0), Freq <- c(caseexp, controlex, casenonex, 
+            controlnonex))
+        Exposure <- factor(Exposure)
+        expgrouplab <- c("Non-exposed", "Exposed")
+        levels(Exposure) <- expgrouplab
+        Outcome <- factor(Outcome)
+        outcomelab <- c("Negative", "Positive")
+        levels(Outcome) <- outcomelab
+        table1 <- xtabs(Freq ~ Outcome + Exposure, data = frame)
+    }
+    else {
+        table1 <- as.table(get("cctable"))
+    }
+    fisher <- fisher.test(table1)
+    cat("\n")
+    table2 <- addmargins(table1)
+    rownames(table2)[nrow(table2)] <- "Total"
+    colnames(table2)[ncol(table2)] <- "Total"
+    print(table2)
+    cat("\n")
+    cat(c("OR = ", round(fisher$estimate, decimal)), "\n")
+    cat(c("95% CI =", round(fisher$conf.int, decimal)), "\n")
+    cat(c("Chi-squared =", round(summary(table1)$statistic, decimal), 
+        ", ", summary(table1)$parameter, "d.f. ,", "P value =", 
+        round(summary(table1)$p.value, decimal + 1), "\n"))
+    cat(c("Fisher's exact test (2-sided) P value =", round(fisher$p.value, 
+        decimal + 1), "\n"))
+    cat("\n")
+    if (graph == TRUE) {
+    caseexp <- table1[2,2]
+    controlex <- table1[1,2]
+    casenonex <- table1[2,1]
+    controlnonex <- table1[1,1]
+        if (design == "prospective" || design == "cohort" || 
+            design == "cross-sectional") {
+            graph.prospective(caseexp, controlex, casenonex, 
+                controlnonex)
+        if(missing(main))  main <- "Odds ratio from prospective/X-sectional study"
+        if(missing(xlab)) xlab <- "Exposure category"
+        if(missing(ylab)) ylab <-  paste("Odds of outcome", ifelse(missing(yaxis), "",paste("=", yaxis[2])))
+        if(missing(xaxis)) xaxis <- c("non-exposed", "exposed")      
+        axis(1, at = c(0, 1), labels = xaxis)
+        }
+        else {
+        graph.casecontrol(caseexp, controlex, casenonex, 
+            controlnonex
+            )
+        if(missing(main))  main <- "Odds ratio from case control study"
+        if(missing(xlab)) xlab <- paste("Odds of exposure", ifelse(missing(xaxis), "", paste("=", xaxis[2])))
+        if(missing(ylab)) ylab <-  "Outcome category"
+        if(missing(yaxis)) yaxis <- c("Control", "Case")      
+        axis(2, at = c(0, 1), labels = yaxis)
+        
+        }    
+        title(main=main, xlab=xlab, ylab=ylab)
+  
+    }
 }
 
 ########## case control study from a data file or cctable
-cc <- function(outcome, exposure,  decimal=2, cctable=NULL, graph=TRUE, design="cohort") {
-if(is.null(cctable)){
-	cctable <- table(outcome, exposure, deparse.level=1, dnn=list(substitute(outcome),substitute(exposure)))
-	cctable.dimnames <- names(attr(cctable,"dimnames"))
-}else{
-	cctable.dimnames <- names(attr(cctable,"dimnames"))
-}
-
-if(ncol(cctable) > 2 & nrow(cctable) ==2){
-or <- rep(NA, ncol(cctable))
-lowci <- rep(NA, ncol(cctable))
-hici <-rep(NA, ncol(cctable))
-or[1] <- 1
-for(i in 2:ncol(cctable)){or[i] <- fisher.test(cctable[,c(1,i)])$estimate}
-for(i in 2:ncol(cctable)){lowci[i] <- fisher.test(cctable[,c(1,i)])$conf.int[1]}
-for(i in 2:ncol(cctable)){hici[i] <- fisher.test(cctable[,c(1,i)])$conf.int[2]}
-row4 <- as.character(round(or,decimal)); row4[1] <- "1"
-row5 <- as.character(round(lowci,decimal)); row5[1] <- " "
-row6 <- as.character(round(hici,decimal)); row6[1] <- " "
-table2 <-rbind(cctable, "", row4, row5, row6)
-rownames(table2)[4] <- "Odds ratio"
-rownames(table2)[5] <- "lower 95% CI  "
-rownames(table2)[6] <- "upper 95% CI  "
-names(attr(table2, "dimnames"))<- names(attr(cctable,"dimnames"))
-cat("\n")
-print.noquote(table2)
-cat("\n")
-cat("Chi-squared =", round(chisq.test(cctable)$statistic,3), ",",
-	chisq.test(cctable)$parameter,"d.f.,",
-	"P value =",round(chisq.test(cctable, correct=FALSE)$p.value,decimal+1),"\n")
-cat("Fisher's exact test (2-sided) P value =",round(fisher.test(cctable)$p.value,decimal+1),"\n")
-cat("\n")
-if(graph==TRUE & design=="cohort"){
-
-
-	if(any(cctable<5)) {
-		cat("Cell counts too small - graph not shown","\n","\n")
-	}else{
-		y <- rep(NA, ncol(cctable))
-		x <- 1:ncol(cctable)
-		x.left <- x-0.02
-		x.right <- x+0.02
-		plot(x,or, ylab="Odds ratio", 
-			xlab=paste(names(attr(cctable,"dimnames")[2])), xaxt="n",
-			main="Odds ratio from prospective/X-sectional study",pch=" ",
-			xlim=c(min(x.left)-.2, x.right[ncol(cctable)]+0.2), 
-			ylim=c(min(c(1,min(lowci,na.rm=TRUE),min(hici,na.rm=TRUE))), 
-				max(c(1,max(hici,na.rm=TRUE,max(lowci,na.rm=TRUE))))),
-			log="y", type="l")
-		for(i in 1:ncol(cctable)){
-			lines(x=c(x[i],x[i]), y=c(lowci[i],hici[i]))
-			lines(x=c(x.left[i],x.right[i]),y=c(lowci[i],lowci[i]))
-			lines(x=c(x.left[i],x.right[i]),y=c(hici[i],hici[i]))
-			points(x[i],or[i], pch=22, cex=sum(cctable[,i])*(5/sum(cctable)))
-		}
-	axis(1,at=x, labels=colnames(cctable))
-
-	text(1,1,labels="1", pos=4, font=4, col="brown")	
-	text(x[-1],or[-1],labels=row4[-1],col="brown", pos=1, font=4)
-	text(x,or,labels=ifelse(x==1,"",paste("(",row5,",",row6,")")),
-		pos=1, font=4, offset=1.5, col="brown")
-
-
-	}
-}
-}else{
-labelTable(outcome, exposure, cctable=cctable, cctable.dimnames=cctable.dimnames) -> a
-cci (caseexp=a$caseexp, controlex= a$controlex, casenonex=a$casenonex, controlnonex=a$controlnonex, 
-	cctable=a$cctable, decimal=decimal, graph=graph, design=design)
-}
+cc <- 
+function (outcome, exposure, decimal = 2, cctable = NULL, graph = TRUE,
+    original = TRUE, design = "cohort", main, xlab = "auto", ylab) 
+{
+    if (is.null(cctable)) {
+        cctable <- table(outcome, exposure, deparse.level = 1, 
+            dnn = list(substitute(outcome), substitute(exposure)))
+        cctable.dimnames <- names(attr(cctable, "dimnames"))
+        if (xlab=="auto") {                                 
+        xlab <- paste("Exposure = ", as.character(substitute(exposure)),", ", "outcome = ", as.character(substitute(outcome)),sep="")
+        }
+        xaxis <- levels(factor(exposure))
+        yaxis <- levels(factor(outcome))
+    }
+    else {
+        cctable.dimnames <- names(attr(cctable, "dimnames"))
+        if (xlab=="auto") {
+        xlab <- paste("Exposure = ", cctable.dimnames[2],", ", "outcome = ", cctable.dimnames[1],sep="")
+        }
+        xaxis <- attr(cctable, "dimnames")[[2]]
+        yaxis <- attr(cctable, "dimnames")[[1]]
+    }
+    if (ncol(cctable) > 2 & nrow(cctable) == 2) {
+        or <- rep(NA, ncol(cctable))
+        lowci <- rep(NA, ncol(cctable))
+        hici <- rep(NA, ncol(cctable))
+        or[1] <- 1
+        for (i in 2:ncol(cctable)) {
+            or[i] <- fisher.test(cctable[, c(1, i)])$estimate
+        }
+        for (i in 2:ncol(cctable)) {
+            lowci[i] <- fisher.test(cctable[, c(1, i)])$conf.int[1]
+        }
+        for (i in 2:ncol(cctable)) {
+            hici[i] <- fisher.test(cctable[, c(1, i)])$conf.int[2]
+        }
+        row4 <- as.character(round(or, decimal))
+        row4[1] <- "1"
+        row5 <- as.character(round(lowci, decimal))
+        row5[1] <- " "
+        row6 <- as.character(round(hici, decimal))
+        row6[1] <- " "
+        table2 <- rbind(cctable, "", row4, row5, row6)
+        rownames(table2)[4] <- "Odds ratio"
+        rownames(table2)[5] <- "lower 95% CI  "
+        rownames(table2)[6] <- "upper 95% CI  "
+        names(attr(table2, "dimnames")) <- names(attr(cctable, 
+            "dimnames"))
+        cat("\n")
+        print.noquote(table2)
+        cat("\n")
+        cat("Chi-squared =", round(chisq.test(cctable)$statistic, 
+            3), ",", chisq.test(cctable)$parameter, "d.f.,", 
+            "P value =", round(chisq.test(cctable, correct = FALSE)$p.value, 
+                decimal + 1), "\n")
+        cat("Fisher's exact test (2-sided) P value =", round(fisher.test(cctable)$p.value, 
+            decimal + 1), "\n")
+        cat("\n")
+        if (graph == TRUE & design == "cohort") {
+            if (any(cctable < 5)) {
+                cat("Cell counts too small - graph not shown", 
+                  "\n", "\n")
+            }
+            else {
+                y <- rep(NA, ncol(cctable))
+                x <- 1:ncol(cctable)
+                x.left <- x - 0.02
+                x.right <- x + 0.02
+                plot(x, or, ylab = "Odds ratio", xlab = paste(names(attr(cctable, 
+                  "dimnames")[2])), xaxt = "n", main = "Odds ratio from prospective/X-sectional study", 
+                  pch = " ", xlim = c(min(x.left) - 0.2, x.right[ncol(cctable)] + 
+                    0.2), ylim = c(min(c(1, min(lowci, na.rm = TRUE), 
+                    min(hici, na.rm = TRUE))), max(c(1, max(hici, 
+                    na.rm = TRUE, max(lowci, na.rm = TRUE))))), 
+                  log = "y", type = "l")
+                for (i in 1:ncol(cctable)) {
+                  lines(x = c(x[i], x[i]), y = c(lowci[i], hici[i]))
+                  lines(x = c(x.left[i], x.right[i]), y = c(lowci[i], 
+                    lowci[i]))
+                  lines(x = c(x.left[i], x.right[i]), y = c(hici[i], 
+                    hici[i]))
+                  points(x[i], or[i], pch = 22, cex = sum(cctable[, 
+                    i]) * (5/sum(cctable)))
+                }
+                axis(1, at = x, labels = colnames(cctable))
+                text(1, 1, labels = "1", pos = 4, font = 4, col = "brown")
+                text(x[-1], or[-1], labels = row4[-1], col = "brown", 
+                  pos = 1, font = 4)
+                text(x, or, labels = ifelse(x == 1, "", paste("(", 
+                  row5, ",", row6, ")")), pos = 1, font = 4, 
+                  offset = 1.5, col = "brown")
+            }
+        }
+    }
+    else {
+        if(!original){
+        a <- labelTable(outcome, exposure, cctable = cctable, 
+            cctable.dimnames = cctable.dimnames)
+        cci(caseexp = a$caseexp, controlex = a$controlex, casenonex = a$casenonex, 
+            controlnonex = a$controlnonex, cctable = a$cctable, 
+            decimal = decimal, graph = graph, design = design, main,
+            xlab, ylab, xaxis, yaxis)
+        }else{
+        if(exists("cctable")){
+            cci(cctable = cctable, 
+            decimal = decimal, graph = graph, design = design, main=main,
+            xlab=xlab, ylab=ylab, xaxis=xaxis, yaxis=yaxis)
+        }else{
+            cci(cctable = table(outcome, exposure, dnn=c(as.character(substitute(outcome)), as.character(substitute(exposure)))), 
+            decimal = decimal, graph = graph, design = design, main=main,
+            xlab=xlab, ylab=ylab, xaxis=xaxis, yaxis=yaxis)
+            }
+        }
+        if (design=="case control" | design=="case-control") mtext("Odds of exposure", side=1, line=1.85)
+    }
 }
 ##### graph for a case control study
 
-graph.casecontrol <- function(caseexp, controlex, casenonex, controlnonex, decimal=2){
-if(any(c(caseexp, controlex, casenonex, controlnonex)<5)) {
-	cat("One of more cells is/are less than 5, not appropriate for graphing","\n")
-	}
-	else
-	{
-	table <- c(caseexp, controlex, casenonex, controlnonex); dim(table)<- c(2,2)
-	fisher <- fisher.test(table)
-	logit0 <- log(controlex/controlnonex); se0 <-sqrt(1/controlex+1/controlnonex)
-	logit1 <- log(caseexp/casenonex); se1 <- sqrt(1/caseexp+1/casenonex)
-	x <- c(c(-1,0,1)*1.96*se0 + logit0,c(-1,0,1)*1.96*se1 + logit1 )
-	y <- c(rep(0,3),rep(1,3))	
-	plot(x[c(1,3,4,6)],y[c(1,3,4,6)], xlab="Odds of exposure",ylab="Outcome category", yaxt="n", xaxt="n",
-		main="Odds ratio from case control study", pch=73)
-	points(x[c(2,5)],y[c(2,5)], pch=22, cex=c((controlex+controlnonex),(caseexp+casenonex))/sum(table)*5)
-	axis(2,at=c(0,1),labels=c("control","case"),las=1)
-	x1 <- exp(x)
-	a <- 2^(-10:10)
-	if(length(a[a>min(x1) & a<max(x1)]) >2 & length(a[a>min(x1) & a<max(x1)]) <10){
-	a1 <- a[a>min(x1) & a<max(x1)]
-		if(any(a1>=1))axis(1,at=log(a1[a1>=1]),labels=as.character(a1[a1>=1]))
-		if(any(a1<1))axis(1,at=log(a1[a1<1]),labels=paste(as.character(1),"/",
-		as.character(trunc(1/a1[a1<1])), sep=""))
-	}
-	else
-	{
-	options(digit=2)
-	at.x <-  seq(from=min(x),to=max(x),by=((max(x)-min(x))/5))
-	labels.oddsx <- exp(at.x)
-	axis(1,at=at.x, labels=as.character(round(labels.oddsx,digits=decimal)), las=1)
-	}
-	lines(x[1:3],y[1:3])
-	lines(x[4:6],y[4:6])
-	lines(x[c(2,5)],y[c(2,5)])
-	arrows(x0=logit0 ,x1=logit1, y0 =0.1, y1=0.1, code=2, col="red")
-	text(x=(max(x)+min(x))/2, y= 0.3, labels=paste("OR = ", round(fisher$estimate, decimal)))
-	text(x=(max(x)+min(x))/2, y= 0.2, labels=paste("95% CI =", round(fisher$conf.int,2)[1],",", round(fisher$conf.int,2)[2]))
-	abline(v=c(logit0, logit1), lty=3, col="blue") 
-	}
+graph.casecontrol <- 
+function (caseexp, controlex, casenonex, controlnonex, decimal = 2) 
+{
+    if (any(c(caseexp, controlex, casenonex, controlnonex) < 
+        5)) {
+        cat("One of more cells is/are less than 5, not appropriate for graphing", 
+            "\n")
+    }
+    else {
+        table <- c(caseexp, controlex, casenonex, controlnonex)
+        dim(table) <- c(2, 2)
+        fisher <- fisher.test(table)
+        logit0 <- log(controlex/controlnonex)
+        se0 <- sqrt(1/controlex + 1/controlnonex)
+        logit1 <- log(caseexp/casenonex)
+        se1 <- sqrt(1/caseexp + 1/casenonex)
+        x <- c(c(-1, 0, 1) * 1.96 * se0 + logit0, c(-1, 0, 1) * 
+            1.96 * se1 + logit1)
+        y <- c(rep(0, 3), rep(1, 3))
+                                               
+        plot(x[c(1, 3, 4, 6)], y[c(1, 3, 4, 6)], xlab="",ylab="", 
+            yaxt = "n", xaxt = "n", pch = 73)
+        points(x[c(2, 5)], y[c(2, 5)], pch = 22, cex = c((controlex + 
+            controlnonex), (caseexp + casenonex))/sum(table) * 
+            5)
+        x1 <- exp(x)
+        a <- 2^(-10:10)
+        if (length(a[a > min(x1) & a < max(x1)]) > 2 & length(a[a > 
+            min(x1) & a < max(x1)]) < 10) {
+            a1 <- a[a > min(x1) & a < max(x1)]
+            if (any(a1 >= 1)) 
+                axis(1, at = log(a1[a1 >= 1]), labels = as.character(a1[a1 >= 
+                  1]))
+            if (any(a1 < 1)) 
+                axis(1, at = log(a1[a1 < 1]), labels = paste(as.character(1), 
+                  "/", as.character(trunc(1/a1[a1 < 1])), sep = ""))
+        }
+        else {
+            options(digit = 2)
+            at.x <- seq(from = min(x), to = max(x), by = ((max(x) - 
+                min(x))/5))
+            labels.oddsx <- exp(at.x)
+            axis(1, at = at.x, labels = as.character(round(labels.oddsx, 
+                digits = decimal)), las = 1)
+        }
+        lines(x[1:3], y[1:3])
+        lines(x[4:6], y[4:6])
+        lines(x[c(2, 5)], y[c(2, 5)])
+        arrows(x0 = logit0, x1 = logit1, y0 = 0.1, y1 = 0.1, 
+            code = 2, col = "red")
+        text(x = (max(x) + min(x))/2, y = 0.3, labels = paste("OR = ", 
+            round(fisher$estimate, decimal)))
+        text(x = (max(x) + min(x))/2, y = 0.2, labels = paste("95% CI =", 
+            round(fisher$conf.int, 2)[1], ",", round(fisher$conf.int, 
+                2)[2]))
+        abline(v = c(logit0, logit1), lty = 3, col = "blue")
+    }
 }
 
 ##### graph for a cohort study
 
-graph.prospective <- function(caseexp, controlex, casenonex, controlnonex, decimal=2){
-if(any(c(caseexp, controlex, casenonex, controlnonex)<5)) {
-	cat("One of more cells is/are less than 5, not appropriate for graphing","\n","\n")
-	}
-	else
-	{
-	table <- c(caseexp, controlex, casenonex, controlnonex); dim(table)<- c(2,2)
-	fisher <- fisher.test(table)
-	logit0 <- log(casenonex/controlnonex); se0 <-sqrt(1/casenonex+1/controlnonex)
-	logit1 <- log(caseexp/controlex); se1 <- sqrt(1/caseexp+1/controlnonex)
-	y <- c(c(-1,0,1)*1.96*se0 + logit0,c(-1,0,1)*1.96*se1 + logit1 )
-	x <- c(rep(0,3),rep(1,3))
-	plot(x[c(1,3,4,6)],y[c(1,3,4,6)], ylab="Odds of outcome",xlab="Exposure category", yaxt="n", xaxt="n",
-		main="Odds ratio from prospective/X-sectional study",pch=" ")
-	lines(x=c(-.02,.02),y=c(y[1],y[1]))
-	lines(x=c(-.02,.02),y=c(y[3],y[3]))
-	lines(x=c(.98,1.02),y=c(y[4],y[4]))
-	lines(x=c(.98,1.02),y=c(y[6],y[6]))
-	points(x[c(2,5)],y[c(2,5)], pch=22, cex=c((controlnonex+casenonex),(caseexp+controlex))/sum(table)*5)
-	axis(1,at=c(0,1),labels=c("non-exposed","exposed"))
-	y1 <- exp(y)
-	a <- 2^(-10:10)
-	if(length(a[a>min(y1) & a<max(y1)]) >2 & length(a[a>min(y1) & a<max(y1)]) <10){
-	a1 <- a[a>min(y1) & a<max(y1)]
-		if(any(a1>=1))axis(2,at=log(a1[a1>=1]),labels=as.character(a1[a1>=1]), las=1)
-		if(any(a1<1))axis(2,at=log(a1[a1<1]),labels=paste(as.character(1),"/",
-		as.character(trunc(1/a1[a1<1])), sep=""),las=1)
-	}
-	else
-	{
-	options(digit=2)
-	at.y <-  seq(from=min(y),to=max(y),by=((max(y)-min(y))/5))
-	labels.oddsy <- exp(at.y)
-	axis(2,at=at.y, labels=as.character(round(labels.oddsy,digits=decimal)), las=1)
-	}
-	lines(x[1:3],y[1:3])
-	lines(x[4:6],y[4:6])
-	lines(x[c(2,5)],y[c(2,5)])
-	arrows(y0=logit0 ,y1=logit1, x0 =0.25, x1=0.25, code=2, col="red")
-	text(y = min(y) + .55*(max(y)-min(y)), x= 0.5, labels=paste("OR = ", round(fisher$estimate, decimal)))
-	text(y = min(y) + .45*(max(y)-min(y)), x= 0.5, labels=paste("95% CI =", round(fisher$conf.int,decimal)[1],",", round(fisher$conf.int,decimal)[2]))
-	abline(h=c(logit0, logit1), lty=3, col="blue") 
-	}
+graph.prospective <-
+function (caseexp, controlex, casenonex, controlnonex, decimal = 2)
+{
+    if (any(c(caseexp, controlex, casenonex, controlnonex) < 
+        5)) {
+        cat("One of more cells is/are less than 5, not appropriate for graphing", 
+            "\n", "\n")
+    }
+    else {
+        table <- c(caseexp, controlex, casenonex, controlnonex)
+        dim(table) <- c(2, 2)
+        fisher <- fisher.test(table)
+        logit0 <- log(casenonex/controlnonex)
+        se0 <- sqrt(1/casenonex + 1/controlnonex)
+        logit1 <- log(caseexp/controlex)
+        se1 <- sqrt(1/caseexp + 1/controlnonex)
+        y <- c(c(-1, 0, 1) * 1.96 * se0 + logit0, c(-1, 0, 1) * 
+            1.96 * se1 + logit1)
+        x <- c(rep(0, 3), rep(1, 3))
+        plot(x[c(1, 3, 4, 6)], y[c(1, 3, 4, 6)], ylab = "", xlab = "", 
+            yaxt = "n", xaxt = "n", 
+            pch = " ")
+        lines(x = c(-0.02, 0.02), y = c(y[1], y[1]))
+        lines(x = c(-0.02, 0.02), y = c(y[3], y[3]))
+        lines(x = c(0.98, 1.02), y = c(y[4], y[4]))
+        lines(x = c(0.98, 1.02), y = c(y[6], y[6]))
+        points(x[c(2, 5)], y[c(2, 5)], pch = 22, cex = c((controlnonex + 
+            casenonex), (caseexp + controlex))/sum(table) * 5)
+        y1 <- exp(y)
+        a <- 2^(-10:10)
+        if (length(a[a > min(y1) & a < max(y1)]) > 2 & length(a[a > 
+            min(y1) & a < max(y1)]) < 10) {
+            a1 <- a[a > min(y1) & a < max(y1)]
+            if (any(a1 >= 1)) 
+                axis(2, at = log(a1[a1 >= 1]), labels = as.character(a1[a1 >= 
+                  1]), las = 1)
+            if (any(a1 < 1)) 
+                axis(2, at = log(a1[a1 < 1]), labels = paste(as.character(1), 
+                  "/", as.character(trunc(1/a1[a1 < 1])), sep = ""), 
+                  las = 1)
+        }
+        else {
+            options(digit = 2)
+            at.y <- seq(from = min(y), to = max(y), by = ((max(y) - 
+                min(y))/5))
+            labels.oddsy <- exp(at.y)
+            axis(2, at = at.y, labels = as.character(round(labels.oddsy, 
+                digits = decimal)), las = 1)
+        }
+        lines(x[1:3], y[1:3])
+        lines(x[4:6], y[4:6])
+        lines(x[c(2, 5)], y[c(2, 5)])
+        arrows(y0 = logit0, y1 = logit1, x0 = 0.25, x1 = 0.25, 
+            code = 2, col = "red")
+        text(y = min(y) + 0.55 * (max(y) - min(y)), x = 0.5, 
+            labels = paste("OR = ", round(fisher$estimate, decimal)))
+        text(y = min(y) + 0.45 * (max(y) - min(y)), x = 0.5, 
+            labels = paste("95% CI =", round(fisher$conf.int, 
+                decimal)[1], ",", round(fisher$conf.int, decimal)[2]))
+        abline(h = c(logit0, logit1), lty = 3, col = "blue")
+    }
 }
+
 #### Create a `cctable' in global environment and label row and column with the variable descriptions
 labelTable <- function(outcome, exposure, cctable=NULL , cctable.dimnames=NULL){
 if(is.null(cctable)){
@@ -3068,12 +3174,15 @@ list(Each.category=each.category, Overall=Overall)
 }
  
 ### Make 2 x 2 table
-make2x2 <- function(caseexp, controlex, casenonex, controlnonex) {
-table <- c(controlnonex, casenonex, controlex, caseexp)
-dim(table) <- c(2,2)
-rownames(table) <- c("Non-diseased", "Diseased")
-colnames(table) <- c("Non-exposed","Exposed")
-return <- as.table(table)
+make2x2 <-
+function (caseexp, controlex, casenonex, controlnonex) 
+{
+    table1 <- c(controlnonex, casenonex, controlex, caseexp)
+    dim(table1) <- c(2, 2)                  
+    rownames(table1) <- c("Non-diseased", "Diseased")
+    colnames(table1) <- c("Non-exposed", "Exposed")
+    attr(attr(table1, "dimnames"), "names") <- c("Outcome", "Exposure")
+    table1 
 }
 
 ### Sample size calculation

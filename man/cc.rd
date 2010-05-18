@@ -11,9 +11,10 @@
 \description{Odds ratio calculation and graphing}
 \usage{
 cc(outcome, exposure, decimal = 2, cctable = NULL, graph = TRUE, 
-	design = "cohort") 
+	original = TRUE, design = "cohort", main, xlab = "auto", ylab) 
 cci(caseexp, controlex, casenonex, controlnonex, cctable = NULL, 
-	decimal = 2, graph = TRUE, design = "cohort") 
+	decimal = 2, graph = TRUE, design = "cohort", main, xlab, ylab,
+  xaxis, yaxis) 
 cs(outcome, exposure, cctable = NULL, decimal = 2)
 csi(caseexp, controlex, casenonex, controlnonex, cctable = NULL, 
 	decimal = 2) 
@@ -35,6 +36,12 @@ make2x2(caseexp, controlex, casenonex, controlnonex)
 	\item{controlex}{Number of controls exposed}
 	\item{casenonex}{Number of cases not exosed}
 	\item{controlnonex}{Number of controls not exposed}
+	\item{original}{should the original table be displayed instead of standard outcome vs exposure table}
+	\item{main}{main title of the graph}
+	\item{xlab}{label on X axis}
+	\item{ylab}{label on Y axis}
+	\item{xaxis}{two categories of exposure in graph}
+	\item{yaxis}{two categories of outcome in graph}
 }
 \details{'cc' computes odds ratios and 95 percent confidence intervals from outcome and exposure variables. The results are based on the exact method.
 
