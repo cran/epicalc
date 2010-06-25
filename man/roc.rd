@@ -5,9 +5,9 @@
 \description{Receiver Operating Characteristic curve of a logistic regression model and a diagnostic table}
 \usage{
 lroc(logistic.model, graph = TRUE, add = FALSE, title = FALSE, 
-    line.col = "red", auc.coords = NULL, ...)
+    line.col = "red", auc.coords = NULL, grid = TRUE, grid.col = "blue", ...)
 roc.from.table(table, graph = TRUE, add = FALSE, title = FALSE, 
-	line.col = "red", auc.coords = NULL, ...) 
+	line.col = "red", auc.coords = NULL, grid = TRUE, grid.col = "blue", ...) 
 }
 \arguments{
 	\item{logistic.model}{A model from logistic regression}
@@ -17,6 +17,8 @@ roc.from.table(table, graph = TRUE, add = FALSE, title = FALSE,
 	\item{title}{If true, the model will be displayed as main title}
 	\item{line.col}{Color of the line}
 	\item{auc.coords}{Coordinates for label of 'auc' (area under curve)}
+	\item{grid}{Whether the grid should be drawn}
+	\item{grid.col}{Grid colour, if drawn}
 	\item{...}{Additional graphic parameters}
 }
 \details{
