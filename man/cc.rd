@@ -86,7 +86,7 @@ graph.casecontrol(25, 22, 20, 7)
 graph.prospective(25, 22, 20, 7)
 
 #Alternatively
-table1 <- make2x2(25,70,22,7)
+table1 <- make2x2(25,22,20,7)
 cc(outcome=NULL, exposure=NULL, cctable=table1)
 cs(outcome=NULL, exposure=NULL, cctable=table1)
 

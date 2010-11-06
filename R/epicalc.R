@@ -4156,82 +4156,118 @@ qqline(x, col="blue", lty=2)
 }
 
 ### Match tabulation
-matchTab <- function(case, exposed, strata) {
-cat("\n")
-if((length(table(case))!=2)){
-stop("Case variable not binary")
+matchTab <-
+function (case, exposed, strata) 
+{
+    cat("\n")
+    if ((length(table(case)) != 2)) {
+        stop("Case variable not binary")
+    }
+    if (any(is.na(case))) {
+        stop("There should not be any missing outcome")
+    }
+    if (length(table(exposed)) != 2) {
+        stop("Exposure variable not binary")
+    }
+    exposed1 <- exposed
+    if (is.factor(exposed)) {
+        cat(paste("Exposure status:", as.character(substitute(exposed)), 
+            "=", levels(exposed)[2], "\n"))
+    }
+    else {
+        cat(paste("Exposure status:", as.character(substitute(exposed)), 
+            "=", max(exposed, na.rm = TRUE), "\n"))
+    }
+    cat("\n")
+    if (is.factor(exposed1)) {
+        exposed1 <- exposed1 == levels(exposed1)[2]
+    }
+    control <- 1 - case
+    a0 <- aggregate.data.frame(case, list(strata=strata), sum)
+    colnames(a0)[2] <- "ncases"
+    a <- aggregate.data.frame(control, list(strata = strata), 
+        sum)
+    colnames(a)[2] <- "ncontrols"
+    a <- merge(a0, a, by.x="strata", by.y = "strata")
+    case.exposed <- case * exposed1
+    b <- aggregate.data.frame(case.exposed, list(strata = strata), 
+        sum)
+    colnames(b)[2] <- "ncase.exposed"
+    control.exposed <- control * exposed1
+    c <- aggregate.data.frame(control.exposed, list(strata = strata), 
+        sum)
+    colnames(c)[2] <- "ncontrol.exposed"
+    d <- aggregate.data.frame(case, list(strata = strata), length)
+    colnames(d)[2] <- "all.subjects"
+    e <- aggregate.data.frame(exposed1, list(strata = strata), 
+        sum)
+    colnames(e)[2] <- "all.exposed"
+    f <- merge(a, b, by.x = "strata", by.y = "strata")
+    g <- merge(f, c, by.x = "strata", by.y = "strata")
+    h <- merge(g, d, by.x = "strata", by.y = "strata")
+    ii <- merge(h, e, by.x = "strata", by.y = "strata")
+    sum.ii <- rowSums(ii[, 2:7])
+    rowi0 <- nrow(ii)
+    nsets.missing.exposure.at.least.in.one.subject <- sum(is.na(ii$all.exposed))
+    nsets.missing.case <- sum(ii$ncases==0) 
+    nsets.missing.control <- sum(ii$ncontrols==0)
+    ii <- subset(ii, !is.na(sum.ii) & ii$ncases > 0 & ii$ncontrols > 0)
+    rowi1 <- nrow(ii)
+    if (rowi1 < rowi0) {
+        if(nsets.missing.case > 0) cat(nsets.missing.case, "set(s) without any case\n")
+        if(nsets.missing.control > 0) cat(nsets.missing.control, "set(s) without any control\n")
+        if(nsets.missing.exposure.at.least.in.one.subject > 0) {
+            cat(nsets.missing.exposure.at.least.in.one.subject, "set(s) with missing exposure of one or more set members\n")
+        }
+    }
+    cat("Total number of match sets in the tabulation =", rowi1, 
+        "\n")
+    ii$all.unexposed <- ii$all.subjects - ii$all.exposed
+    ii$ncontrol.exposed1 <- factor(ii$ncontrol.exposed, levels = as.character(0:max(ii$ncontrols)))
+    ii$ncase.exposed1 <- factor(ii$ncase.exposed, levels = as.character(0:max(ii$ncase.exposed)))
+    matchTable <- table(ii$ncase.exposed1, ii$ncontrol.exposed1, 
+        ii$ncontrols, dnn = c("No. of cases exposed", "No. of controls exposed", 
+            "No. of controls per case"))
+    cat("\n")
+    for (i in 1:max(ii$ncontrols)) {
+        cat(paste("Number of controls =", i, "\n"))
+        print(matchTable[1:max(c(2, max(which(rowSums(matchTable[, 
+            , i]) > 0)))), 1:(i + 1), i])
+        cat("\n")
+    }
+    numerator <- (ii$ncontrols - ii$ncontrol.exposed) * ii$ncase.exposed/(ii$ncontrols + 
+        1)
+    denominator <- ii$ncontrol.exposed * (1 - ii$ncase.exposed)/(ii$ncontrols + 
+        1)
+    if (sum(denominator) < 1) {
+        cat("Inadequate discordant pairs. Odds ratio not computed")
+        cat("\n")
+    }
+    else {
+        if (any(ii$ncase.exposed > 1)) {
+            cat(paste(c("More than one cases exposed in strata # ", 
+                as.character(ii$strata[ii$ncase.exposed > 1]), 
+                ". M-H odds ratio not computed."), sep = ""))
+            cat("\n", "\n")
+        }
+        else {
+            mhor <- sum(numerator)/sum(denominator)
+            cat(paste("Odds ratio by Mantel-Haenszel method =", 
+                round(mhor, 3), "\n", "\n"))
+        }
+        library(survival)
+        model <- clogit(case ~ exposed + strata(strata))
+        clogitor <- exp(model$coefficients)
+        lnci95 <- c(model$coefficients - qnorm(0.975) * sqrt(model$var), 
+            model$coefficients + qnorm(0.975) * sqrt(model$var))
+        ci95.mleor <- exp(lnci95)
+        cat(paste("Odds ratio by maximum likelihood estimate (MLE) method =", 
+            round(clogitor, 3), "\n", "95%CI=", round(ci95.mleor[1], 
+                3), ",", round(ci95.mleor[2], 3), "\n"))
+        cat("\n")
+    }
 }
-if(any(is.na(case))){
-stop("There should not be any missing outcome")}
-if(length(table(exposed))!=2){
-stop("Exposure variable not binary")
-}
-exposed1 <- exposed
-if(is.factor(exposed)){
-	cat(paste("Exposure status:", as.character(substitute(exposed)), "=", levels(exposed)[2],"\n"))
-}else{
-	cat(paste("Exposure status:", as.character(substitute(exposed)), "=", max(exposed, na.rm=TRUE),"\n"))
-}
-cat("\n")
-if(is.factor(exposed1)){
-	exposed1 <- exposed1==levels(exposed1)[2]
-}
-control <- 1-case
-aggregate.data.frame(control, list(strata=strata), sum) -> a
-colnames(a)[2] <- "ncontrols"
-case.exposed <- case*exposed1
-aggregate.data.frame(case.exposed, list(strata=strata), sum) -> b
-colnames(b)[2] <- "ncase.exposed"
-control.exposed <- control*exposed1
-aggregate.data.frame(control.exposed, list(strata=strata), sum) -> c
-colnames(c)[2] <- "ncontrol.exposed"
-aggregate.data.frame(case, list(strata=strata), length) -> d
-colnames(d)[2] <- "all.subjects"
-aggregate.data.frame(exposed1, list(strata=strata), sum) -> e
-colnames(e)[2] <- "all.exposed"
-merge(a,b,by.x="strata", by.y="strata") -> f
-merge(f,c,by.x="strata", by.y="strata") -> g
-merge(g,d,by.x="strata", by.y="strata") -> h
-merge(h,e,by.x="strata", by.y="strata") -> ii
-sum.ii <- rowSums(ii[,2:6])
-rowi0 <- nrow(ii)
-ii <- subset(ii, !is.na(sum.ii))
-rowi1 <- nrow(ii)
-if(rowi1 < rowi0){
-cat (rowi0-rowi1,"match sets with incomplete information omitted from tabulation.","\n")
-}
-cat ("Total number of match sets in the tabulation =", rowi1,"\n")
-all.unexposed <- ii$all.subjects-ii$all.exposed
-ii$ncontrol.exposed1 <- factor(ii$ncontrol.exposed, levels=as.character(0:max(ii$ncontrols)))
-ii$ncase.exposed1 <- factor(ii$ncase.exposed, levels=as.character(0:max(ii$ncase.exposed)))
-table(ii$ncase.exposed1, ii$ncontrol.exposed1, ii$ncontrols, dnn=c("No. of cases exposed","No. of controls exposed","No. of controls per case"))->matchTable
-cat("\n")
-for(i in 1:max(ii$ncontrols)){
-	cat(paste("Number of controls =",i,"\n"))
-	print(matchTable[1:max(c(2,max(which(rowSums(matchTable[,,i])>0)))),1:(i+1),i])
-	cat("\n")
-}
-numerator <- (ii$ncontrols-ii$ncontrol.exposed)*ii$ncase.exposed/(ii$ncontrols+1)
-denominator <- ii$ncontrol.exposed*(1-ii$ncase.exposed)/(ii$ncontrols+1)
-if(sum(denominator) <1){
-cat("Inadequate discordant pairs. Odds ratio not computed"); cat("\n")
-}else{
-if(any(ii$ncase.exposed>1)){
-cat(paste(c("More than one cases exposed in strata # ", as.character(ii$strata[ii$ncase.exposed > 1]), ". M-H odds ratio not computed."), sep=""))
-cat("\n", "\n")
-}else{
-mhor <- sum(numerator)/sum(denominator)
-cat(paste("Odds ratio by Mantel-Haenszel method =", round(mhor,3), "\n", "\n"))
-### computing MLE-OR using clogit
-}
-library(survival)
-model <- clogit(case ~ exposed + strata(strata))
-clogitor <- exp(model$coefficients)
-lnci95 <- c(model$coefficients-qnorm(0.975)*sqrt(model$var),model$coefficients+qnorm(0.975)*sqrt(model$var))
-ci95.mleor <- exp(lnci95)
-cat(paste("Odds ratio by maximum likelihood estimate (MLE) method =", round(clogitor,3),"\n","95%CI=",round(ci95.mleor[1],3),",",round(ci95.mleor[2],3), "\n"))
-cat("\n")
-}}
+
  
 ### Goodness-of-fit test for poisson assumption after regression
 poisgof <- function(model) {
