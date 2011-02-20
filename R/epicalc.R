@@ -787,153 +787,246 @@ suppressWarnings(return(list(cctable, caseexp=cctable[2,2], controlex=cctable[1,
 }
 
 #### Cohort tabulation from a dataset
-cs <- function(outcome, exposure, cctable = NULL, decimal=2) {
-if(is.null(cctable)){
-	cctable <- table(outcome, exposure, deparse.level=1, dnn=list(substitute(outcome),substitute(exposure)))
-	cctable.dimnames <- names(attr(cctable,"dimnames"))
-}else{
-	cctable.dimnames <- names(attr(cctable,"dimnames"))
-}
-
-if(ncol(cctable) > 2 & nrow(cctable) ==2){
-r     <- rep(NA, ncol(cctable))
-rr    <- rep(NA, ncol(cctable))
-lowci <- rep(NA, ncol(cctable))
-hici  <-rep(NA, ncol(cctable))
-for(i in 1:ncol(cctable)) {r[i] <- cctable[2,i]/colSums(cctable)[i]}
-rr[1] <- 1
-for(i in 2:ncol(cctable)){rr[i] <- (cctable[2,i]/colSums(cctable)[i])/(cctable[2,1]/colSums(cctable)[1])}
-for(i in 2:ncol(cctable)){lowci[i] <- rr[i]^(1-qnorm(1-.05/2)/sqrt(suppressWarnings(chisq.test(cbind(cctable[,1],cctable[,i])))$statistic))}
-for(i in 2:ncol(cctable)){hici[i] <- rr[i]^(1+qnorm(1-.05/2)/sqrt(suppressWarnings(chisq.test(cbind(cctable[,1],cctable[,i])))$statistic))}
-row4 <- as.character(round(r,decimal))
-row5 <- as.character(round(rr,decimal)); row5[1] <- "1"
-row6 <- as.character(round(lowci,decimal)); row6[1] <- " "
-row7 <- as.character(round(hici,decimal)); row7[1] <- " "
-table2 <-rbind(cctable,"", row4, row5, row6, row7)
-rownames(table2)[4] <- "Absolute risk"
-rownames(table2)[5] <- "Risk ratio"
-rownames(table2)[6] <- "lower 95% CI  "
-rownames(table2)[7] <- "upper 95% CI  "
-names(attr(table2, "dimnames"))<- names(attr(cctable,"dimnames"))
-cat("\n")
-print.noquote(table2)
-cat("\n")
-cat("Chi-squared =", round(chisq.test(cctable)$statistic,3), ",",
-	chisq.test(cctable)$parameter,"d.f.,",
-	"P value =",round(chisq.test(cctable, correct=FALSE)$p.value,decimal+1),"\n")
-if(sum(chisq.test(cctable)$expected < 5)/sum(chisq.test(cctable)$expected > 0) > .2){
-cat("Fisher's exact test (2-sided) P value =",round(fisher.test(cctable)$p.value,decimal+1),"\n")
-}
-cat("\n")
-
-	if(any(cctable<5)) {
-		cat("One of more cells is/are less than 5, not appropriate for graphing","\n","\n")
-	}else{
-		x <- 1:ncol(cctable)
-		x.left <- x-0.02
-		x.right <- x+0.02
-		plot(x,rr, ylab= "Risk ratio", xaxt="n",
-			xlab=paste(names(attr(cctable,"dimnames")[2])),
-			main="Risk ratio from a cohort study",pch=" ",
-			xlim=c(min(x.left)-.2, x.right[ncol(cctable)]+0.2), 
-			ylim=c(min(c(1,min(lowci,na.rm=TRUE),min(hici,na.rm=TRUE))), 
-				max(c(1,max(hici,na.rm=TRUE,max(lowci,na.rm=TRUE))))),
-			log="y", type="l")
-		for(i in 1:ncol(cctable)){
-			lines(x=c(x[i],x[i]), y=c(lowci[i],hici[i]))
-			lines(x=c(x.left[i],x.right[i]),y=c(lowci[i],lowci[i]))
-			lines(x=c(x.left[i],x.right[i]),y=c(hici[i],hici[i]))
-			points(x[i],rr[i], pch=22, cex=sum(cctable[,i])*(5/sum(cctable)))
-		}
-	axis(1,at=x, labels=colnames(cctable))
-	text(1,1,labels="1", pos=4, font=4, col="brown")	
-	text(x[-1],rr[-1],labels=row5[-1],col="brown", pos=1, font=4)
-	text(x,rr,labels=ifelse(x==1,"",paste("(",row6,",",row7,")")),
-		pos=1, font=4, offset=1.5, col="brown")
-	}
-
-}else{
-labelTable(outcome, exposure, cctable=cctable, cctable.dimnames=cctable.dimnames) -> a
-csi (caseexp=a$caseexp, controlex= a$controlex, casenonex=a$casenonex, controlnonex=a$controlnonex, 
-	cctable=a$cctable, decimal=decimal)
-}
+cs <-
+function (outcome, exposure, cctable = NULL, decimal = 2, method="Newcombe.Wilson", main, xlab, ylab, cex, cex.axis) 
+{
+    if (is.null(cctable)) {
+        cctable <- table(outcome, exposure, deparse.level = 1, 
+            dnn = list(substitute(outcome), substitute(exposure)))
+        cctable.dimnames <- names(attr(cctable, "dimnames"))
+    }
+    else {
+        cctable.dimnames <- names(attr(cctable, "dimnames"))
+    }
+    if (ncol(cctable) > 2 & nrow(cctable) == 2) {
+        r <- rep(NA, ncol(cctable))
+        rr <- rep(NA, ncol(cctable))
+        lowci <- rep(NA, ncol(cctable))
+        hici <- rep(NA, ncol(cctable))
+        for (i in 1:ncol(cctable)) {
+            r[i] <- cctable[2, i]/colSums(cctable)[i]
+        }
+        rr[1] <- 1
+        for (i in 2:ncol(cctable)) {
+            rr[i] <- (cctable[2, i]/colSums(cctable)[i])/(cctable[2, 
+                1]/colSums(cctable)[1])
+        }
+        for (i in 2:ncol(cctable)) {
+            lowci[i] <- rr[i]^(1 - qnorm(1 - 0.05/2)/sqrt(suppressWarnings(chisq.test(cbind(cctable[, 
+                1], cctable[, i])))$statistic))
+        }
+        for (i in 2:ncol(cctable)) {
+            hici[i] <- rr[i]^(1 + qnorm(1 - 0.05/2)/sqrt(suppressWarnings(chisq.test(cbind(cctable[, 
+                1], cctable[, i])))$statistic))
+        }
+        row4 <- as.character(round(r, decimal))
+        row5 <- as.character(round(rr, decimal))
+        row5[1] <- "1"
+        row6 <- as.character(round(lowci, decimal))
+        row6[1] <- " "
+        row7 <- as.character(round(hici, decimal))
+        row7[1] <- " "
+        table2 <- rbind(cctable, "", row4, row5, row6, row7)
+        rownames(table2)[4] <- "Absolute risk"
+        rownames(table2)[5] <- "Risk ratio"
+        rownames(table2)[6] <- "lower 95% CI  "
+        rownames(table2)[7] <- "upper 95% CI  "
+        names(attr(table2, "dimnames")) <- names(attr(cctable, 
+            "dimnames"))
+        cat("\n")
+        print.noquote(table2)
+        cat("\n")
+        cat("Chi-squared =", round(chisq.test(cctable)$statistic, 
+            3), ",", chisq.test(cctable)$parameter, "d.f.,", 
+            "P value =", round(chisq.test(cctable, correct = FALSE)$p.value, 
+                decimal + 1), "\n")
+        if (sum(chisq.test(cctable)$expected < 5)/sum(chisq.test(cctable)$expected > 
+            0) > 0.2) {
+            cat("Fisher's exact test (2-sided) P value =", round(fisher.test(cctable)$p.value, 
+                decimal + 1), "\n")
+        }
+        cat("\n")
+        if (any(cctable < 5)) {
+            cat("One of more cells is/are less than 5, not appropriate for graphing", 
+                "\n", "\n")
+        }
+        else {
+            x <- 1:ncol(cctable)
+            x.left <- x - 0.02
+            x.right <- x + 0.02
+            plot(x, rr, ylab = ifelse(missing(ylab), "Risk ratio", ylab), xaxt = "n", xlab = ifelse(missing(xlab),paste(names(attr(cctable, 
+                "dimnames")[2])),xlab), main = ifelse(missing(main),"Risk ratio from a cohort study", main), 
+                pch = " ", xlim = c(min(x.left) - 0.2, x.right[ncol(cctable)] + 
+                  0.2), ylim = c(min(c(1, min(lowci, na.rm = TRUE), 
+                  min(hici, na.rm = TRUE))), max(c(1, max(hici, 
+                  na.rm = TRUE, max(lowci, na.rm = TRUE))))), 
+                log = "y", type = "l", cex.axis=ifelse(missing(cex.axis), 1, cex.axis))
+            for (i in 1:ncol(cctable)) {
+                lines(x = c(x[i], x[i]), y = c(lowci[i], hici[i]))
+                lines(x = c(x.left[i], x.right[i]), y = c(lowci[i], 
+                  lowci[i]))
+                lines(x = c(x.left[i], x.right[i]), y = c(hici[i], 
+                  hici[i]))
+                points(x[i], rr[i], pch = 22, cex = sum(cctable[, 
+                  i]) * (5/sum(cctable)))
+            }
+            axis(1, at = x, labels = colnames(cctable), ifelse(missing(cex.axis), 1, cex.axis))
+            text(1, 1, labels = "1", pos = 4, font = 4, col = "brown", cex=ifelse(missing(cex),1,cex))
+            text(x[-1], rr[-1], labels = row5[-1], col = "brown", 
+                pos = 1, font = 4, cex=ifelse(missing(cex),1,cex))
+            text(x, rr, labels = ifelse(x == 1, "", paste("(", 
+                row6, ",", row7, ")")), pos = 1, font = 4, offset = 1.5, 
+                col = "brown", cex=ifelse(missing(cex),1,cex))
+        }
+    }
+    else {
+        a <- labelTable(outcome, exposure, cctable = cctable, 
+            cctable.dimnames = cctable.dimnames)
+        csi(caseexp = a$caseexp, controlex = a$controlex, casenonex = a$casenonex, 
+            controlnonex = a$controlnonex, cctable = a$cctable, 
+            decimal = decimal, method=method)
+    }
 }
 
 #### Cohort tabulation from keyboard
-csi <- function(caseexp, controlex, casenonex, controlnonex, cctable=NULL, decimal=2) {
-if(is.null(cctable)){
-	frame <- cbind(Outcome<-c(1,0,1,0),Exposure<- c(1,1,0,0),Freq <- c(caseexp,controlex, casenonex, controlnonex))
-	Exposure <- factor(Exposure)
-	expgrouplab <- c("Non-exposed","Exposed") 
-	levels(Exposure) <- expgrouplab
-	Outcome <- factor(Outcome)
-	outcomelab <- c("Negative", "Positive")
-	levels(Outcome) <- outcomelab
-	table <- xtabs(Freq ~ Outcome + Exposure, data=frame)
-}else{
-	table <- get("cctable")
+csi <- 
+function (caseexp, controlex, casenonex, controlnonex, cctable = NULL, 
+    decimal = 2, method="Newcombe.Wilson") 
+{
+    if (is.null(cctable)) {
+        frame <- cbind(Outcome <- c(1, 0, 1, 0), Exposure <- c(1, 
+            1, 0, 0), Freq <- c(caseexp, controlex, casenonex, 
+            controlnonex))
+        Exposure <- factor(Exposure)
+        expgrouplab <- c("Non-exposed", "Exposed")
+        levels(Exposure) <- expgrouplab
+        Outcome <- factor(Outcome)
+        outcomelab <- c("Negative", "Positive")
+        levels(Outcome) <- outcomelab
+        table <- xtabs(Freq ~ Outcome + Exposure, data = frame)
+    }
+    else {
+        table <- get("cctable")
+    }
+    cat("\n")
+    table2 <- addmargins(table)
+    rownames(table2)[nrow(table2)] <- "Total"
+    colnames(table2)[ncol(table2)] <- "Total"
+    risk <- table2[2, ]/table2[3, ]
+    table2 <- rbind(table2, c("", "", ""), c("Rne", "Re", "Rt"), 
+        round(risk, decimal), deparse.level = 1)
+    rownames(table2)[c(4:6)] <- c("", "", "Risk")
+    names(attr(table2, "dimnames")) <- names(attr(table, "dimnames"))
+    print.noquote(table2)
+    a <- table[1, 1]
+    A <- sum(table[, 1]) * sum(table[1, ])/sum(table[, ])
+    Vara <- sum(table[, 1])/(sum(table[, ]) - 1) * sum(table[1, 
+        ]) * sum(table[, 2]) * sum(table[2, ])/sum(table[, ])^2
+    chi2 <- abs(a - A)^2/Vara
+    
+if(method=="Newcombe.Wilson"){
+newcombe.wilson <- function(caseexp, controlex, casenonex, controlnonex, alpha=0.05)
+{
+ n1 <- casenonex+controlnonex
+ n2 <- caseexp+controlex
+ CER <- casenonex/n1
+ EER <- caseexp/n2
+
+ Z <- qnorm(1-alpha/2)
+
+ lower1 <- (1/(2*(n2+Z^2)))*(2*n2*CER+Z^2 - Z*(Z^2+4*n2*CER*(1-CER))^0.5)
+ upper1 <- (1/(2*(n2+Z^2)))*(2*n2*CER+Z^2 + Z*(Z^2+4*n2*CER*(1-CER))^0.5)
+ 
+ lower2 <- (1/(2*(n1+Z^2)))*(2*n1*EER+Z^2 - Z*(Z^2+4*n1*EER*(1-EER))^0.5)
+ upper2 <- (1/(2*(n1+Z^2)))*(2*n1*EER+Z^2 + Z*(Z^2+4*n1*EER*(1-EER))^0.5)
+
+ term1 <- sqrt(abs((lower1*(1-lower1)/n2)+(upper2*(1-upper2)/n1)))
+ term2 <- sqrt(abs((upper1*(1-upper1)/n2)+(lower2*(1-lower2)/n1)))
+
+ lower <- CER-EER - Z * term1
+ upper <- CER-EER + Z * term2
+ 
+ return(list(Risk = -(CER-EER), Lower.CI=-upper, Upper.CI=-lower))#ifelse(EER < CER,-upper,-upper), Upper.CI=ifelse(EER < CER, -lower,-lower)))
 }
-cat( "\n")
-table2 <- addmargins(table)
-rownames(table2)[nrow(table2)] <- "Total"
-colnames(table2)[ncol(table2)] <- "Total"
-risk <- table2[2,]/table2[3,]
-table2 <- rbind(table2,c("","",""), c("Rne","Re","Rt"), round(risk,decimal), deparse.level=1)
-rownames(table2)[c(4:6)] <- c("","","Risk")
-names(attr(table2,"dimnames")) <- names(attr(table,"dimnames")) 
-print.noquote(table2)
-
-# Computing chi-squared
-	a <- table[1,1]
-        A <- sum(table[,1])*sum(table[1,])/sum(table[,])
-        Vara <- sum(table[, 1]) / (sum(table[, ]) - 1) * 
-		sum(table[1, ]) * 
-		sum(table[, 2]) * 
-		sum(table[2, ]) /
-		sum(table[, ])^2
-# MH corrected chisquared: 
-chi2 <-abs(a-A)^2/Vara
-
-
-risk.diff  <- risk[2]-risk[1]
-risk.diff.lower <- round(risk.diff*(1-sign(risk.diff)*(qnorm(1-.05/2)/sqrt(chi2))),decimal)
-risk.diff.upper <- round(risk.diff*(1+sign(risk.diff)*(qnorm(1-.05/2)/sqrt(chi2))),decimal)
-risk.ratio <- round(risk[2]/risk[1], decimal)
-risk.ratio.lower <- round(risk.ratio^(1-sign(risk.diff)*(qnorm(1-.05/2)/sqrt(suppressWarnings(chisq.test(table)$statistic)))),decimal)
-risk.ratio.upper <- round(risk.ratio^(1+sign(risk.diff)*(qnorm(1-.05/2)/sqrt(suppressWarnings(chisq.test(table)$statistic)))),decimal)
-if(risk.ratio < 1) {
-	protective.efficacy <- round(-risk.diff/risk[1]*100, decimal-1)
-	protective.efficacy.lower <- round(100*(1-(risk.ratio^(1-(qnorm(1-.05/2)/sqrt(suppressWarnings(chisq.test(table)$statistic)))))),decimal)
-	protective.efficacy.upper <- round(100*(1-(risk.ratio^(1+(qnorm(1-.05/2)/sqrt(suppressWarnings(chisq.test(table)$statistic)))))),decimal)
-	nnt <- round(-1/risk.diff,decimal)
-  nnt.lower <- round(-1/(risk.diff*(1+(qnorm(1-.05/2)/sqrt(chi2)))),decimal)
-  nnt.upper <- round(-1/(risk.diff*(1-(qnorm(1-.05/2)/sqrt(chi2)))),decimal) 	
-	risk.names <- c("Risk difference (Re - Rne)","Risk ratio","Protective efficacy =(Rne-Re)/Rne*100  ", "  or percent of risk reduced", 
-		"Number needed to treat (NNT)", "  or -1/(risk difference)"  )
-	risk.table <- cbind(risk.names, 
-      c(round(risk.diff,decimal), risk.ratio,      protective.efficacy,       " ", nnt, ""),
-  		c(risk.diff.lower,          risk.ratio.lower,protective.efficacy.lower, " ", nnt.lower, ""),
-      c(risk.diff.upper,          risk.ratio.upper,protective.efficacy.upper, " ", nnt.upper, ""))
+newcombe.wilson.results <- newcombe.wilson(caseexp, controlex, casenonex, controlnonex)
+risk.diff <- newcombe.wilson.results$Risk 
+risk.diff.lower <-  round(min(c(newcombe.wilson.results$Lower.CI,newcombe.wilson.results$Upper.CI)),decimal)
+risk.diff.upper <-  round(max(c(newcombe.wilson.results$Lower.CI,newcombe.wilson.results$Upper.CI)),decimal)
 }else{
-	attributable.frac.exp <- round(risk.diff/risk[2], decimal) 
-	pop.risk.diff <- risk[3] - risk[1]
-	attributable.frac.pop <- round((risk[3] - risk[1])/risk[3]*100, decimal)
-	nnh <- round(1/risk.diff,decimal)
-  nnh.lower <- round(1/(risk.diff*(1+(qnorm(1-.05/2)/sqrt(chi2)))),decimal)
-  nnh.upper <- round(1/(risk.diff*(1-(qnorm(1-.05/2)/sqrt(chi2)))),decimal) 	
-	cat("\n")
-	risk.names <- c("Risk difference (attributable risk)","Risk ratio","Attr. frac. exp. -- (Re-Rne)/Re",
-		"Attr. frac. pop. -- (Rt-Rne)/Rt*100 %  ", "Number needed to harm (NNH)", "  or 1/(risk difference)")
-	risk.table <- cbind(risk.names, 
-      c(round(risk.diff,decimal), risk.ratio,    attributable.frac.exp, attributable.frac.pop, nnh, ""), 
-      c(risk.diff.lower,          risk.ratio.lower,"","", nnh.lower, ""),
-      c(risk.diff.upper,          risk.ratio.upper,"","", nnh.upper, ""))
+ 
+    risk.diff <- risk[2] - risk[1]
+    risk.diff.lower <- round(risk.diff * (1 - sign(risk.diff) * 
+        (qnorm(1 - 0.05/2)/sqrt(chi2))), decimal)
+    risk.diff.upper <- round(risk.diff * (1 + sign(risk.diff) * 
+        (qnorm(1 - 0.05/2)/sqrt(chi2))), decimal)
 }
-	row.names(risk.table) <- rep("",nrow(risk.table))
-	colnames(risk.table) <- c("","Estimate","Lower95ci","Upper95ci")
-	print.noquote(risk.table)
-	cat("\n")
-suppressWarnings(rm(cctable,caseexp, controlex, casenonex, controlnonex, pos=1))
+    risk.ratio <- round(risk[2]/risk[1], decimal)
+    risk.ratio.lower <- round(risk.ratio^(1 - sign(risk.diff) * 
+        (qnorm(1 - 0.05/2)/sqrt(suppressWarnings(chisq.test(table)$statistic)))), 
+        decimal)
+    risk.ratio.upper <- round(risk.ratio^(1 + sign(risk.diff) * 
+        (qnorm(1 - 0.05/2)/sqrt(suppressWarnings(chisq.test(table)$statistic)))), 
+        decimal)
+    if (risk.ratio < 1) {
+        protective.efficacy <- round(-risk.diff/risk[1] * 100, 
+            decimal - 1)
+        protective.efficacy.lower <- round(100 * (1 - (risk.ratio^(1 - 
+            (qnorm(1 - 0.05/2)/sqrt(suppressWarnings(chisq.test(table)$statistic)))))), 
+            decimal)
+        protective.efficacy.upper <- round(100 * (1 - (risk.ratio^(1 + 
+            (qnorm(1 - 0.05/2)/sqrt(suppressWarnings(chisq.test(table)$statistic)))))), 
+            decimal)
+        nnt <- round(-1/risk.diff, decimal)
+if(method=="Newcombe.Wilson"){
+nnt.lower <- round(min(c(-1/newcombe.wilson.results$Lower.CI, -1/newcombe.wilson.results$Upper.CI)),decimal)
+nnt.upper <- round(max(c(-1/newcombe.wilson.results$Lower.CI, -1/newcombe.wilson.results$Upper.CI)),decimal)
+}else{
+        nnt.lower <- round(min(c(-1/(risk.diff * (1 + (qnorm(1 - 0.05/2)/sqrt(chi2)))),-1/(risk.diff * (1 - (qnorm(1 - 0.05/2)/sqrt(chi2)))))), 
+            decimal)
+        nnt.upper <- round(max(c(-1/(risk.diff * (1 + (qnorm(1 - 0.05/2)/sqrt(chi2)))),-1/(risk.diff * (1 - (qnorm(1 - 0.05/2)/sqrt(chi2)))))), 
+            decimal)
+}
+        risk.names <- c("Risk difference (Re - Rne)", "Risk ratio", 
+            "Protective efficacy =(Rne-Re)/Rne*100  ", "  or percent of risk reduced", 
+            "Number needed to treat (NNT)", "  or -1/(risk difference)")
+        risk.table <- cbind(risk.names, c(round(risk.diff, decimal), 
+            risk.ratio, protective.efficacy, " ", nnt, ""), c(risk.diff.lower, 
+            risk.ratio.lower, protective.efficacy.lower, " ", 
+            nnt.lower, ""), c(risk.diff.upper, risk.ratio.upper, 
+            protective.efficacy.upper, " ", nnt.upper, ""))
+    }
+    else {
+        attributable.frac.exp <- round(risk.diff/risk[2], decimal)
+        pop.risk.diff <- risk[3] - risk[1]
+        attributable.frac.pop <- round((risk[3] - risk[1])/risk[3] * 
+            100, decimal)
+        nnh <- round(1/risk.diff, decimal)
+if(method=="Newcombe.Wilson"){
+nnh.lower <- round(min(c(1/newcombe.wilson.results$Upper.CI,1/newcombe.wilson.results$Lower.CI)), decimal)
+nnh.upper <- round(max(c(1/newcombe.wilson.results$Upper.CI,1/newcombe.wilson.results$Lower.CI)), decimal)
+}else{
+        nnh.lower <- round(min(c(1/(risk.diff * (1 - (qnorm(1 - 0.05/2)/sqrt(chi2)))),1/(risk.diff * (1 + (qnorm(1 - 0.05/2)/sqrt(chi2)))))), 
+            decimal)
+        nnh.upper <- round(max(c(1/(risk.diff * (1 - (qnorm(1 - 0.05/2)/sqrt(chi2)))),1/(risk.diff * (1 + (qnorm(1 - 0.05/2)/sqrt(chi2)))))), 
+            decimal)
+}
+        cat("\n")
+        risk.names <- c("Risk difference (attributable risk)", 
+            "Risk ratio", "Attr. frac. exp. -- (Re-Rne)/Re", 
+            "Attr. frac. pop. -- (Rt-Rne)/Rt*100 %  ", "Number needed to harm (NNH)", 
+            "  or 1/(risk difference)")
+        risk.table <- cbind(risk.names, c(round(risk.diff, decimal), 
+            risk.ratio, attributable.frac.exp, attributable.frac.pop, 
+            nnh, ""), c(risk.diff.lower, risk.ratio.lower, "", 
+            "", nnh.lower, ""), c(risk.diff.upper, risk.ratio.upper, 
+            "", "", nnh.upper, ""))
+    }
+    row.names(risk.table) <- rep("", nrow(risk.table))
+    colnames(risk.table) <- c("", "Estimate", "Lower95ci", "Upper95ci")
+    print.noquote(risk.table)
+    cat("\n")
+    suppressWarnings(rm(cctable, caseexp, controlex, casenonex, 
+        controlnonex, pos = 1))
 }
 
 ### IDR display for poisson  and negative binomial regression
@@ -4156,118 +4249,82 @@ qqline(x, col="blue", lty=2)
 }
 
 ### Match tabulation
-matchTab <-
-function (case, exposed, strata) 
-{
-    cat("\n")
-    if ((length(table(case)) != 2)) {
-        stop("Case variable not binary")
-    }
-    if (any(is.na(case))) {
-        stop("There should not be any missing outcome")
-    }
-    if (length(table(exposed)) != 2) {
-        stop("Exposure variable not binary")
-    }
-    exposed1 <- exposed
-    if (is.factor(exposed)) {
-        cat(paste("Exposure status:", as.character(substitute(exposed)), 
-            "=", levels(exposed)[2], "\n"))
-    }
-    else {
-        cat(paste("Exposure status:", as.character(substitute(exposed)), 
-            "=", max(exposed, na.rm = TRUE), "\n"))
-    }
-    cat("\n")
-    if (is.factor(exposed1)) {
-        exposed1 <- exposed1 == levels(exposed1)[2]
-    }
-    control <- 1 - case
-    a0 <- aggregate.data.frame(case, list(strata=strata), sum)
-    colnames(a0)[2] <- "ncases"
-    a <- aggregate.data.frame(control, list(strata = strata), 
-        sum)
-    colnames(a)[2] <- "ncontrols"
-    a <- merge(a0, a, by.x="strata", by.y = "strata")
-    case.exposed <- case * exposed1
-    b <- aggregate.data.frame(case.exposed, list(strata = strata), 
-        sum)
-    colnames(b)[2] <- "ncase.exposed"
-    control.exposed <- control * exposed1
-    c <- aggregate.data.frame(control.exposed, list(strata = strata), 
-        sum)
-    colnames(c)[2] <- "ncontrol.exposed"
-    d <- aggregate.data.frame(case, list(strata = strata), length)
-    colnames(d)[2] <- "all.subjects"
-    e <- aggregate.data.frame(exposed1, list(strata = strata), 
-        sum)
-    colnames(e)[2] <- "all.exposed"
-    f <- merge(a, b, by.x = "strata", by.y = "strata")
-    g <- merge(f, c, by.x = "strata", by.y = "strata")
-    h <- merge(g, d, by.x = "strata", by.y = "strata")
-    ii <- merge(h, e, by.x = "strata", by.y = "strata")
-    sum.ii <- rowSums(ii[, 2:7])
-    rowi0 <- nrow(ii)
-    nsets.missing.exposure.at.least.in.one.subject <- sum(is.na(ii$all.exposed))
-    nsets.missing.case <- sum(ii$ncases==0) 
-    nsets.missing.control <- sum(ii$ncontrols==0)
-    ii <- subset(ii, !is.na(sum.ii) & ii$ncases > 0 & ii$ncontrols > 0)
-    rowi1 <- nrow(ii)
-    if (rowi1 < rowi0) {
-        if(nsets.missing.case > 0) cat(nsets.missing.case, "set(s) without any case\n")
-        if(nsets.missing.control > 0) cat(nsets.missing.control, "set(s) without any control\n")
-        if(nsets.missing.exposure.at.least.in.one.subject > 0) {
-            cat(nsets.missing.exposure.at.least.in.one.subject, "set(s) with missing exposure of one or more set members\n")
-        }
-    }
-    cat("Total number of match sets in the tabulation =", rowi1, 
-        "\n")
-    ii$all.unexposed <- ii$all.subjects - ii$all.exposed
-    ii$ncontrol.exposed1 <- factor(ii$ncontrol.exposed, levels = as.character(0:max(ii$ncontrols)))
-    ii$ncase.exposed1 <- factor(ii$ncase.exposed, levels = as.character(0:max(ii$ncase.exposed)))
-    matchTable <- table(ii$ncase.exposed1, ii$ncontrol.exposed1, 
-        ii$ncontrols, dnn = c("No. of cases exposed", "No. of controls exposed", 
-            "No. of controls per case"))
-    cat("\n")
-    for (i in 1:max(ii$ncontrols)) {
-        cat(paste("Number of controls =", i, "\n"))
-        print(matchTable[1:max(c(2, max(which(rowSums(matchTable[, 
-            , i]) > 0)))), 1:(i + 1), i])
-        cat("\n")
-    }
-    numerator <- (ii$ncontrols - ii$ncontrol.exposed) * ii$ncase.exposed/(ii$ncontrols + 
-        1)
-    denominator <- ii$ncontrol.exposed * (1 - ii$ncase.exposed)/(ii$ncontrols + 
-        1)
-    if (sum(denominator) < 1) {
-        cat("Inadequate discordant pairs. Odds ratio not computed")
-        cat("\n")
-    }
-    else {
-        if (any(ii$ncase.exposed > 1)) {
-            cat(paste(c("More than one cases exposed in strata # ", 
-                as.character(ii$strata[ii$ncase.exposed > 1]), 
-                ". M-H odds ratio not computed."), sep = ""))
-            cat("\n", "\n")
-        }
-        else {
-            mhor <- sum(numerator)/sum(denominator)
-            cat(paste("Odds ratio by Mantel-Haenszel method =", 
-                round(mhor, 3), "\n", "\n"))
-        }
-        library(survival)
-        model <- clogit(case ~ exposed + strata(strata))
-        clogitor <- exp(model$coefficients)
-        lnci95 <- c(model$coefficients - qnorm(0.975) * sqrt(model$var), 
-            model$coefficients + qnorm(0.975) * sqrt(model$var))
-        ci95.mleor <- exp(lnci95)
-        cat(paste("Odds ratio by maximum likelihood estimate (MLE) method =", 
-            round(clogitor, 3), "\n", "95%CI=", round(ci95.mleor[1], 
-                3), ",", round(ci95.mleor[2], 3), "\n"))
-        cat("\n")
-    }
+matchTab <- function(case, exposed, strata) {
+cat("\n")
+if((length(table(case))!=2)){
+stop("Case variable not binary")
 }
-
+if(any(is.na(case))){
+stop("There should not be any missing outcome")}
+if(length(table(exposed))!=2){
+stop("Exposure variable not binary")
+}
+exposed1 <- exposed
+if(is.factor(exposed)){
+	cat(paste("Exposure status:", as.character(substitute(exposed)), "=", levels(exposed)[2],"\n"))
+}else{
+	cat(paste("Exposure status:", as.character(substitute(exposed)), "=", max(exposed, na.rm=TRUE),"\n"))
+}
+cat("\n")
+if(is.factor(exposed1)){
+	exposed1 <- exposed1==levels(exposed1)[2]
+}
+control <- 1-case
+aggregate.data.frame(control, list(strata=strata), sum) -> a
+colnames(a)[2] <- "ncontrols"
+case.exposed <- case*exposed1
+aggregate.data.frame(case.exposed, list(strata=strata), sum) -> b
+colnames(b)[2] <- "ncase.exposed"
+control.exposed <- control*exposed1
+aggregate.data.frame(control.exposed, list(strata=strata), sum) -> c
+colnames(c)[2] <- "ncontrol.exposed"
+aggregate.data.frame(case, list(strata=strata), length) -> d
+colnames(d)[2] <- "all.subjects"
+aggregate.data.frame(exposed1, list(strata=strata), sum) -> e
+colnames(e)[2] <- "all.exposed"
+merge(a,b,by.x="strata", by.y="strata") -> f
+merge(f,c,by.x="strata", by.y="strata") -> g
+merge(g,d,by.x="strata", by.y="strata") -> h
+merge(h,e,by.x="strata", by.y="strata") -> ii
+sum.ii <- rowSums(ii[,2:6])
+rowi0 <- nrow(ii)
+ii <- subset(ii, !is.na(sum.ii))
+rowi1 <- nrow(ii)
+if(rowi1 < rowi0){
+cat (rowi0-rowi1,"match sets with incomplete information omitted from tabulation.","\n")
+}
+cat ("Total number of match sets in the tabulation =", rowi1,"\n")
+all.unexposed <- ii$all.subjects-ii$all.exposed
+ii$ncontrol.exposed1 <- factor(ii$ncontrol.exposed, levels=as.character(0:max(ii$ncontrols)))
+ii$ncase.exposed1 <- factor(ii$ncase.exposed, levels=as.character(0:max(ii$ncase.exposed)))
+table(ii$ncase.exposed1, ii$ncontrol.exposed1, ii$ncontrols, dnn=c("No. of cases exposed","No. of controls exposed","No. of controls per case"))->matchTable
+cat("\n")
+for(i in 1:max(ii$ncontrols)){
+	cat(paste("Number of controls =",i,"\n"))
+	print(matchTable[1:max(c(2,max(which(rowSums(matchTable[,,i])>0)))),1:(i+1),i])
+	cat("\n")
+}
+numerator <- (ii$ncontrols-ii$ncontrol.exposed)*ii$ncase.exposed/(ii$ncontrols+1)
+denominator <- ii$ncontrol.exposed*(1-ii$ncase.exposed)/(ii$ncontrols+1)
+if(sum(denominator) <1){
+cat("Inadequate discordant pairs. Odds ratio not computed"); cat("\n")
+}else{
+if(any(ii$ncase.exposed>1)){
+cat(paste(c("More than one cases exposed in strata # ", as.character(ii$strata[ii$ncase.exposed > 1]), ". M-H odds ratio not computed."), sep=""))
+cat("\n", "\n")
+}else{
+mhor <- sum(numerator)/sum(denominator)
+cat(paste("Odds ratio by Mantel-Haenszel method =", round(mhor,3), "\n", "\n"))
+### computing MLE-OR using clogit
+}
+library(survival)
+model <- clogit(case ~ exposed + strata(strata))
+clogitor <- exp(model$coefficients)
+lnci95 <- c(model$coefficients-qnorm(0.975)*sqrt(model$var),model$coefficients+qnorm(0.975)*sqrt(model$var))
+ci95.mleor <- exp(lnci95)
+cat(paste("Odds ratio by maximum likelihood estimate (MLE) method =", round(clogitor,3),"\n","95%CI=",round(ci95.mleor[1],3),",",round(ci95.mleor[2],3), "\n"))
+cat("\n")
+}}
  
 ### Goodness-of-fit test for poisson assumption after regression
 poisgof <- function(model) {

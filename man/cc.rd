@@ -15,9 +15,10 @@ cc(outcome, exposure, decimal = 2, cctable = NULL, graph = TRUE,
 cci(caseexp, controlex, casenonex, controlnonex, cctable = NULL, 
 	decimal = 2, graph = TRUE, design = "cohort", main, xlab, ylab,
   xaxis, yaxis) 
-cs(outcome, exposure, cctable = NULL, decimal = 2)
+cs(outcome, exposure, cctable = NULL, decimal = 2, method="Newcombe.Wilson", 
+   main, xlab, ylab, cex, cex.axis)
 csi(caseexp, controlex, casenonex, controlnonex, cctable = NULL, 
-	decimal = 2) 
+	decimal = 2, method="Newcombe.Wilson") 
 graph.casecontrol(caseexp, controlex, casenonex, controlnonex,
 	 decimal=2) 
 graph.prospective(caseexp, controlex, casenonex, controlnonex,
@@ -42,6 +43,9 @@ make2x2(caseexp, controlex, casenonex, controlnonex)
 	\item{ylab}{label on Y axis}
 	\item{xaxis}{two categories of exposure in graph}
 	\item{yaxis}{two categories of outcome in graph}
+  \item{method}{method of computation for 95 percent limits of risk difference}
+  \item{cex.axis}{character expansion factor for graph axis}
+  \item{cex}{character expansion factor for text in the graph}
 }
 \details{'cc' computes odds ratios and 95 percent confidence intervals from outcome and exposure variables. The results are based on the exact method.
 
@@ -49,7 +53,11 @@ make2x2(caseexp, controlex, casenonex, controlnonex)
 
 'cs' is for cohort and cross-sectional studies. It computes the absolute risk, risk difference, and risk ratio. When the exposure is a risk factor, the attributable fraction exposure, attributable fraction population and number needed to harm (NNH) are also displayed in the output. When the exposure is a protective factor, protective efficacy or percent of risk reduced and number needed to treat (NNT) are displayed instead. 
 
+If there are more than 2 exposure categories and the sample size is large enough, a graph will be plotted.
+
 'csi' is a variant of 'cs' where four numbers are entered manually.
+
+'method' chooses whether 95 percent ci of risk difference should be computed by Newcomb-Wilson method. Both this and the standard method may give non-sensible values if the risk difference is not statistically significant.
 
 'make2x2' creates a 2-by-2 table using the above orientation.
 
@@ -66,11 +74,7 @@ Alternatively, a table saved from 'make2x2' can be supplied as the 'cctable' arg
 \seealso{'fisher.test', 'chisq.test' and 'mhor'}
 \examples{
 data(Oswego)
-.data <- Oswego
-attach(.data)
-
-# The above lines generate a hypothetical data frame. 
-# In reality, one just types 'use("Oswego.rec")', if the file is available.
+use(Oswego)
 cc(ill, chocolate)
 cc(ill, chocolate, design="case-control")
 cs(ill, chocolate) # The outcome variable should come first.
@@ -89,6 +93,7 @@ graph.prospective(25, 22, 20, 7)
 table1 <- make2x2(25,22,20,7)
 cc(outcome=NULL, exposure=NULL, cctable=table1)
 cs(outcome=NULL, exposure=NULL, cctable=table1)
-
+agegr <- pyramid(age, sex, bin=30)$ageGroup
+cs(ill, agegr, main="Risk ratio by age group", xlab="Age (years)")
 }
 \keyword{array}
