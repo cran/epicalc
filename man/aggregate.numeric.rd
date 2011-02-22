@@ -3,7 +3,7 @@
 \title{Summary statistics of a numeric variable by group}
 \description{Split the numeric variable into subsets, compute summary statistics for each, and return the results in a data frame.}
 \usage{
-\method{aggregate}{numeric}(x, by, FUN=c("count","sum","mean","median","sd","min","max"), 
+\method{aggregate}{numeric}(x, by, FUN=c("count","sum","mean","median","sd","se","min","max"), 
 	na.rm=TRUE, length.warning=TRUE, ...)
 }
 \arguments{

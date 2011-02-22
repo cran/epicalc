@@ -5576,27 +5576,34 @@ names(result)[c(ncol(result)-1, ncol(result))] <- c(paste("lower",100-100*alpha,
 result
 }
 ## Aggregate a numeric variable
-aggregate.numeric <- function (x, by, FUN = c("count", "sum", "mean", "median", "sd", "min", 
-    "max"), na.rm = TRUE, length.warning = TRUE, ...) 
+aggregate.numeric <-
+function (x, by, FUN = c("count", "sum", "mean", "median", "sd", "se", 
+    "min", "max"), na.rm = TRUE, length.warning = TRUE, ...) 
 {
-
-count <- function(x1) {length(na.omit(x1))}
+    count <- function(x1) {
+        length(na.omit(x1))
+    }
+se <- function(x1){
+sd(x1, na.rm=TRUE)/sqrt(count(x1))
+}    
     if (length(FUN) == 1 & class(FUN) == "function") {
         FUN <- as.character(substitute(FUN))
     }
     else {
-
-if(any(is.na(x)) & na.rm==FALSE & (is.element("var", FUN) | is.element("sd", FUN))){
-cat(paste("\n","   'FUN = \"var\"' and 'FUN = \"sd\" not computable when 'na.rm=FALSE'","\n","   and therefore omitted"), "\n", "\n")
-FUN <- setdiff(FUN, c("sd", "var"))
-}
-if(length(FUN)==0)
-{stop("Too few FUN's")}
-
+        if (any(is.na(x)) & na.rm == FALSE & (is.element("var", 
+            FUN) | is.element("sd", FUN))) {
+            cat(paste("\n", "   'FUN = \"var\"' and 'FUN = \"sd\" not computable when 'na.rm=FALSE'", 
+                "\n", "   and therefore omitted"), "\n", "\n")
+            FUN <- setdiff(FUN, c("sd", "var"))
+        }
+        if (length(FUN) == 0) {
+            stop("Too few FUN's")
+        }
         if (any(is.na(x)) & length.warning & na.rm) {
-            if (any(FUN == "var") | any(FUN == "sd") | any(FUN=="mean") |any(FUN=="sum")) {
-                #na.rm <- TRUE
-                cat("\n", "Note:","\n","     Missing values removed.","\n")
+            if (any(FUN == "var") | any(FUN == "sd") | any(FUN == 
+                "mean") | any(FUN == "sum")) {
+                cat("\n", "Note:", "\n", "     Missing values removed.", 
+                  "\n")
             }
             if (any(FUN == "length")) {
                 cat("     'length' computed with missing records included.", 
@@ -5606,20 +5613,24 @@ if(length(FUN)==0)
         }
     }
     if (FUN[1] != "length") {
-        if(FUN[1]=="count"){
-        y <- aggregate.data.frame(x, by, FUN = count)
+        if (FUN[1] == "count") {
+            y <- aggregate.data.frame(x, by, FUN = count)
             names(y)[length(names(y))] <- paste("count", as.character(substitute(x)), 
-               sep = ".")
-        }else{
-            if(FUN[1]=="sum"|FUN[1]=="mean"|FUN[1]=="median"|FUN[1]=="var"|
-                  FUN[1]=="sd"|FUN[1]=="min"|FUN[1]=="max"){
-              y <- aggregate.data.frame(x, by, FUN = FUN[1], na.rm = na.rm)
-            }else{
-            y <- aggregate.data.frame(x, by, FUN = FUN[1])
+                sep = ".")
+        }
+        else {
+            if (FUN[1] == "sum" | FUN[1] == "mean" | FUN[1] == 
+                "median" | FUN[1] == "var" | FUN[1] == "sd" | 
+                FUN[1] == "min" | FUN[1] == "max") {
+                y <- aggregate.data.frame(x, by, FUN = FUN[1], 
+                  na.rm = na.rm)
+            }
+            else {
+                y <- aggregate.data.frame(x, by, FUN = FUN[1])
             }
             names(y)[length(names(y))] <- paste(FUN[1], as.character(substitute(x)), 
-               sep = ".")
-            }
+                sep = ".")
+        }
     }
     else {
         y <- aggregate.data.frame(x, by, FUN = length)
@@ -5628,18 +5639,21 @@ if(length(FUN)==0)
     if (length(FUN) > 1) {
         for (i in 2:length(FUN)) {
             if (FUN[i] != "length") {
-                if(FUN[i]=="count"){
-                y1 <- aggregate.data.frame(x, by, FUN = count)
-                y <- data.frame(y, y1[, length(names(y1))])
-                }else{
-                if(FUN[i]=="sum"|FUN[i]=="mean"|FUN[i]=="median"|FUN[i]=="var"|
-                  FUN[i]=="sd"|FUN[i]=="min"|FUN[i]=="max"){
-                  y1 <- aggregate.data.frame(x, by, FUN = FUN[i], 
-                  na.rm = na.rm)
-                  }else{
-                y1 <- aggregate.data.frame(x, by, FUN = FUN[i])
+                if (FUN[i] == "count") {
+                  y1 <- aggregate.data.frame(x, by, FUN = count)
+                  y <- data.frame(y, y1[, length(names(y1))])
                 }
-                y <- data.frame(y, y1[, length(names(y1))])
+                else {
+                  if (FUN[i] == "sum" | FUN[i] == "mean" | FUN[i] == 
+                    "median" | FUN[i] == "var" | FUN[i] == "sd" | 
+                    FUN[i] == "min" | FUN[i] == "max") {
+                    y1 <- aggregate.data.frame(x, by, FUN = FUN[i], 
+                      na.rm = na.rm)
+                  }
+                  else {
+                    y1 <- aggregate.data.frame(x, by, FUN = FUN[i])
+                  }
+                  y <- data.frame(y, y1[, length(names(y1))])
                 }
                 names(y)[length(names(y))] <- paste(FUN[i], as.character(substitute(x)), 
                   sep = ".")
@@ -5666,17 +5680,20 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
 {
     p25 <- function(xx) quantile(xx, prob = 0.25, na.rm = TRUE)
     p75 <- function(xx) quantile(xx, prob = 0.75, na.rm = TRUE)
+     se <- function(xx) sd(xx, na.rm=TRUE)/sqrt(length(na.omit(xx)))
     x.is.factor.2.levels <- is.factor(x) & (length(levels(factor(x))) == 
         2)
+x.is.01 <- FALSE
     if (is.integer(x) | is.numeric(x) | is.logical(x)) 
         x.is.01 <- length(table(x)) == 2 & min(x, na.rm = TRUE) == 
             0 & max(x, na.rm = TRUE) == 1
     if (length(FUN) == 2 | any(FUN == "mean")) {
-        FUN1 <- c("mean", "sd", "sum", "count")
+        FUN1 <- c("mean", "sd", "sum", "count", "se")
     }
     else {
         FUN1 <- c("median", "p25", "p75")
     }
+
     if (is.list(by)) {
         if (any(bar.col == "auto")) 
             bar.col <- grey.colors(length(levels(factor(by[[1]]))))
@@ -5707,6 +5724,7 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
             mean.matrix <- tapply(x1, by, FUN = "mean", na.rm = TRUE)
             sd.matrix <- tapply(x1, by, FUN = "sd", na.rm = TRUE)
             count <- function(x) length(na.omit(x))
+            se <- function(x) sd(x, na.rm=TRUE)/count(x)
             count.matrix <- tapply(x1, by, FUN = "count")
             if (error == "se") {
                 error.matrix <- sd.matrix/sqrt(count.matrix)
@@ -5852,6 +5870,10 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
         }
     }
     else {
+
+
+#### Line Aggregate plot starts here
+
         if (any(lty == "auto")) 
             lty <- rep(1, length(table(factor(by))))
         time <- by
@@ -5860,10 +5882,6 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
         xrange <- xlim[2] - xlim[1]
         if (is.factor(time)) 
             stop("'time' must not be factor")
-        x.is.factor.2.levels <- is.factor(x) & (length(levels(factor(x))) == 
-            2)
-        x.is.01 <- length(table(x)) == 2 & names(table(x))[1] == 
-            "0" & names(table(x))[2] == "1"
         if (is.factor(x)) {
             if (length(levels(x)) == 2) {
                 name.x <- deparse(substitute(x))
@@ -5875,12 +5893,14 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
             }
         }
         if (length(error) == 1) {
-            if (error != "none") {
+            if (error != "none" & error !="sd" & error !="se") {
                 error <- "ci"
             }
         }
         if (length(error) == 4) 
             error <- "ci"
+
+# Define time bin of not regular
         if (min(table(time), na.rm = TRUE) > 3) {
             bin.time <- length(na.omit(table(time))) - 1
             time1 <- time
@@ -5901,6 +5921,8 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
             tx <- cbind(1:(length(break.points) - 1), midpoints)
             time1 <- lookup(unclass(time.gr), tx)
         }
+        
+# Grouping or stratification        
         if (!is.null(grouping)) {
             if (legend == "auto") {
                 legend <- TRUE
@@ -5922,6 +5944,10 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
             else {
                 data1 <- aggregate.numeric(x, by = list(grouping = grouping, 
                   time = time1), FUN = FUN1, length.warning = FALSE)
+                output <- data1
+                if(error=="ci") {
+                output <- ci.numeric(x=data1$mean.x, n=data1$count.x, sds=data1$sd.x)
+                }
             }
         }
         else {
@@ -5937,15 +5963,21 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
             else {
                 data1 <- aggregate.numeric(x, by = list(time = time1), 
                   FUN = FUN1, length.warning = FALSE)
+                output <- data1  
+                if(error=="ci") {
+                output <- ci.numeric(x=data1$mean.x, n=data1$count.x, sds=data1$sd.x)
+                }
             }
         }
-        if (any(FUN1 == "median")) {
-            data1$mean.x <- data1$median.x
-            data1$lowerci <- data1$p25.x
-            data1$upperci <- data1$p75.x
-            output <- data1[, -ncol(data1):-(ncol(data1) - 2)]
-        }
-        else {
+#print(data1)
+#        if (any(FUN1 == "median")) {
+#            data1$mean.x <- data1$median.x
+#            data1$lowerci <- data1$p25.x
+#            data1$upperci <- data1$p75.x
+#            output <- data1[, -ncol(data1):-(ncol(data1) - 2)]
+#        }
+#        else {
+if(any(FUN1=="mean")){
             if (error[1] == "ci") {
                 if (x.is.factor.2.levels | is.logical(x) | x.is.01) {
                   data.ci <- ci.binomial(data1$sum.x, data1$count.x, 
@@ -5967,7 +5999,8 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
                 names(output)[names(output) == "lowerci"] <- names(data.ci)[5]
                 names(output)[names(output) == "upperci"] <- names(data.ci)[6]
             }
-        }
+}
+#        }
         if (any(ylim == "auto")) {
             if (error[1] == "ci") {
                 ylim0 <- c(min(data1[, ncol(data1) - 1], na.rm = TRUE), 
@@ -5990,23 +6023,34 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
                   levels(data1$grouping)[i]] + (i - 1) * lagging * 
                   xrange
             }
+if(any(FUN1=="mean")){
+data1$mid.point <- data1$mean.x
+  if (error == "ci") {data1$upper.point <- data1$upperci; data1$lower.point <- data1$lowerci}
+  if (error == "sd") {data1$upper.point <- data1$mean.x + data1$sd.x; data1$lower.point <- data1$mean.x - data1$sd.x}
+  if (error == "se") {data1$upper.point <- data1$mean.x + data1$sd.x/sqrt(data1$count.x); data1$lower.point <- data1$mean.x - data1$sd.x/sqrt(data1$count.x)}
+}else{
+  data1$mid.point <- data1$median.x
+  data1$upper.point <- data1$p75.x
+  data1$lower.point <- data1$p25.x
+}            
             followup.plot(id = data1$grouping, time = data1$time, 
-                outcome = data1$mean.x, ylim = ylim, legend = legend, 
+                outcome = data1$mid.point, ylim = ylim, legend = legend, 
                 legend.site = legend.site, lwd = lwd, xlim = xlim, 
-                line.col = line.col, lty = lty, xlab="", ylab="", ...)
-            if (error == "ci") {
-                segments(x0 = data1$time, y0 = data1$upperci, 
-                  x1 = data1$time, y1 = data1$lowerci, col = line.col, 
+                line.col = line.col, lty = lty, xlab = "", ylab = "", 
+                ...)
+            if (error != "none") {
+                segments(x0 = data1$time, y0 = data1$upper.point, 
+                  x1 = data1$time, y1 = data1$lower.point, col = line.col, 
                   lwd = lwd)
                 segments(x0 = data1$time - cap.size/2 * xrange, 
-                  y0 = data1$upperci, x1 = data1$time + cap.size/2 * 
-                    xrange, y1 = data1$upperci, col = line.col, 
+                  y0 = data1$upper.point, x1 = data1$time + cap.size/2 * 
+                    xrange, y1 = data1$upper.point, col = line.col, 
                   lwd = lwd)
                 segments(x0 = data1$time - cap.size/2 * xrange, 
-                  y0 = data1$lowerci, x1 = data1$time + cap.size/2 * 
-                    xrange, y1 = data1$lowerci, col = line.col, 
+                  y0 = data1$lower.point, x1 = data1$time + cap.size/2 * 
+                    xrange, y1 = data1$lower.point, col = line.col, 
                   lwd = lwd)
-            }
+           }
             if (legend) {
                 legend(x = legend.site, legend = levels(factor(grouping)), 
                   lwd = lwd, col = line.col, bg = legend.bg, 
@@ -6016,23 +6060,49 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
         else {
             if (any(line.col == "auto")) 
                 line.col <- 1
+if(any(FUN1=="mean")){
+data1$mid.point <- data1$mean.x
+  if (error == "ci") {data1$upper.point <- data1$upperci; data1$lower.point <- data1$lowerci}
+  if (error == "sd") {data1$upper.point <- data1$mean.x + data1$sd.x; data1$lower.point <- data1$mean.x - data1$sd.x}
+  if (error == "se") {data1$upper.point <- data1$mean.x + data1$sd.x/sqrt(data1$count.x); data1$lower.point <- data1$mean.x - data1$sd.x/sqrt(data1$count.x)}
+}else{
+  data1$mid.point <- data1$median.x
+  data1$upper.point <- data1$p75.x
+  data1$lower.point <- data1$p25.x
+}            
             followup.plot(id = rep(1, nrow(data1)), time = data1$time, 
-                outcome = data1$mean.x, ylim = ylim, legend = FALSE, 
+                outcome = data1$mid.point, ylim = ylim, legend = FALSE, 
                 lwd = lwd, xlim = xlim, line.col = line.col, 
-                legend.site = legend.site, xlab = "", ylab="", ...)
-            if (error == "ci") {
-                segments(x0 = data1$time, y0 = data1$upperci, 
-                  x1 = data1$time, y1 = data1$lowerci, lwd = lwd, 
-                  col = line.col)
-                segments(x0 = data1$time - cap.size/2 * xrange, 
-                  y0 = data1$upperci, x1 = data1$time + cap.size/2 * 
-                    xrange, y1 = data1$upperci, col = line.col, 
+                legend.site = legend.site, xlab = "", ylab = "", 
+                ...)
+if(error !="none"){
+                segments(x0 = data1$time, y0 = data1$upper.point, 
+                  x1 = data1$time, y1 = data1$lower.point, col = line.col, 
                   lwd = lwd)
                 segments(x0 = data1$time - cap.size/2 * xrange, 
-                  y0 = data1$lowerci, x1 = data1$time + cap.size/2 * 
-                    xrange, y1 = data1$lowerci, col = line.col, 
+                  y0 = data1$upper.point, x1 = data1$time + cap.size/2 * 
+                    xrange, y1 = data1$upper.point, col = line.col, 
                   lwd = lwd)
-            }
+                segments(x0 = data1$time - cap.size/2 * xrange, 
+                  y0 = data1$lower.point, x1 = data1$time + cap.size/2 * 
+                    xrange, y1 = data1$lower.point, col = line.col, 
+                  lwd = lwd)
+}
+
+
+#            if (error == "ci") {
+#                segments(x0 = data1$time, y0 = data1$upperci, 
+#                  x1 = data1$time, y1 = data1$lowerci, lwd = lwd, 
+#                  col = line.col)
+#                segments(x0 = data1$time - cap.size/2 * xrange, 
+#                  y0 = data1$upperci, x1 = data1$time + cap.size/2 * 
+#                    xrange, y1 = data1$upperci, col = line.col, 
+#                  lwd = lwd)
+#                segments(x0 = data1$time - cap.size/2 * xrange, 
+#                  y0 = data1$lowerci, x1 = data1$time + cap.size/2 * 
+#                    xrange, y1 = data1$lowerci, col = line.col, 
+#                  lwd = lwd)
+#            }
         }
     }
     if (!is.null(main)) {
@@ -6063,8 +6133,8 @@ function (x, by, grouping = NULL, FUN = c("mean", "median"),
                 main.first <- "Median"
             }
             main.and <- paste("and", error[1])
-            if (!is.list(by) & main.and == "and se") 
-                main.and <- NULL
+#            if (!is.list(by) & main.and == "and se") 
+#                main.and <- NULL
             if (main.first == "Median") {
                 if (error[1] == "none") {
                   main.and <- NULL
