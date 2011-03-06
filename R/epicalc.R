@@ -5724,7 +5724,6 @@ x.is.01 <- FALSE
             mean.matrix <- tapply(x1, by, FUN = "mean", na.rm = TRUE)
             sd.matrix <- tapply(x1, by, FUN = "sd", na.rm = TRUE)
             count <- function(x) length(na.omit(x))
-            se <- function(x) sd(x, na.rm=TRUE)/count(x)
             count.matrix <- tapply(x1, by, FUN = "count")
             if (error == "se") {
                 error.matrix <- sd.matrix/sqrt(count.matrix)
@@ -5875,7 +5874,7 @@ x.is.01 <- FALSE
 #### Line Aggregate plot starts here
 
         if (any(lty == "auto")) 
-            lty <- rep(1, length(table(factor(by))))
+            lty <- rep(1, length(table(factor(grouping))))
         time <- by
         if (any(xlim == "auto")) 
             xlim <- c(min(by, na.rm = TRUE), max(by, na.rm = TRUE))
