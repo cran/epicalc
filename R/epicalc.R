@@ -322,16 +322,22 @@ print.noquote(x$table)
 
 
 ### Detaching all data frame from the search path
-detachAllData <- function(){
-pos.to.detach <- (1:length(search()))[substring(search(),first=1,last=8)!="package:" &
-	search()!=".GlobalEnv" & search()!="Autoloads" & search()!="CheckExEnv"]
-for(i in 1:length(pos.to.detach)){
-	if(length(pos.to.detach)>0){
-		detach(pos=pos.to.detach[1])
-		pos.to.detach <- (1:length(search()))[substring(search(),first=1,last=8)!="package:" &
-		search()!=".GlobalEnv" & search()!="Autoloads" & search()!="CheckExEnv" & search() !="tools:rstudio" & search() != "TempEnv"]
-	}
-}
+detachAllData <-
+function () 
+{
+    pos.to.detach <- (1:length(search()))[substring(search(), 
+        first = 1, last = 8) != "package:" & search() != ".GlobalEnv" & 
+        search() != "Autoloads" & search() != "CheckExEnv" & search() != "tools:rstudio" & search() != "TempEnv"]
+    for (i in 1:length(pos.to.detach)) {
+        if (length(pos.to.detach) > 0) {
+            detach(pos = pos.to.detach[1])
+            pos.to.detach <- (1:length(search()))[substring(search(), 
+                first = 1, last = 8) != "package:" & search() != 
+                ".GlobalEnv" & search() != "Autoloads" & search() != 
+                "CheckExEnv" & search() != "tools:rstudio" & 
+                search() != "TempEnv"]
+        }
+    }
 }
 ### Getting percentage from the tabulation
 tabpct <- function(row, column, decimal=1, percent=c("both","col","row"), graph=TRUE, las=0, main = "auto", xlab = "auto", 
@@ -5075,20 +5081,13 @@ cat("\n")
 
 
 ### Zap
-zap <- function() {
-pos.to.detach <- (1:length(search()))[substring(search(),first=1,last=8)!="package:" &
-	search()!=".GlobalEnv" & search()!="Autoloads" & search()!="CheckExEnv"]
-for(i in 1:length(pos.to.detach)){
-	if(length(pos.to.detach)>0){
-		detach(pos=pos.to.detach[1])
-		pos.to.detach <- (1:length(search()))[substring(search(),first=1,last=8)!="package:" &
-		search()!=".GlobalEnv" & search()!="Autoloads" & search()!="CheckExEnv" & search() !="tools:rstudio" & search() != "TempEnv"]
-	}
+zap <- 
+function () 
+{
+detachAllData()
+    vector1 <- setdiff(ls(envir = .GlobalEnv), lsf.str(envir = .GlobalEnv)[])
+    rm(list = vector1, pos = 1)
 }
-vector1 <-  setdiff(ls(envir= .GlobalEnv), lsf.str(envir= .GlobalEnv)[])
-rm(list=vector1, pos=1)
-} 
-
 ### Pyramid of age by sex
 pyramid <- function (age, sex, binwidth = 5, inputTable = NULL, printTable = FALSE, 
     percent = c("none", "each", "total"), col.gender = NULL, bar.label = "auto", decimal = 1, 
