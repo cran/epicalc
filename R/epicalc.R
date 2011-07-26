@@ -9,9 +9,16 @@
 
 # Work started in 2002-October
 
-
-# Setting locale and automatic graph titles
-.locale <- FALSE # All automatic graphs will initially have English titles
+## The below .locale is a local function. Thanks to Kurt Hornik for the trick.
+.locale <- local({ 
+  val <- FALSE  # All automatic graphs will initially have English titles
+  function(new){
+  if(!missing(new))
+     val <<- new
+     else
+     val
+  }                 
+})                 
 .distribution.of <- "Distribution of"
 .by <- "by"
 .frequency <- "Frequency"
@@ -101,15 +108,18 @@ function (dataFrame = .data)
 
 
 ###################
+# Setting locale and automatic graph titles
 setTitle <- function(locale){
-  Sys.setlocale("LC_ALL",locale)
+  suppressWarnings(Sys.setlocale("LC_ALL",locale))
+  if(nchar(suppressWarnings(Sys.setlocale("LC_ALL",locale)))>0){
   print(Sys.getlocale())
-  .locale <<- TRUE 
-  # With `set title' command the language of title will change with locale
+  .locale(TRUE) 
+  }else{print("Invalid locale under this system.")}
+  # With `setTitle' command the language of title will change with locale
   # listed in the array of the title string.
 }
 
-titleString <- function(distribution.of=.distribution.of,by=.by,frequency=.frequency, locale=.locale, return.look.up.table=FALSE){
+titleString <- function(distribution.of=.distribution.of,by=.by,frequency=.frequency, locale=.locale(), return.look.up.table=FALSE){
 	# title.array can be changed or added rows
     title.array <- rbind( c("Distribution of","by","Frequency"),
                       c("Pembahagian","mengikut","Kekerapan"),
@@ -131,15 +141,15 @@ titleString <- function(distribution.of=.distribution.of,by=.by,frequency=.frequ
       distribution.of <- title.array[row.chosen,1]
       by <- title.array[row.chosen,2]; frequency <- title.array[row.chosen,3]
     }
-  }else{.locale<<-FALSE
-	.distribution.of <<- distribution.of
-	.by <<- by
-	.frequency <<- frequency
+  }else{.locale(FALSE)
+	.distribution.of <- distribution.of
+	.by <- by
+	.frequency <- frequency
 	}
 	if(return.look.up.table){
-		return(list(distribution.of=distribution.of,by=by,frequency=frequency, look.up.table=title.array))
+		return(list(locale=.locale(),distribution.of=distribution.of,by=by,frequency=frequency, look.up.table=title.array))
 	}else{
-		return(list(distribution.of=distribution.of,by=by,frequency=frequency))
+		return(list(locale=.locale(),distribution.of=distribution.of,by=by,frequency=frequency))
 	}
 }
 
@@ -2451,7 +2461,7 @@ print.noquote(oor.95ci)
 
 
 ### Summarize continous variable in the loaded data set
-summ <- 
+summ <-
 function (x = .data, by = NULL, graph = TRUE, box = FALSE, pch = 18, 
     ylab = "auto", main = "auto", cex.X.axis = 1, cex.Y.axis = 1, 
     dot.col = "auto", ...) 
@@ -2737,8 +2747,8 @@ function (x = .data, by = NULL, graph = TRUE, box = FALSE, pch = 18,
             }
         }
     }
-    if (is.numeric(x) | is.integer(x)){
-    attributes(x) <- NULL
+    if (is.numeric(x) | is.integer(x)) {
+        attributes(x) <- NULL
     }
     if (is.data.frame(x)) {
         heading <- paste(attr(x, "datalabel"), "\n", .No.of.observations, 
@@ -2814,10 +2824,10 @@ function (x = .data, by = NULL, graph = TRUE, box = FALSE, pch = 18,
                     "%Y-%m-%d"))
                 }
                 else if (any(class(x) == "difftime")) {
-                  a[1, ] <- c(length(na.omit(x)), summary(x)[4], 
-                    summary(x)[3], ifelse(is.na(mean(na.omit(x1))), 
-                      NA, round(sd(na.omit(x1)), 2)), summary(x)[1], 
-                    summary(x)[6])
+                  a[1, ] <- c(length(na.omit(x)), summary(as.numeric(x))[4], 
+                    summary(as.numeric(x))[3], ifelse(is.na(mean(na.omit(x1))), 
+                      NA, round(sd(na.omit(x1)), 2)), summary(as.numeric(x))[1], 
+                    summary(as.numeric(x))[6])
                 }
                 else {
                   a[1, ] <- round(c(length(na.omit(x)), mean(na.omit(x)), 
@@ -2868,8 +2878,10 @@ function (x = .data, by = NULL, graph = TRUE, box = FALSE, pch = 18,
                   a[i, 2] <- length((x[[i]])[!is.na(x[[i]])])
                 }
                 else if (any(class(x[[i]]) == "difftime")) {
-                  a[i, c(3, 4, 6, 7)] <- c(summary(x[[i]])[c(4, 3, 1, 6)])
-                  a[i, 5] <- round(sd(x[[i]], na.rm=TRUE),2)
+                  a[i, c(3, 4, 6, 7)] <- c(summary(as.numeric(x[[i]]))[c(4, 
+                    3, 1, 6)])
+                  a[i, 5] <- round(sd(x[[i]], na.rm = TRUE), 
+                    2)
                   a[i, 2] <- length((x[[i]])[!is.na(x[[i]])])
                 }
                 else if (suppressWarnings(is.integer(x[[i]]) || 
@@ -2896,7 +2908,6 @@ function (x = .data, by = NULL, graph = TRUE, box = FALSE, pch = 18,
                       ]))), max(na.omit(unclass(x[i][, ])))), 
                     3)
                 }
-                
             }
         }
     }

@@ -8,11 +8,11 @@ setTitle(locale)
 \arguments{
 	\item{locale}{A string denoting international language of choice}
 }
-\details{On calling 'library(epicalc)', '.locale' has an inital value of FALSE, ie. the titles of Epicalc's automatic graphs are displayed in the English language. 'setTitle' has two effects. It selects the locale and resets the hidden object '.locale' to TRUE. The command internationalizes the title of automatic graphs created by Epicalc according to 'locale' given in the function's argument. 
+\details{On calling 'library(epicalc)', '.locale()' has an inital value of FALSE, ie. the titles of Epicalc's automatic graphs are displayed in the English language. 'setTitle' has two effects. It selects the locale and resets the hidden object '.locale()' to TRUE. The command internationalizes the title of automatic graphs created by Epicalc according to 'locale' given in the function's argument. 
 
-If '.locale' is TRUE, then the automatic graphs produced by Epicalc commands, such as 'summ(var)' or 'tab1(var)' or 'tabpct(var1,var2)', will lookup a language conversion table for the graph title and the title will be changed accordingly.
+If '.locale()' is TRUE, then the automatic graphs produced by Epicalc commands, such as 'summ(var)' or 'tab1(var)' or 'tabpct(var1,var2)', will lookup a language conversion table for the graph title and the title will be changed accordingly.
 
-Internationalization of the title can be disabled by typing '.locale <- FALSE'. This has no effect of locale as a whole unless it is reset to English by issuing the command 'setTitle("English")'.
+Internationalization of the title can be disabled by typing '.locale(FALSE)'. This has no effect of locale as a whole unless it is reset to English by issuing the command 'setTitle("English")'.
 
 }
 \author{Virasakdi Chongsuvivatwong
