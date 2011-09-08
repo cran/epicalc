@@ -6619,7 +6619,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
     reverse = FALSE, vars.to.reverse = NULL, by = NULL, vars.to.factor = NULL, 
     iqr = "auto", prevalence = FALSE, percent = c("column", "row", 
         "none"), frequency = TRUE, test = TRUE, name.test = TRUE, 
-    total.column = FALSE) 
+    total.column = FALSE, simulate.p.value=FALSE) 
 {
     nl <- as.list(1:ncol(dataFrame))
     names(nl) <- names(dataFrame)
@@ -6980,7 +6980,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                   if ((sum(E < 5))/length(E) > 0.2 & nrow(dataFrame) < 
                     1000) {
                     test.method <- "Fisher's exact test"
-                    p.value <- fisher.test(x0, simulate.p.value = TRUE)$p.value
+                    p.value <- fisher.test(x0, simulate.p.value = simulate.p.value)$p.value
                   }
                   else {
                     test.method <- paste("Chisq. (", suppressWarnings(chisq.test(x0)$parameter), 

@@ -8,7 +8,7 @@ tableStack (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
     total = TRUE, var.labels = TRUE, var.labels.trunc =150, reverse = FALSE, 
     vars.to.reverse = NULL, by = NULL, vars.to.factor = NULL, iqr = "auto", 
     prevalence = FALSE, percent = c("column", "row", "none"), frequency=TRUE, 
-    test = TRUE, name.test = TRUE, total.column = FALSE) 
+    test = TRUE, name.test = TRUE, total.column = FALSE, simulate.p.value = FALSE) 
 }
 \arguments{
 	\item{vars}{a vector of variables in the data frame}
@@ -34,6 +34,7 @@ tableStack (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
   \item{test}{whether statistical test(s) will be computed}
   \item{name.test}{display name of the test and relevant degrees of freedom}
   \item{total.column}{whether to add 'total column' to the output or not}
+  \item{simulate.p.value}{simulate P value for Fisher's exact test}
 }
 \details{This function simultaneously explores several variables with a fixed integer rating scale. For non-factor variables, the default values for tabulation are the mininum and the maximum of all variables but can be specified by user.
 
@@ -46,6 +47,8 @@ Options for 'reverse', 'vars.to.reverse' and statistics of 'means', 'medians', '
 When the 'by' argument is given, 'reverse' and 'vars.to.reverse' do not apply. Instead, columns of the 'by' variable will be formed. A table will be created against each selected variable. If the variable is a factor or coerced to factor with 'vars.to.factor', cross-tabulation will result with percents as specified, ie. "column", "row", or "none" (FALSE). For a dichotomous row variable, if set to 'TRUE', the prevalence of row variable in the form of a fraction is displayed in each subgroup column. For continuous variables, means with standard deviations will be displayed. For variables with residuals that are not normally distributed or where the variance of subgroups are significantly not normally distributed (using a significance level of 0.01), medians and inter-quartile ranges will be presented if the argument 'iqr' is set to "auto" (by default). Users may specify a subset of the selected variables (from the 'vars' argument) to be presented in such a form. Otherwise, the argument could be set as any other character string such as "none", to insist to present means and standard deviations. 
                                                                             
 When 'test = TRUE' (default), Pearson's chi-squared test (or a two-sided Fisher's exact test, if the sample size is small) will be carried out for a categorical variable or a factor. The two-sample t-test (or ANOVA F-test, when there are more than 2 levels of 'by') will be computed for a numeric variable. If the numeric variable is included in the 'iqr' argument, (manually or automatically), Wilcoxson's ranksum test or Kruskal-Wallis test will be performed instead.
+
+For Fisher's exact test, the default method employs 'simulate.p.value = FALSE'. See further explanation in 'fisher.test' procedure. If the dataset is extraordinarily large, the option may be manually set to TRUE. 
 
 When 'by' is specified as a single character object (such as 'by="none"'), there will be no breakdown and all tests will be omitted. Only the 'total' column is shown.
 
