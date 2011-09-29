@@ -1,5 +1,5 @@
-ac62e8941be851240d9dc00154481c4f *DESCRIPTION
-16408f6d3bd19ee351c2217df8d0fcb6 *R/epicalc.R
+de93fcb445e5e67f37536ad7746e7f7d *DESCRIPTION
+64d8f46adf50872e0b1c7fe5173e6aee *R/epicalc.R
 1721d9a396b168fe50a85b52adbc228f *data/ANCdata.rdata
 adf1de16ad1852dd7be771d2b0ecbaf8 *data/ANCtable.txt.gz
 af5abbf83afc371f6a64009cd3eb9106 *data/Attitudes.rdata
@@ -64,7 +64,7 @@ cbab361898d3e545deb9a628ab5d4999 *man/aggregate.plot.rd
 09adf0ee65fd2cd8d316466e13eb2f0e *man/auc.rd
 00a4f440548f98a0041f0762530a3961 *man/bang.rd
 e3864cad8d857ebbe6f53015cbbcf526 *man/be2ad.rd
-7b70b50779c2540cdebda1eed7d498cc *man/cc.rd
+34beee2551c599d9745b38b6c4e840df *man/cc.rd
 57e910fcdc669d2b58dc29b2f7af4623 *man/ci.rd
 8eb1e850ca97103400ccfb59a02e43ad *man/codebook.rd
 18cef11c983f5b62c2a5befd66662eb2 *man/des.rd
@@ -88,6 +88,7 @@ e0211f82cdf428fad19571eab5372823 *man/markVisits.rd
 d0812c38cf9893ed00ec282cc47094ae *man/power.for.2means.rd
 3ce2de01ce6904b631eedf01b04b2a99 *man/power.rd
 ee5830516339c15bb4e5474af30dbd15 *man/print.alpha.rd
+abd1607ad3940db6d707a8406134f47c *man/print.cci.rd
 51b6904a353f64bf6e561cecc63291d7 *man/print.des.rd
 ed303bd6bd17cd5733a1a3acc7e02323 *man/print.n.for.2means.rd
 ef96f4b8b4e60f2d86b4eb86e5ece360 *man/print.n.for.2p.rd

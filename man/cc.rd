@@ -11,10 +11,11 @@
 \description{Odds ratio calculation and graphing}
 \usage{
 cc(outcome, exposure, decimal = 2, cctable = NULL, graph = TRUE, 
-	original = TRUE, design = "cohort", main, xlab = "auto", ylab) 
+	original = TRUE, design = "cohort", main, xlab = "auto", ylab,
+  alpha = .05, fisher.or = FALSE, exact.ci.or = TRUE) 
 cci(caseexp, controlex, casenonex, controlnonex, cctable = NULL, 
-	decimal = 2, graph = TRUE, design = "cohort", main, xlab, ylab,
-  xaxis, yaxis) 
+	graph = TRUE, design = "cohort", main, xlab, ylab, xaxis, yaxis, 
+  alpha = .05, fisher.or = FALSE, exact.ci.or = TRUE,decimal = 2 ) 
 cs(outcome, exposure, cctable = NULL, decimal = 2, method="Newcombe.Wilson", 
    main, xlab, ylab, cex, cex.axis)
 csi(caseexp, controlex, casenonex, controlnonex, cctable = NULL, 
@@ -41,31 +42,32 @@ make2x2(caseexp, controlex, casenonex, controlnonex)
 	\item{main}{main title of the graph}
 	\item{xlab}{label on X axis}
 	\item{ylab}{label on Y axis}
+	\item{alpha}{level of significance}
+	\item{fisher.or}{whether odds ratio should be computed by the exact method}
+	\item{exact.ci.or}{whether confidence limite of the odds ratio should be computed by the exact method}
 	\item{xaxis}{two categories of exposure in graph}
 	\item{yaxis}{two categories of outcome in graph}
   \item{method}{method of computation for 95 percent limits of risk difference}
   \item{cex.axis}{character expansion factor for graph axis}
   \item{cex}{character expansion factor for text in the graph}
 }
-\details{'cc' computes odds ratios and 95 percent confidence intervals from outcome and exposure variables. The results are based on the exact method.
+\details{'cc' usually reads in two variables whereas in 'cci' four number are entered manually. However, both the variables and the numbers should be omitted if the analysis is directly on a table specified by 'cctable'.
 
-'cci' is a variant of 'cc' where four numbers are entered manually.  
+From both functions, odds ratio and its confidence limits, chisquared test and Fisher's exact test are computed. The odds ratio calcuation is based on cross product method unless 'fisher.or' is set as TRUE. It's confidence limits are obtained by the exact method unless exact.ci.or is set as FALSE.
 
-'cs' is for cohort and cross-sectional studies. It computes the absolute risk, risk difference, and risk ratio. When the exposure is a risk factor, the attributable fraction exposure, attributable fraction population and number needed to harm (NNH) are also displayed in the output. When the exposure is a protective factor, protective efficacy or percent of risk reduced and number needed to treat (NNT) are displayed instead. 
+'cs' and 'csi' are for cohort and cross-sectional studies. It computes the absolute risk, risk difference, and risk ratio. When the exposure is a risk factor, the attributable fraction exposure, attributable fraction population and number needed to harm (NNH) are also displayed in the output. When the exposure is a protective factor, protective efficacy or percent of risk reduced and number needed to treat (NNT) are displayed instead. 
 
 If there are more than 2 exposure categories and the sample size is large enough, a graph will be plotted.
 
-'csi' is a variant of 'cs' where four numbers are entered manually.
-
-'method' chooses whether 95 percent ci of risk difference should be computed by Newcomb-Wilson method. Both this and the standard method may give non-sensible values if the risk difference is not statistically significant.
+'method' in 'csi' and 'cs' chooses whether confidence limits of the risk difference should be computed by Newcomb-Wilson method. Both this and the standard method may give non-sensible values if the risk difference is not statistically significant.
 
 'make2x2' creates a 2-by-2 table using the above orientation.
 
 'graph.casecontrol' and 'graph.prospective' draw a graph comparing the odds of exposure between cases and controls or odds of diseased between exposed and non-exposed.
 
-These two graphic commands are automatically called by 'cc' and 'cci'.
+These two graphic commands are automatically chosen by 'cc' and 'cci', depending on the 'design' argument.
 
-Alternatively, a table saved from 'make2x2' can be supplied as the 'cctable' argument for the 'cc' command. The squares on the values of each group (case vs control and exposed vs unexposed) represent the relative sample sizes for each group.
+Alternatively, a contingency table saved from 'make2x2' can be supplied as the 'cctable' argument for the 'cc' function and so on.
 
 }
 \author{Virasakdi Chongsuvivatwong
@@ -88,6 +90,8 @@ cs(ill, chocolate) # The outcome variable should come first.
 cci(25, 22, 20, 7)
 graph.casecontrol(25, 22, 20, 7)
 graph.prospective(25, 22, 20, 7)
+# Each of the above two lines produces untitled graph, which can be decorated
+# additionally decorated
 
 #Alternatively
 table1 <- make2x2(25,22,20,7)
