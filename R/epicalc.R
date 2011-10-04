@@ -6652,14 +6652,14 @@ alphaBest <- function (vars, standardized = FALSE, dataFrame = .data)
 
 
 ## Table stack
-tableStack  <-
+tableStack <- 
 function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, 
     means = TRUE, medians = FALSE, sds = TRUE, decimal = 1, dataFrame = .data, 
     total = TRUE, var.labels = TRUE, var.labels.trunc = 150, 
     reverse = FALSE, vars.to.reverse = NULL, by = NULL, vars.to.factor = NULL, 
     iqr = "auto", prevalence = FALSE, percent = c("column", "row", 
         "none"), frequency = TRUE, test = TRUE, name.test = TRUE, 
-    total.column = FALSE, simulate.p.value=FALSE) 
+    total.column = FALSE, simulate.p.value = FALSE, sample.size=TRUE) 
 {
     nl <- as.list(1:ncol(dataFrame))
     names(nl) <- names(dataFrame)
@@ -6697,7 +6697,8 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
         }
     }
     for (i in selected) {
-        if ((class(dataFrame[, i]) == "integer" | class(dataFrame[, i]) == "numeric") & !is.null(by)) {
+        if ((class(dataFrame[, i]) == "integer" | class(dataFrame[, 
+            i]) == "numeric") & !is.null(by)) {
             if (any(selected.to.factor == i)) {
                 dataFrame[, i] <- factor(dataFrame[, i])
             }
@@ -6928,6 +6929,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                   if (is.integer(dataFrame[, selected[i]]) | 
                     is.numeric(dataFrame[, selected[i]])) {
                     if (length(table(by1)) > 1) {
+                    if(all(table(dataFrame[,selected[i]]) > 2)) {
                       if (nrow(dataFrame) < 5000) {
                         if (nrow(dataFrame) < 3) {
                           selected.iqr <- c(selected.iqr, selected[i])
@@ -6949,6 +6951,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                         }
                       }
                     }
+                    }
                   }
                 }
             }
@@ -6957,6 +6960,33 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
             }
         }
         table2 <- NULL
+        if(sample.size){
+        if(test)
+        {
+        if(name.test)
+        {
+        if(total.column){
+        table2 <- rbind(c(table(by1),length(by1),"",""), c(rep("",length(table(by1))+1),"",""))
+        colnames(table2)[ncol(table2)-(2:0)] <- c("Total", "Test stat.", "P value")
+        }else{
+        table2 <- rbind(c(table(by1),"",""), c(rep("",length(table(by1))),"",""))
+        colnames(table2)[ncol(table2)-(1:0)] <- c("Test stat.", "P value")
+        }
+        }else{
+        if(total.column){
+        table2 <- rbind(c(table(by1),length(by1),""), c(rep("", length(table(by1))+1),"",""))
+        colnames(table2)[ncol(table2)-(1:0)] <- c("Total", "P value")
+        }else{
+        table2 <- rbind(c(table(by1),""), c(rep("",length(table(by1))),""))
+        colnames(table2)[ncol(table2)] <-  "P value"
+        }
+        }
+        }
+        else{
+        total.column <- FALSE
+        table2 <- rbind(table(by1), "")
+        }
+        }
         for (i in 1:length(selected)) {
             if (is.factor(dataFrame[, selected[i]]) | is.logical(dataFrame[, 
                 selected[i]])) {
@@ -7077,6 +7107,10 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                 }
                 table0 <- term.numeric
                 if (test) {
+if(any(as.integer(table(by1[!is.na(dataFrame[,selected[i]])]))<3) | length(table(by1)) > length(table(by1[!is.na(dataFrame[,selected[i]])]))){
+                  test.method <- paste("Sample too small: group",paste(which(as.integer(table(factor(by)[!is.na(dataFrame[,selected[i]])]))<3), collapse=" "))
+                  p.value <- NA
+                  }else{
                   if (any(selected.iqr == selected[i])) {
                     if (length(levels(by1)) > 2) {
                       test.method <- "Kruskal-Wallis test"
@@ -7099,7 +7133,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                           1), sep = "")
                       p.value <- anova(lm(dataFrame[, selected[i]] ~ 
                         by1))[1, 5]
-                    }
+                    }                                
                     else {
                       test.method <- paste("t-test", paste(" (", 
                         t.test(dataFrame[, selected[i]] ~ by1, 
@@ -7111,7 +7145,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                         by1, var.equal = TRUE)$p.value
                     }
                   }
-                }
+                }}
             }
             if (test) {
                 if (name.test) {
@@ -7122,11 +7156,11 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                   label.row <- t(label.row)
                   if (total.column) {
                     colnames(label.row) <- c(levels(by1), "Total", 
-                      "Test stat.", "  P value")
+                      "Test stat.", "P value")
                   }
                   else {
                     colnames(label.row) <- c(levels(by1), "Test stat.", 
-                      "  P value")
+                      "P value")
                   }
                   table0 <- cbind(table0, "", "")
                   blank.row <- rep("", length(levels(by1)) + 
@@ -7139,10 +7173,10 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                   label.row <- t(label.row)
                   if (total.column) {
                     colnames(label.row) <- c(levels(by1), "Total", 
-                      "  P value")
+                      "P value")
                   }
                   else {
-                    colnames(label.row) <- c(levels(by1), "  P value")
+                    colnames(label.row) <- c(levels(by1), "P value")
                   }
                   table0 <- cbind(table0, "")
                   blank.row <- rep("", length(levels(by1)) + 
@@ -7182,6 +7216,10 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
             blank.row <- t(blank.row)
             rownames(blank.row) <- ""
             table2 <- rbind(table2, label.row, table0, blank.row)
+}
+        if(sample.size) 
+        {
+        rownames(table2)[1:2] <- c("Total","")
         }
         class(table2) <- c("tableStack", "table")
         table2
