@@ -527,9 +527,9 @@ function (caseexp, controlex, casenonex, controlnonex, cctable = NULL,
         title(main = main, xlab = xlab, ylab = ylab)
     }
     if(!fisher.or){
-    results <- list(method="",or = or, se.ln.or=se.ln.or, alpha=alpha, exact.ci.or=exact.ci.or, ci.or=ci.or, table=table1, decimal=decimal)
+    results <- list(or.method="Asymptotic",or = or, se.ln.or=se.ln.or, alpha=alpha, exact.ci.or=exact.ci.or, ci.or=ci.or, table=table1, decimal=decimal)
     }else{
-    results <- list(method="Fisher's ", or = or,  alpha=alpha, exact.ci.or=exact.ci.or, ci.or=ci.or, table=table1, decimal=decimal)
+    results <- list(or.method="Fisher's", or = or,  alpha=alpha, exact.ci.or=exact.ci.or, ci.or=ci.or, table=table1, decimal=decimal)
     }
     class(results) <- c("cci", "cc")
     return(results)
@@ -2191,7 +2191,7 @@ tableGlm <- function (model, modified.coeff.array, decimal)
         if((length(var.names)==1 & names(model$coefficients)[1] != "(Intercept)")){
         lr.p.value <- "-"
         }else{
-        lr.p.value <- suppressWarnings(lrtest(model1, model, print=FALSE)$p.value)
+        lr.p.value <- suppressWarnings(lrtest(model1, model)$p.value)
         lr.p.value <- ifelse(lr.p.value < .001, "< 0.001",round(lr.p.value,decimal+1))
         }
       }
@@ -2216,7 +2216,7 @@ tableGlm <- function (model, modified.coeff.array, decimal)
       formula.coxph.i <- as.formula(paste(b[2], "~", paste(var.names[-i], collapse="+")))
       model.coxph.i <- coxph(formula.coxph.i, data=data)
       }
-      lr.p.value <- suppressWarnings(lrtest(model.full.coxph, model.coxph.i, print=FALSE)$p.value)
+      lr.p.value <- suppressWarnings(lrtest(model.full.coxph, model.coxph.i)$p.value)
       }
       lr.p.value <- ifelse(lr.p.value < .001, "< 0.001",round(lr.p.value,decimal+1))
       }
@@ -2367,12 +2367,12 @@ tableGlm <- function (model, modified.coeff.array, decimal)
 
 
 #### Likelihood ratio test
-lrtest <- function (model1, model2, print = TRUE) 
+lrtest <- function (model1, model2)
 {
     if (any(class(model1) != class(model2))) {
         stop("Two models have different classes")
     }
-    if (any(class(model1) == "coxph") & any(class(model2) == 
+    if (any(class(model1) == "coxph") & any(class(model2) ==
         "coxph")) {
         if (model1$n != model2$n) {
             stop("Two models has different sample sizes")
@@ -2389,16 +2389,8 @@ lrtest <- function (model1, model2, print = TRUE)
         if (lrt * diff.df < 0) {
             stop("Likelihood gets worse with more variables. Test not executed")
         }
-        if (print) {
-            cat("Likelihood ratio test for Cox regression & conditional logistic regression", 
-                "\n")
-            cat("Chi-squared", diff.df, "d.f. = ", lrt, ",", 
-                "P value = ", round(pchisq(lrt, diff.df, lower.tail = FALSE), 
-                  4), "\n")
-            cat("\n")
-        }
     }
-    if (any(class(model1) == "multinom") & any(class(model2) == 
+    if (any(class(model1) == "multinom") & any(class(model2) ==
         "multinom")) {
         if (any(dim(model1$residuals) != dim(model2$residuals))) {
             stop("Two models have different outcomes or different sample sizes")
@@ -2414,14 +2406,6 @@ lrtest <- function (model1, model2, print = TRUE)
         }
         if (lrt * diff.df < 0) {
             stop("Likelihood gets worse with more variables. Test not executed")
-        }
-        if (print) {
-            cat("Likelihood ratio test for multinomial logistic regression", 
-                "\n")
-            cat("Chi-squared", diff.df, "d.f. = ", lrt, ",", 
-                "P value = ", round(pchisq(lrt, diff.df, lower.tail = FALSE), 
-                  4), "\n")
-            cat("\n")
         }
     }
     if (any(class(model1) == "polr") & any(class(model2) == "polr")) {
@@ -2440,18 +2424,11 @@ lrtest <- function (model1, model2, print = TRUE)
         if (lrt * diff.df < 0) {
             stop("Likelihood gets worse with more variables. Test not executed")
         }
-        if (print) {
-            cat("Likelihood ratio test for ordinal regression", 
-                "\n")
-            cat("Chi-squared", diff.df, "d.f. = ", lrt, ",", 
-                "P value = ", round(pchisq(lrt, diff.df, lower.tail = FALSE), 
-                  4), "\n")
-            cat("\n")
-        }
     }
-    if (suppressWarnings((all(class(model1) == c("glm", "lm")) & all(class(model2) == 
-        c("glm", "lm"))) | (any(class(model1)=="negbin") & any(class(model2)=="negbin")))) {
-        if (sum(model1$df.null) != sum(model2$df.null)) 
+    if (suppressWarnings((all(class(model1) == c("glm", "lm")) &
+        all(class(model2) == c("glm", "lm"))) | (any(class(model1) ==
+        "negbin") & any(class(model2) == "negbin")))) {
+        if (sum(model1$df.null) != sum(model2$df.null))
             stop("Number of observation not equal!!")
         df1 <- attributes(logLik(model1))$df
         df2 <- attributes(logLik(model2))$df
@@ -2464,17 +2441,45 @@ lrtest <- function (model1, model2, print = TRUE)
         if (lrt * diff.df < 0) {
             stop("Likelihood gets worse with more variables. Test not executed")
         }
-        if (print) {
-            cat("Likelihood ratio test for MLE method", "\n")
-            cat("Chi-squared", diff.df, "d.f. = ", lrt, ",", 
-                "P value = ", round(pchisq(lrt, diff.df, lower.tail = FALSE), 
-                  4), "\n")
+    }
+    output <- list(model1 = model1$call, model2 = model2$call, model.class =class(model1),
+        Chisquared = lrt, df = diff.df, p.value = pchisq(lrt,
+            diff.df, lower.tail = FALSE))
+class(output) <- "lrtest"
+output
+}
+
+# print.lrtest
+print.lrtest <- function(x, ...) {
+if(any(x$model.class == "coxph")){
+    cat("Likelihood ratio test for Cox regression & conditional logistic regression",
+                "\n")
+            cat("Chi-squared", x$df, "d.f. = ", x$Chisquared, ",",
+                "P value = ", x$p.value, "\n")
             cat("\n")
         }
-    }
-    output <- list(model1 = model1$call, model2 = model2$call, 
-        Chisquared = lrt, df = diff.df, p.value = pchisq(lrt, 
-            diff.df, lower.tail = FALSE))
+if(any(x$model.class == "multinom")){
+            cat("Likelihood ratio test for multinomial logistic regression",
+                "\n")
+            cat("Chi-squared", x$df, "d.f. = ", x$Chisquared, ",",
+                "P value = ", x$p.value, "\n")
+            cat("\n")
+}
+if(any(x$model.class == "polr")){
+            cat("Likelihood ratio test for ordinal regression",
+                "\n")
+            cat("Chi-squared", x$df, "d.f. = ", x$Chisquared, ",",
+                "P value = ", x$p.value, "\n")
+            cat("\n")
+}
+if (suppressWarnings((all(x$model.class == c("glm", "lm"))) | (any(x$model.class ==
+        "negbin")))){
+
+            cat("Likelihood ratio test for MLE method", "\n")
+            cat("Chi-squared", x$df, "d.f. = ", x$Chisquared, ",",
+                "P value = ", x$p.value, "\n")
+            cat("\n")
+}
 }
 
 ### List objects excluding function
