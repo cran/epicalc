@@ -5632,22 +5632,23 @@ result
 }
 ## Aggregate a numeric variable
 aggregate.numeric <-
-function (x, by, FUN = c("count", "sum", "mean", "median", "sd", "se", 
-    "min", "max"), na.rm = TRUE, length.warning = TRUE, ...) 
+function (x, by, FUN = c("count", "sum", "mean", "median", "sd",
+    "se", "min", "max"), na.rm = TRUE, length.warning = TRUE,
+    ...)
 {
     count <- function(x1) {
         length(na.omit(x1))
     }
-se <- function(x1){
-sd(x1, na.rm=TRUE)/sqrt(count(x1))
-}    
+    se <- function(x1) {
+        sd(x1, na.rm = TRUE)/sqrt(count(x1))
+    }
     if (length(FUN) == 1 & class(FUN) == "function") {
         FUN <- as.character(substitute(FUN))
     }
     else {
-        if (any(is.na(x)) & na.rm == FALSE & (is.element("var", 
+        if (any(is.na(x)) & na.rm == FALSE & (is.element("var",
             FUN) | is.element("sd", FUN))) {
-            cat(paste("\n", "   'FUN = \"var\"' and 'FUN = \"sd\" not computable when 'na.rm=FALSE'", 
+            cat(paste("\n", "   'FUN = \"var\"' and 'FUN = \"sd\" not computable when 'na.rm=FALSE'",
                 "\n", "   and therefore omitted"), "\n", "\n")
             FUN <- setdiff(FUN, c("sd", "var"))
         }
@@ -5655,13 +5656,13 @@ sd(x1, na.rm=TRUE)/sqrt(count(x1))
             stop("Too few FUN's")
         }
         if (any(is.na(x)) & length.warning & na.rm) {
-            if (any(FUN == "var") | any(FUN == "sd") | any(FUN == 
+            if (any(FUN == "var") | any(FUN == "sd") | any(FUN ==
                 "mean") | any(FUN == "sum")) {
-                cat("\n", "Note:", "\n", "     Missing values removed.", 
+                cat("\n", "Note:", "\n", "     Missing values removed.",
                   "\n")
             }
             if (any(FUN == "length")) {
-                cat("     'length' computed with missing records included.", 
+                cat("     'length' computed with missing records included.",
                   "\n")
             }
             cat("\n")
@@ -5670,20 +5671,20 @@ sd(x1, na.rm=TRUE)/sqrt(count(x1))
     if (FUN[1] != "length") {
         if (FUN[1] == "count") {
             y <- aggregate.data.frame(x, by, FUN = count)
-            names(y)[length(names(y))] <- paste("count", as.character(substitute(x)), 
+            names(y)[length(names(y))] <- paste("count", as.character(deparse(substitute(x))),
                 sep = ".")
         }
         else {
-            if (FUN[1] == "sum" | FUN[1] == "mean" | FUN[1] == 
-                "median" | FUN[1] == "var" | FUN[1] == "sd" | 
+            if (FUN[1] == "sum" | FUN[1] == "mean" | FUN[1] ==
+                "median" | FUN[1] == "var" | FUN[1] == "sd" |
                 FUN[1] == "min" | FUN[1] == "max") {
-                y <- aggregate.data.frame(x, by, FUN = FUN[1], 
+                y <- aggregate.data.frame(x, by, FUN = FUN[1],
                   na.rm = na.rm)
             }
             else {
                 y <- aggregate.data.frame(x, by, FUN = FUN[1])
             }
-            names(y)[length(names(y))] <- paste(FUN[1], as.character(substitute(x)), 
+            names(y)[length(names(y))] <- paste(FUN[1], as.character(deparse(substitute(x))),
                 sep = ".")
         }
     }
@@ -5699,10 +5700,10 @@ sd(x1, na.rm=TRUE)/sqrt(count(x1))
                   y <- data.frame(y, y1[, length(names(y1))])
                 }
                 else {
-                  if (FUN[i] == "sum" | FUN[i] == "mean" | FUN[i] == 
-                    "median" | FUN[i] == "var" | FUN[i] == "sd" | 
+                  if (FUN[i] == "sum" | FUN[i] == "mean" | FUN[i] ==
+                    "median" | FUN[i] == "var" | FUN[i] == "sd" |
                     FUN[i] == "min" | FUN[i] == "max") {
-                    y1 <- aggregate.data.frame(x, by, FUN = FUN[i], 
+                    y1 <- aggregate.data.frame(x, by, FUN = FUN[i],
                       na.rm = na.rm)
                   }
                   else {
@@ -5710,7 +5711,7 @@ sd(x1, na.rm=TRUE)/sqrt(count(x1))
                   }
                   y <- data.frame(y, y1[, length(names(y1))])
                 }
-                names(y)[length(names(y))] <- paste(FUN[i], as.character(substitute(x)), 
+                names(y)[length(names(y))] <- paste(FUN[i], as.character(deparse(substitute(x))),
                   sep = ".")
             }
             else {
@@ -5722,6 +5723,7 @@ sd(x1, na.rm=TRUE)/sqrt(count(x1))
     }
     y
 }
+
 
 ## Aggregate plot
 aggregate.plot <-
