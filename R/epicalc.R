@@ -454,13 +454,14 @@ returns <- list(table.row.percent=rpercent, table.column.percent=cpercent)
 
 ####
 cci <-
-function (caseexp, controlex, casenonex, controlnonex, cctable = NULL, 
-    graph = TRUE, design = "cohort", main, xlab,ylab, xaxis, yaxis, 
-    alpha=.05, fisher.or=FALSE, exact.ci.or=TRUE, decimal=2) 
+function (caseexp, controlex, casenonex, controlnonex, cctable = NULL,
+    graph = TRUE, design = "cohort", main, xlab, ylab, xaxis,
+    yaxis, alpha = 0.05, fisher.or = FALSE, exact.ci.or = TRUE,
+    decimal = 2)
 {
     if (is.null(cctable)) {
-        frame <- cbind(Outcome <- c(1, 0, 1, 0), Exposure <- c(1, 
-            1, 0, 0), Freq <- c(caseexp, controlex, casenonex, 
+        frame <- cbind(Outcome <- c(1, 0, 1, 0), Exposure <- c(1,
+            1, 0, 0), Freq <- c(caseexp, controlex, casenonex,
             controlnonex))
         Exposure <- factor(Exposure)
         expgrouplab <- c("Non-exposed", "Exposed")
@@ -474,62 +475,76 @@ function (caseexp, controlex, casenonex, controlnonex, cctable = NULL,
         table1 <- as.table(get("cctable"))
     }
     fisher <- fisher.test(table1)
-    caseexp <- table1[2,2]; controlex <- table1[1,2]
-    casenonex <- table1[2,1]; controlnonex <- table1[1,1]
-    se.ln.or <- sqrt(1/caseexp+1/controlex+1/casenonex+1/controlnonex)
-    if(!fisher.or){
-    or <- caseexp/controlex/casenonex*controlnonex
-    p.value <- chisq.test(table1, correct=FALSE)$p.value
-    }else{
-    or <- fisher$estimate
-    p.value <- fisher$p.value
+    caseexp <- table1[2, 2]
+    controlex <- table1[1, 2]
+    casenonex <- table1[2, 1]
+    controlnonex <- table1[1, 1]
+    se.ln.or <- sqrt(1/caseexp + 1/controlex + 1/casenonex +
+        1/controlnonex)
+    if (!fisher.or) {
+        or <- caseexp/controlex/casenonex * controlnonex
+        p.value <- chisq.test(table1, correct = FALSE)$p.value
     }
-    if(exact.ci.or){
-    ci.or <- as.numeric(fisher$conf.int)
-    }else{
-    ci.or <- or * exp(c(-1,1)*qnorm(1 - alpha/2)*se.ln.or)    
+    else {
+        or <- fisher$estimate
+        p.value <- fisher$p.value
+    }
+    if (exact.ci.or) {
+        ci.or <- as.numeric(fisher$conf.int)
+    }
+    else {
+        ci.or <- or * exp(c(-1, 1) * qnorm(1 - alpha/2) * se.ln.or)
     }
     if (graph == TRUE) {
         caseexp <- table1[2, 2]
         controlex <- table1[1, 2]
         casenonex <- table1[2, 1]
         controlnonex <- table1[1, 1]
-        if (design == "prospective" || design == "cohort" || 
+if (!any(c(caseexp, controlex, casenonex, controlnonex) <
+        5)) {
+        if (design == "prospective" || design == "cohort" ||
             design == "cross-sectional") {
-            graph.prospective(caseexp, controlex, casenonex, 
+            graph.prospective(caseexp, controlex, casenonex,
                 controlnonex)
-            if (missing(main)) 
+            if (missing(main))
                 main <- "Odds ratio from prospective/X-sectional study"
-            if (missing(xlab)) 
+            if (missing(xlab))
                 xlab <- ""
-            if (missing(ylab)) 
-                ylab <- paste("Odds of being", ifelse(missing(yaxis), 
+            if (missing(ylab))
+                ylab <- paste("Odds of being", ifelse(missing(yaxis),
                   "a case", yaxis[2]))
-            if (missing(xaxis)) 
+            if (missing(xaxis))
                 xaxis <- c("non-exposed", "exposed")
             axis(1, at = c(0, 1), labels = xaxis)
         }
         else {
-            graph.casecontrol(caseexp, controlex, casenonex, 
+            graph.casecontrol(caseexp, controlex, casenonex,
                 controlnonex)
-            if (missing(main)) 
+            if (missing(main))
                 main <- "Odds ratio from case control study"
-            if (missing(ylab)) 
+            if (missing(ylab))
                 ylab <- "Outcome category"
-            if (missing(xlab)) 
+            if (missing(xlab))
                 xlab <- ""
-            if (missing(yaxis)) 
+            if (missing(yaxis))
                 yaxis <- c("Control", "Case")
-            axis(2, at = c(0, 1), labels = yaxis, las=2)
-            mtext(paste("Odds of ", ifelse(xlab=="","being exposed", paste("exposure being", xaxis[2]))), side = 1, line = ifelse(xlab=="",2.5,1.8))
+            axis(2, at = c(0, 1), labels = yaxis, las = 2)
+            mtext(paste("Odds of ", ifelse(xlab == "", "being exposed",
+                paste("exposure being", xaxis[2]))), side = 1,
+                line = ifelse(xlab == "", 2.5, 1.8))
         }
-        
         title(main = main, xlab = xlab, ylab = ylab)
     }
-    if(!fisher.or){
-    results <- list(or.method="Asymptotic",or = or, se.ln.or=se.ln.or, alpha=alpha, exact.ci.or=exact.ci.or, ci.or=ci.or, table=table1, decimal=decimal)
-    }else{
-    results <- list(or.method="Fisher's", or = or,  alpha=alpha, exact.ci.or=exact.ci.or, ci.or=ci.or, table=table1, decimal=decimal)
+}
+    if (!fisher.or) {
+        results <- list(or.method = "Asymptotic", or = or, se.ln.or = se.ln.or,
+            alpha = alpha, exact.ci.or = exact.ci.or, ci.or = ci.or,
+            table = table1, decimal = decimal)
+    }
+    else {
+        results <- list(or.method = "Fisher's", or = or, alpha = alpha,
+            exact.ci.or = exact.ci.or, ci.or = ci.or, table = table1,
+            decimal = decimal)
     }
     class(results) <- c("cci", "cc")
     return(results)

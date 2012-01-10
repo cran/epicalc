@@ -1,6 +1,6 @@
-04cb34e06f5e62855eb1dc509ab96dd6 *DESCRIPTION
+6d63f6a2ae761da7b660a469ed9f5409 *DESCRIPTION
 a7029ab4e2d345ccd376d76e711f28f6 *NAMESPACE
-88d6df5cd95896a8a9f558e7a4b8db72 *R/epicalc.R
+16a4ac8afc20f4f1f9ed1b48cb792043 *R/epicalc.R
 1721d9a396b168fe50a85b52adbc228f *data/ANCdata.rdata
 c1ddefc687a4e0421362affcbb17debb *data/ANCtable.txt.gz
 af5abbf83afc371f6a64009cd3eb9106 *data/Attitudes.rdata
@@ -58,7 +58,7 @@ db4026d637b5a72e97b4c3577a7bd043 *man/VCT.rd
 cd7145b2f22fb45cf227d115978ef233 *man/Vc1to1.rd
 da8fad92605356060b08dbfc1efc30b1 *man/Xerop.rd
 0cd43ae08083059da23a80808234a14d *man/addMissingRecords.rd
-6b544f656e753c40834688f84dbba3b6 *man/adjust.rd
+9608d02cf938c8ab2b3d966d04caaf7b *man/adjust.rd
 55225f7928e5b48a75824136c1915d86 *man/aggregate.numeric.rd
 cbab361898d3e545deb9a628ab5d4999 *man/aggregate.plot.rd
 0378be67ad6f3bd68a6aed21e6e9e263 *man/alpha.rd

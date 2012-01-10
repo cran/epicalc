@@ -48,6 +48,9 @@ Table.adjusted.means <- xtabs(mean ~ Origin + DriveTrain, data=a)
 Table.crude.means
 Table.adjusted.means
 
+# Price by category of DriveTrain adjusted for Horsepower & Origina
+adjust(c(Horsepower,Origin), list(DriveTrain), model=model1)
+
 ## Now for crude and adjusted probabilities of having manual transmission
 manual <- Man.trans.avail =="Yes"
 model2 <- glm(manual ~ Origin + Horsepower + DriveTrain, family=binomial)
