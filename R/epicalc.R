@@ -2853,6 +2853,13 @@ function (x = .data, by = NULL, graph = TRUE, box = FALSE, pch = 18,
                         NA, round(sd(na.omit(x1)), 2)), min(na.omit(x1)), 
                       max(na.omit(x1))), 3)
                   }
+ 
+                  else if (any(class(x) == "difftime")) {
+                    a[1, ] <- round(c(length(na.omit(x1)), mean(na.omit(as.numeric(x1))), 
+                      quantile(na.omit(as.numeric(x1)), 0.5), ifelse(is.na(mean(na.omit(as.numeric(x1)))), 
+                        NA, round(sd(na.omit(as.numeric(x1))), 2)), min(na.omit(as.numeric(x1))), 
+                      max(na.omit(as.numeric(x1)))), 3)
+                  }
                   else {
                     a[1, ] <- round(c(length(na.omit(x1)), summary(x1)[4], 
                       summary(x1)[3], ifelse(is.na(mean(na.omit(x1))), 
@@ -6681,7 +6688,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
     reverse = FALSE, vars.to.reverse = NULL, by = NULL, vars.to.factor = NULL, 
     iqr = "auto", prevalence = FALSE, percent = c("column", "row", 
         "none"), frequency = TRUE, test = TRUE, name.test = TRUE, 
-    total.column = FALSE, simulate.p.value = FALSE, sample.size=TRUE) 
+    total.column = FALSE, simulate.p.value = FALSE, sample.size = TRUE) 
 {
     nl <- as.list(1:ncol(dataFrame))
     names(nl) <- names(dataFrame)
@@ -6951,28 +6958,29 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                   if (is.integer(dataFrame[, selected[i]]) | 
                     is.numeric(dataFrame[, selected[i]])) {
                     if (length(table(by1)) > 1) {
-                    if(all(table(dataFrame[,selected[i]]) > 2)) {
-                      if (nrow(dataFrame) < 5000) {
-                        if (nrow(dataFrame) < 3) {
-                          selected.iqr <- c(selected.iqr, selected[i])
+                      if (all(table(dataFrame[, selected[i]]) > 
+                        2)) {
+                        if (nrow(dataFrame) < 5000) {
+                          if (nrow(dataFrame) < 3) {
+                            selected.iqr <- c(selected.iqr, selected[i])
+                          }
+                          else if (shapiro.test(lm(dataFrame[, 
+                            selected[i]] ~ by1)$residuals)$p.value < 
+                            0.01 | bartlett.test(dataFrame[, 
+                            selected[i]] ~ by1)$p.value < 0.01) {
+                            selected.iqr <- c(selected.iqr, selected[i])
+                          }
                         }
-                        else if (shapiro.test(lm(dataFrame[, 
-                          selected[i]] ~ by1)$residuals)$p.value < 
-                          0.01 | bartlett.test(dataFrame[, selected[i]] ~ 
-                          by1)$p.value < 0.01) {
-                          selected.iqr <- c(selected.iqr, selected[i])
+                        else {
+                          sampled.shapiro <- sample(lm(dataFrame[, 
+                            selected[i]] ~ by1)$residuals, 250)
+                          if (shapiro.test(sampled.shapiro)$p.value < 
+                            0.01 | bartlett.test(dataFrame[, 
+                            selected[i]] ~ by1)$p.value < 0.01) {
+                            selected.iqr <- c(selected.iqr, selected[i])
+                          }
                         }
                       }
-                      else {
-                        sampled.shapiro <- sample(lm(dataFrame[, 
-                          selected[i]] ~ by1)$residuals, 250)
-                        if (shapiro.test(sampled.shapiro)$p.value < 
-                          0.01 | bartlett.test(dataFrame[, selected[i]] ~ 
-                          by1)$p.value < 0.01) {
-                          selected.iqr <- c(selected.iqr, selected[i])
-                        }
-                      }
-                    }
                     }
                   }
                 }
@@ -6982,36 +6990,46 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
             }
         }
         table2 <- NULL
-        if(sample.size){
-        if(test)
-        {
-        if(name.test)
-        {
-        if(total.column){
-        table2 <- rbind(c(table(by1),length(by1),"",""), c(rep("",length(table(by1))+1),"",""))
-        colnames(table2)[ncol(table2)-(2:0)] <- c("Total", "Test stat.", "P value")
-        }else{
-        table2 <- rbind(c(table(by1),"",""), c(rep("",length(table(by1))),"",""))
-        colnames(table2)[ncol(table2)-(1:0)] <- c("Test stat.", "P value")
-        }
-        }else{
-        if(total.column){
-        table2 <- rbind(c(table(by1),length(by1),""), c(rep("", length(table(by1))+1),"",""))
-        colnames(table2)[ncol(table2)-(1:0)] <- c("Total", "P value")
-        }else{
-        table2 <- rbind(c(table(by1),""), c(rep("",length(table(by1))),""))
-        colnames(table2)[ncol(table2)] <-  "P value"
-        }
-        }
-        }
-        else{
-        total.column <- FALSE
-        table2 <- rbind(table(by1), "")
-        }
+        if (sample.size) {
+            if (test) {
+                if (name.test) {
+                  if (total.column) {
+                    table2 <- rbind(c(table(by1), length(by1), 
+                      "", ""), c(rep("", length(table(by1)) + 
+                      1), "", ""))
+                    colnames(table2)[ncol(table2) - (2:0)] <- c("Total", 
+                      "Test stat.", "P value")
+                  }
+                  else {
+                    table2 <- rbind(c(table(by1), "", ""), c(rep("", 
+                      length(table(by1))), "", ""))
+                    colnames(table2)[ncol(table2) - (1:0)] <- c("Test stat.", 
+                      "P value")
+                  }
+                }
+                else {
+                  if (total.column) {
+                    table2 <- rbind(c(table(by1), length(by1), 
+                      ""), c(rep("", length(table(by1)) + 1), 
+                      "", ""))
+                    colnames(table2)[ncol(table2) - (1:0)] <- c("Total", 
+                      "P value")
+                  }
+                  else {
+                    table2 <- rbind(c(table(by1), ""), c(rep("", 
+                      length(table(by1))), ""))
+                    colnames(table2)[ncol(table2)] <- "P value"
+                  }
+                }
+            }
+            else {
+                total.column <- FALSE
+                table2 <- rbind(table(by1), "")
+            }
         }
         for (i in 1:length(selected)) {
             if (is.factor(dataFrame[, selected[i]]) | is.logical(dataFrame[, 
-                selected[i]])) {
+                selected[i]]) | is.character(dataFrame[, selected[i]])) {
                 x0 <- table(dataFrame[, selected[i]], by1)
                 if (total.column) {
                   x <- addmargins(x0, margin = 2)
@@ -7129,45 +7147,51 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
                 }
                 table0 <- term.numeric
                 if (test) {
-if(any(as.integer(table(by1[!is.na(dataFrame[,selected[i]])]))<3) | length(table(by1)) > length(table(by1[!is.na(dataFrame[,selected[i]])]))){
-                  test.method <- paste("Sample too small: group",paste(which(as.integer(table(factor(by)[!is.na(dataFrame[,selected[i]])]))<3), collapse=" "))
-                  p.value <- NA
-                  }else{
-                  if (any(selected.iqr == selected[i])) {
-                    if (length(levels(by1)) > 2) {
-                      test.method <- "Kruskal-Wallis test"
-                      p.value <- kruskal.test(dataFrame[, selected[i]] ~ 
-                        by1)$p.value
-                    }
-                    else {
-                      test.method <- "Ranksum test"
-                      p.value <- wilcox.test(dataFrame[, selected[i]] ~ 
-                        by1, exact = FALSE)$p.value
-                    }
+                  if (any(as.integer(table(by1[!is.na(dataFrame[, 
+                    selected[i]])])) < 3) | length(table(by1)) > 
+                    length(table(by1[!is.na(dataFrame[, selected[i]])]))) {
+                    test.method <- paste("Sample too small: group", 
+                      paste(which(as.integer(table(factor(by)[!is.na(dataFrame[, 
+                        selected[i]])])) < 3), collapse = " "))
+                    p.value <- NA
                   }
                   else {
-                    if (length(levels(by1)) > 2) {
-                      test.method <- paste("ANOVA F-test (", 
-                        anova(lm(dataFrame[, selected[i]] ~ by1))[1, 
-                          1], ", ", anova(lm(dataFrame[, selected[i]] ~ 
-                          by1))[2, 1], " df) = ", round(anova(lm(dataFrame[, 
-                          selected[i]] ~ by1))[1, 4], decimal + 
-                          1), sep = "")
-                      p.value <- anova(lm(dataFrame[, selected[i]] ~ 
-                        by1))[1, 5]
-                    }                                
+                    if (any(selected.iqr == selected[i])) {
+                      if (length(levels(by1)) > 2) {
+                        test.method <- "Kruskal-Wallis test"
+                        p.value <- kruskal.test(dataFrame[, selected[i]] ~ 
+                          by1)$p.value
+                      }
+                      else {
+                        test.method <- "Ranksum test"
+                        p.value <- wilcox.test(dataFrame[, selected[i]] ~ 
+                          by1, exact = FALSE)$p.value
+                      }
+                    }
                     else {
-                      test.method <- paste("t-test", paste(" (", 
-                        t.test(dataFrame[, selected[i]] ~ by1, 
-                          var.equal = TRUE)$parameter, " df)", 
-                        sep = ""), "=", round(abs(t.test(dataFrame[, 
-                        selected[i]] ~ by1, var.equal = TRUE)$statistic), 
-                        decimal + 1))
-                      p.value <- t.test(dataFrame[, selected[i]] ~ 
-                        by1, var.equal = TRUE)$p.value
+                      if (length(levels(by1)) > 2) {
+                        test.method <- paste("ANOVA F-test (", 
+                          anova(lm(dataFrame[, selected[i]] ~ 
+                            by1))[1, 1], ", ", anova(lm(dataFrame[, 
+                            selected[i]] ~ by1))[2, 1], " df) = ", 
+                          round(anova(lm(dataFrame[, selected[i]] ~ 
+                            by1))[1, 4], decimal + 1), sep = "")
+                        p.value <- anova(lm(dataFrame[, selected[i]] ~ 
+                          by1))[1, 5]
+                      }
+                      else {
+                        test.method <- paste("t-test", paste(" (", 
+                          t.test(dataFrame[, selected[i]] ~ by1, 
+                            var.equal = TRUE)$parameter, " df)", 
+                          sep = ""), "=", round(abs(t.test(dataFrame[, 
+                          selected[i]] ~ by1, var.equal = TRUE)$statistic), 
+                          decimal + 1))
+                        p.value <- t.test(dataFrame[, selected[i]] ~ 
+                          by1, var.equal = TRUE)$p.value
+                      }
                     }
                   }
-                }}
+                }
             }
             if (test) {
                 if (name.test) {
@@ -7238,10 +7262,9 @@ if(any(as.integer(table(by1[!is.na(dataFrame[,selected[i]])]))<3) | length(table
             blank.row <- t(blank.row)
             rownames(blank.row) <- ""
             table2 <- rbind(table2, label.row, table0, blank.row)
-}
-        if(sample.size) 
-        {
-        rownames(table2)[1:2] <- c("Total","")
+        }
+        if (sample.size) {
+            rownames(table2)[1:2] <- c("Total", "")
         }
         class(table2) <- c("tableStack", "table")
         table2
