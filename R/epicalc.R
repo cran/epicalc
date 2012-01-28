@@ -5031,15 +5031,26 @@ function (vars, old.value, new.value, dataFrame = .data, ...)
     if (is.numeric(old.value) | is.integer(old.value) | any(class(data1[, 
         var.order]) == "POSIXt")) {
         if (length(old.value) == 1) {
+if(all(is.integer(data1[, var.order]))){
+            data1[, var.order][data1[, var.order] == old.value] <- as.integer(new.value)
+}else{
             data1[, var.order][data1[, var.order] == old.value] <- new.value
+}
+            
         }
         else {
             if (length(old.value) != length(new.value) & length(new.value) != 
                 1) 
                 stop("Lengths of old and new values are not equal")
             for (i in var.order) {
+if(is.integer(data1[,i])){
+                data1[, i] <- as.integer(lookup(data1[, i, drop = TRUE], 
+                  tx))
+
+}else{
                 data1[, i] <- lookup(data1[, i, drop = TRUE], 
                   tx)
+}
             }
         }
     }
@@ -6681,8 +6692,8 @@ alphaBest <- function (vars, standardized = FALSE, dataFrame = .data)
 
 
 ## Table stack
-tableStack <- 
-function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, 
+tableStack <-
+function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, na.rm = FALSE, 
     means = TRUE, medians = FALSE, sds = TRUE, decimal = 1, dataFrame = .data, 
     total = TRUE, var.labels = TRUE, var.labels.trunc = 150, 
     reverse = FALSE, vars.to.reverse = NULL, by = NULL, vars.to.factor = NULL, 
@@ -6801,16 +6812,17 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
         }
         table1 <- NULL
         for (i in as.integer(selected)) {
-            if (!is.factor(dataFrame[, i])) {
+            if (!is.factor(dataFrame[, i]) & !is.logical(dataFrame[,i, drop=TRUE])) {
                 x <- factor(dataFrame[, i])
-                if (!is.logical(dataFrame[, i, drop = TRUE])) {
                   levels(x) <- nlevel
-                }
                 tablei <- table(x)
             }
             else {
+            if(is.logical(dataFrame[,i, drop=TRUE])){
+                tablei <- table(factor(dataFrame[,i, drop=TRUE], levels=c("FALSE","TRUE")))
+            }else{
                 tablei <- table(dataFrame[, i])
-            }
+            }}
             if (count) {
                 tablei <- c(tablei, length(na.omit(dataFrame[, 
                   i])))
@@ -6923,7 +6935,7 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
             if (is.integer(selected.dataFrame[, 1]) | is.numeric(selected.dataFrame[, 
                 1])) {
                 results <- c(results, list(total.score = rowSums(selected.matrix)), 
-                  list(mean.score = rowMeans(selected.matrix)), 
+                  list(mean.score = rowMeans(selected.matrix, na.rm=na.rm)), 
                   list(mean.of.total.scores = mean.of.total.scores, 
                     sd.of.total.scores = sd.of.total.scores, 
                     mean.of.average.scores = mean.of.average.scores, 

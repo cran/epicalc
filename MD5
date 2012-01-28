@@ -1,6 +1,6 @@
-9d381a77120967dce65412597275b737 *DESCRIPTION
+4b92b4d1850859f7ff2db9ac6b3104d9 *DESCRIPTION
 a7029ab4e2d345ccd376d76e711f28f6 *NAMESPACE
-5edd7de10c706e44247b447629576194 *R/epicalc.R
+e00429fb9be4af4a2bf345e66a2b07e4 *R/epicalc.R
 1721d9a396b168fe50a85b52adbc228f *data/ANCdata.rdata
 c1ddefc687a4e0421362affcbb17debb *data/ANCtable.txt.gz
 af5abbf83afc371f6a64009cd3eb9106 *data/Attitudes.rdata
@@ -114,7 +114,7 @@ a8fe624bea5dbd0a8b54b922507d9365 *man/sampsize.rd
 d1112f183e41c0869a4b8799dc5a0e7b *man/sortBy.rd
 4afa2f6c82060cd8043d590dd6782a93 *man/summ.rd
 57aeae04190080742ef5d49e812b3e2c *man/tab1.rd
-e574ff76b836729f299575bd9ac2914b *man/tableStack.rd
+d350d29c584a5fdc63661ffbd4c6262e *man/tableStack.rd
 5f077ee0762704bed014948e0a8b723e *man/tabpct.rd
 c40f827949feb0b87802c2ffbbba41e7 *man/titleString.rd
 5bff92fc08dfa3e03d1219c201b035f7 *man/unclassDataframe.rd

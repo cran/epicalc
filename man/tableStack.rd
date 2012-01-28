@@ -3,7 +3,7 @@
 \title{Tabulation of variables in a stack form}
 \description{Tabulation of variables with the same possible range of distribution and stack into a new table with or without other descriptive statistics or to breakdown distribution of more than one row variables against a column variable}
 \usage{
-tableStack (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, 
+tableStack (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, na.rm =FALSE, 
     means = TRUE, medians = FALSE, sds = TRUE, decimal = 1, dataFrame = .data, 
     total = TRUE, var.labels = TRUE, var.labels.trunc =150, reverse = FALSE, 
     vars.to.reverse = NULL, by = NULL, vars.to.factor = NULL, iqr = "auto", 
@@ -16,6 +16,7 @@ tableStack (vars, minlevel = "auto", maxlevel = "auto", count = TRUE,
 	\item{minlevel}{possible minimum value of items specified by user}
 	\item{maxlevel}{possible maximum value of items specified by user}
 	\item{count}{whether number of valid records for each item will be displayed}
+	\item{na.rm}{whether missing value would be removed during calculation mean score of each person}
 	\item{means}{whether means of all selected items will be displayed}
 	\item{medians}{whether medians of all selected items will be displayed}
 	\item{sds}{whether standard deviations of all selected items will be displayed}
