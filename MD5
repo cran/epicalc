@@ -1,6 +1,6 @@
-4b92b4d1850859f7ff2db9ac6b3104d9 *DESCRIPTION
+a6395b2cec2f693e4238820c29ed3bfc *DESCRIPTION
 a7029ab4e2d345ccd376d76e711f28f6 *NAMESPACE
-e00429fb9be4af4a2bf345e66a2b07e4 *R/epicalc.R
+73eb7df60187ad13030ed4077642c1ae *R/epicalc.R
 1721d9a396b168fe50a85b52adbc228f *data/ANCdata.rdata
 c1ddefc687a4e0421362affcbb17debb *data/ANCtable.txt.gz
 af5abbf83afc371f6a64009cd3eb9106 *data/Attitudes.rdata
@@ -74,7 +74,7 @@ b05ac9f552b153cda0bcec73729777bf *man/dotplot.rd
 cafa7528254d902379359519c4d53078 *man/expand.rd
 5455292c07818c8798d78f6994abdc1a *man/fillin.rd
 b2f1048a1c52efd9e6da84f8718a1302 *man/followup.plot.rd
-2e855440140da6e82097d3fcd81c8760 *man/kap.rd
+6a44510e3acf7e1effb05557aa9376f3 *man/kap.rd
 8308d4fe9cd83761871d0bdc0532d081 *man/keepData.rd
 4d7123503fc2f25df3144273ab320abf *man/label.var.rd
 42554d536bb9191bdd0226a3a701f5dc *man/lagVar.rd
@@ -91,6 +91,8 @@ d0812c38cf9893ed00ec282cc47094ae *man/power.for.2means.rd
 ee5830516339c15bb4e5474af30dbd15 *man/print.alpha.rd
 abd1607ad3940db6d707a8406134f47c *man/print.cci.rd
 51b6904a353f64bf6e561cecc63291d7 *man/print.des.rd
+701e8676c916b8c3dc6f25ae385ffd50 *man/print.kap.ByCategory.rd
+c47276e99743ddcdf53dfac55f9cb936 *man/print.kap.table.rd
 8d35042898cc2cc841e830a532a4d338 *man/print.lrtest.rd
 ed303bd6bd17cd5733a1a3acc7e02323 *man/print.n.for.2means.rd
 ef96f4b8b4e60f2d86b4eb86e5ece360 *man/print.n.for.2p.rd

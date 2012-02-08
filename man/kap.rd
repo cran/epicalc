@@ -12,13 +12,13 @@ kap(x, ...)
 
 \method{kap}{default}(x, ...)
 
-\method{kap}{table}(x, wttable = c(NULL, "w", "w2"), print.wttable = FALSE, ...)
+\method{kap}{table}(x, decimal =3, wttable = c(NULL, "w", "w2"), print.wttable = FALSE, ...)
 
-\method{kap}{2.raters}(x, rater2, ...)
+\method{kap}{2.raters}(x, rater2, decimal =3, ...)
 
-\method{kap}{m.raters}(x, raters, ...)
+\method{kap}{m.raters}(x, decimal =3, ...)
 
-\method{kap}{ByCategory}(x, category.counts, ...)
+\method{kap}{ByCategory}(x, decimal =3, ...)
 }
 \arguments{
 	\item{x}{an object serving the first argument for different methods
@@ -26,14 +26,14 @@ kap(x, ...)
         	\tab FUNCTION \tab 'x'\cr
         	\tab 'kap.table' \tab table\cr
          	\tab 'kap.2.raters' \tab rater1\cr
-         	\tab 'kap.m.raters' \tab 'id' of subjects being rated\cr
-         	\tab 'kap.ByCategory' \tab 'id' of subjects being rated\cr
+         	\tab 'kap.m.raters' \tab data frame with raters in column\cr
+         	\tab 'kap.ByCategory' \tab data frame with categories in column\cr
        }}
-	\item{wttable}{cross tabulation of weights of agreement among categories. Applicable only for 'kap.table' and 'kap.2.raters'}
+
+	\item{decimal}{number of decimal in the print}
+  \item{wttable}{cross tabulation of weights of agreement among categories. Applicable only for 'kap.table' and 'kap.2.raters'}
 	\item{print.wttable}{whether the weights table will be printed out}
 	\item{rater2}{a vector or factor containing opinions of the second rater among two raters.}
-	\item{raters}{a data frame or a matrix containing opinions of two or more raters}
-	\item{category.counts}{a data frame or a matrix containing columns of frequencies of rating categories.}
 	\item{...}{further arguments passed to or used by other methods.}
 }
 \details{
@@ -79,40 +79,38 @@ kap(table1, wttable = "w", print.wttable=TRUE)
 kap(table1, wttable = "w2", print.wttable=TRUE)
 
 ## A data set from 5 raters with 3 possible categories.
-id <- 1:10
 category.lab <- c("yes","no","Don't know")
 rater1 <- factor(c(1,1,3,1,1,1,1,2,1,1), labels=category.lab)
 rater2 <- factor(c(2,1,3,1,1,2,1,2,3,1), labels=category.lab)
 rater3 <- factor(c(2,3,3,1,1,2,1,2,3,1), labels=category.lab)
 rater4 <- factor(c(2,3,3,1,3,2,1,2,3,3), labels=category.lab)
 rater5 <- factor(c(2,3,3,3,3,2,1,3,3,3), labels=category.lab)
-kap.m.raters(id, raters=data.frame(rater1,rater2,rater3,rater4,rater5))
+kap.m.raters(data.frame(rater1,rater2,rater3,rater4,rater5))
 
 # The above is the same as
 YES <- c(1,2,0,4,3,1,5,0,1,3)
 NO <- c(4,0,0,0,0,4,0,4,0,0)
 DONTKNOW <- c(0,3,5,1,2,0,0,1,4,2)
-kap.ByCategory(id, category.counts = data.frame(YES,NO,DONTKNOW))
+kap.ByCategory(data.frame(YES,NO,DONTKNOW))
 
 # Using 'kap.m.raters' for 2 raters is inappropriate. Kappa obtained
 # from this method assumes that the agreement can come from any two raters,
 # which is usually not the case.
-kap.m.raters(id, data.frame(rater1, rater2))
+kap.m.raters(data.frame(rater1, rater2))
 # 'kap.2.raters' gives correct results
 kap.2.raters(rater1, rater2)
 
 # When there are missing values,
 rater3[9] <- NA; rater4[c(1,9)] <- NA
-kap.m.raters(id, raters=data.frame(rater1,rater2,rater3,rater4,rater5))
+kap.m.raters(data.frame(rater1,rater2,rater3,rater4,rater5))
 # standard errors and other related statistics are not available.
 
 # Two exclusive rating categories give only one common set of results.
 # The standard error is obtainable even if the numbers of raters vary
 # among individual subjects being rated.
-id2 <- 1:25
 totalRaters <- c(2,2,3,4,3,4,3,5,2,4,5,3,4,4,2,2,3,2,4,5,3,4,3,3,2)
 pos <- c(2,0,2,3,3,1,0,0,0,4,5,3,4,3,0,2,1,1,1,4,2,0,0,3,2)
 neg <- totalRaters - pos
-kap.ByCategory(id2, category.counts = data.frame(neg, pos))
+kap.ByCategory(data.frame(neg, pos))
 }
 \keyword{array}

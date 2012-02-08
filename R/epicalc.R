@@ -3192,37 +3192,48 @@ function (table, graph = TRUE, add = FALSE, title = FALSE, line.col = "red",
 
 
 ### Kappa statistics
-kap <- function(x, ...){
+kap <- function(x,...){
 UseMethod("kap")
 }
 kap.default <- function(x, ...){
     if (is.table(x)){ 
-    kap.table(x, ...)
+    kap.table(x, decimal=3,...)
     }
 }
 ### Kappa statistics from a table cross-tab ratings of 2 raters
-kap.table <- function (x, wttable = c(NULL, "w", "w2"), print.wttable = FALSE, ...) 
+kap.table <-
+function (x, decimal =3, wttable = c(NULL, "w", "w2"), print.wttable = FALSE, ...)
 {
-kaptable <- x
-    if (ncol(kaptable) != nrow(kaptable)) 
+    kaptable <- x
+    if (ncol(kaptable) != nrow(kaptable))
         stop("Column & row not equal length")
-    if(is.null(wttable) | (is.character(wttable)& length(wttable)==2)){
+    if (is.null(wttable) | (is.character(wttable) & length(wttable) ==
+        2)) {
         wttable <- kaptable
         wttable[] <- 0
         for (i in 1:nrow(kaptable)) wttable[i, i] <- 1
-    }else{
-    if(!is.matrix(wttable)){
-    if (wttable=="w"| wttable=="w2"){
-    wttable1 <- kaptable
-    wttable1[] <- 0
-        for (i in 1:nrow(kaptable)) {
-            for (j in 1:ncol(kaptable)){
-            if(wttable=="w") {wttable1[i, j] <- 1 - abs(i-j)/(ncol(kaptable)-1)}
-            if(wttable=="w2") {wttable1[i, j] <- 1 - (abs(i-j)/(ncol(kaptable)-1))^2}
+    }
+    else {
+        if (!is.matrix(wttable)) {
+            if (wttable == "w" | wttable == "w2") {
+                wttable1 <- kaptable
+                wttable1[] <- 0
+                for (i in 1:nrow(kaptable)) {
+                  for (j in 1:ncol(kaptable)) {
+                    if (wttable == "w") {
+                      wttable1[i, j] <- 1 - abs(i - j)/(ncol(kaptable) -
+                        1)
+                    }
+                    if (wttable == "w2") {
+                      wttable1[i, j] <- 1 - (abs(i - j)/(ncol(kaptable) -
+                        1))^2
+                    }
+                  }
+                }
+                wttable <- wttable1
             }
         }
-        wttable <- wttable1
-    }}}
+    }
     po <- 0
     pe <- 0
     exptable <- kaptable
@@ -3231,149 +3242,236 @@ kaptable <- x
     wbarj <- rep(0, nrow(kaptable))
     for (i in 1:nrow(kaptable)) {
         for (j in 1:ncol(kaptable)) {
-            wbari[i] <- wbari[i] + wttable[i, j] * sum(kaptable[, 
+            wbari[i] <- wbari[i] + wttable[i, j] * sum(kaptable[,
                 j])/sum(kaptable)
         }
     }
     for (j in 1:ncol(kaptable)) {
         for (i in 1:nrow(kaptable)) {
-            wbarj[j] <- wbarj[j] + wttable[i, j] * sum(kaptable[i, 
+            wbarj[j] <- wbarj[j] + wttable[i, j] * sum(kaptable[i,
                 ])/sum(kaptable)
         }
     }
     for (i in 1:nrow(kaptable)) {
         for (j in 1:ncol(kaptable)) {
             po <- po + wttable[i, j] * kaptable[i, j]/sum(kaptable)
-            exptable[i, j] <- sum(kaptable[i, ]) * sum(kaptable[, 
+            exptable[i, j] <- sum(kaptable[i, ]) * sum(kaptable[,
                 j])/sum(kaptable)/sum(kaptable)
             pe <- pe + wttable[i, j] * exptable[i, j]
-            bigbracket <- bigbracket + exptable[i, j] * (wttable[i, 
+            bigbracket <- bigbracket + exptable[i, j] * (wttable[i,
                 j] - (wbari[i] + wbarj[j]))^2
         }
     }
     kap <- (po - pe)/(1 - pe)
-    if(print.wttable)  print(wttable)
     if (length(colnames(kaptable)) == 0) {
-        rownames(kaptable) <- paste("Group", as.character(1:nrow(kaptable)), 
+        rownames(kaptable) <- paste("Group", as.character(1:nrow(kaptable)),
             sep = "")
         colnames(kaptable) <- rownames(kaptable)
-        attr(attr(kaptable, "dimnames"), "names") <- c("Rater A", 
+        attr(attr(kaptable, "dimnames"), "names") <- c("Rater A",
             "Rater B")
-        cat("\n")
-        print(kaptable)
     }
-    else {
-        print(kaptable)
-    }
-    cat("\n")
-    cat("Observed agreement =", round(po * 100, 2), "%", "\n")
-    cat("Expected agreement =", round(pe * 100, 2), "%", "\n")
-    cat("Kappa =", round(kap, 3), "\n")
-    sekap <- 1/(1 - pe)/sqrt(sum(kaptable)) * sqrt(bigbracket - 
+    sekap <- 1/(1 - pe)/sqrt(sum(kaptable)) * sqrt(bigbracket -
         pe^2)
     z <- kap/sekap
     p.value <- pnorm(z, lower.tail = FALSE)
-    if (p.value < 0.001) {
-        P.value <- "< 0.001"
-    }
-    else {
-        P.value <- as.character(round(p.value, 3))
-    }
-    cat("Standard error =", round(sekap, digits = 3), ", Z =", 
-        round(z, digits = 3), ", P value =", P.value, "\n", "\n")
-    returns <- list(po = po, pe = pe, kappa = kap, std.error = sekap, 
+    results <- list(table = kaptable, wttable = wttable,
+    print.wttable = print.wttable, decimal = decimal,
+    po = po, pe = pe, kappa = kap, std.error = sekap,
         z = z, p.value = p.value)
+    class(results) <- "kap.table"
+    results
 }
+
+### Print kap.table
+print.kap.table <-
+function(x, ...)
+{
+cat("\n","Table for calculation of kappa"); cat("\n")
+print(x$table)
+if(x$print.wttable & nrow(x$table)>2){
+cat("\n")
+cat("Weighting scheme", "\n")
+print(x$wttable)
+}
+    cat("\n")
+    cat("Observed agreement =", round(x$po * 100, x$decimal-1), "%", "\n")
+    cat("Expected agreement =", round(x$pe * 100, x$decimal-1), "%", "\n")
+    cat("Kappa =", round(x$kap, x$decimal), "\n")
+    cat("Standard error =", round(x$std.error, x$decimal), ", Z =",
+    round(x$z, x$decimal), ", P value =", ifelse(x$p.value <0.001, "< 0.001",round(x$p.value, x$decimal)), "\n", "\n")
+}
+
 ## Kappa statistics with two raters
-kap.2.raters <- function(x, rater2, ...){
-rater1 <- x
-kaptable <- table(rater1, rater2)
-if(any(rownames(kaptable)!= colnames(kaptable))) {stop("Table to use for kappa calculation must be symmetrical")}
-kap.table(kaptable, ...) 
-}
-## Kappa statistics with more than two raters
-kap.m.raters <- function(x, raters, ...){
-id <- x
-category.levels <- NULL
-for(i in 1:ncol(raters)){
-  category.levels <- c(category.levels, names(table(raters[,i])))
-}
-category.levels <- unique(category.levels)
-category.counts <- rep(0, times=length(id)*length(category.levels))
-dim(category.counts) <- c(length(id), length(category.levels))
-for(j in 1:length(category.levels)){
-if(is.factor(raters[,1])){
-    for(i in 1:length(id)){
-    category.counts[i,j] <- sum(raters[i,][!is.na(raters[i,])]==category.levels[j])
+kap.2.raters <-
+function (x, rater2, decimal =3, ...)
+{
+    rater1 <- x
+    kaptable <- table(rater1, rater2)
+    if (any(rownames(kaptable) != colnames(kaptable))) {
+        stop("Table to use for kappa calculation must be symmetrical")
     }
-  }else{
-    for(i in 1:length(id)){
-    category.counts[i,j] <- sum(raters[i,][!is.na(raters[i,])]==as.numeric(category.levels[j]))
-  }
+    kap.table(kaptable, decimal=decimal)
 }
-colnames(category.counts) <- category.levels
-}
-kap.ByCategory(x, as.data.frame(category.counts))
+
+## Kappa statistics with more than two raters
+kap.m.raters <-
+function (x, decimal =3, ...)
+{
+    category.levels <- NULL
+    for (i in 1:ncol(x)) {
+        category.levels <- c(category.levels, names(table(x[,
+            i])))
+    }
+    category.levels <- unique(category.levels)
+    category.counts <- rep(0, times = nrow(x) * length(category.levels))
+    dim(category.counts) <- c(nrow(x), length(category.levels))
+    for (j in 1:length(category.levels)) {
+        if (is.factor(x[, 1])) {
+            for (i in 1:nrow(x)) {
+                category.counts[i, j] <- sum(x[i, ][!is.na(x[i,
+                  ])] == category.levels[j])
+            }
+        }
+        else {
+            for (i in 1:nrow(x)) {
+                category.counts[i, j] <- sum(x[i, ][!is.na(x[i,
+                  ])] == as.numeric(category.levels[j]))
+            }
+        }
+        colnames(category.counts) <- category.levels
+    }
+    kap.ByCategory( as.data.frame(category.counts), decimal=decimal)
 }
 
 
 ## Kappa statistics with id of the ratee and counts of rated categories
-kap.ByCategory <- function(x, category.counts, ...){
-id <- x
-n <- length(id)
-mi <- rowSums(category.counts)
-mbar <- sum(mi/n)
-pbar <- NULL
-qbar <- NULL
-kapp <- NULL
-z <- NULL
-sekap <- NULL
-p.value <- NULL
-for(j in 1:ncol(category.counts)){
-  xi <- category.counts[,j]
-  last.pbar <- sum(xi/(n*mbar))
-  pbar <- c(pbar, last.pbar)
-  last.qbar <- 1-last.pbar
-  qbar <- c(qbar, last.qbar)
-  B <- 1/n*sum((xi-mi*last.pbar)^2/mi) # Between-subject mean square
-  W <- 1/(n*(mbar-1))*sum(xi*(mi-xi)/mi) # Within-subject mean square
-  mbarH <- 1/(mean(1/mi)) # harmonic mean of mi
-  kapp <- c(kapp, (B-W)/(B+(mbar-1)*W))
-  if(ncol(category.counts)==2| var(mi)==0){
-    last.sekap <- 1/((mbar-1)*sqrt(n*mbarH))*
-        sqrt(2*(mbarH-1)+(mbar-mbarH)*(1-4*last.pbar*last.qbar)/(mbar*last.pbar*last.qbar))
-    sekap <- c(sekap, last.sekap)
-    last.z <- (B-W)/(B+(mbar-1)*W)/last.sekap
-    z <- c(z, last.z)
-    last.p.value <- pnorm(last.z, lower.tail = FALSE)
-    p.value <- c(p.value, last.p.value)
-  }
+kap.ByCategory <-
+function (x, decimal =3, ...)
+{
+    n    <- nrow(x)
+    mi   <- rowSums(x)
+    mbar <- sum(mi/n)
+    pbar <- NULL
+    qbar <- NULL
+    kapp <- NULL
+    z <- NULL
+    sekap <- NULL
+    p.value <- NULL
+    for (j in 1:ncol(x)) {
+        xi <- x[, j]
+        last.pbar <- sum(xi/(n * mbar))
+        pbar <- c(pbar, last.pbar)
+        last.qbar <- 1 - last.pbar
+        qbar <- c(qbar, last.qbar)
+        B <- 1/n * sum((xi - mi * last.pbar)^2/mi)
+        W <- 1/(n * (mbar - 1)) * sum(xi * (mi - xi)/mi)
+        mbarH <- 1/(mean(1/mi))
+        kapp <- c(kapp, (B - W)/(B + (mbar - 1) * W))
+        if (ncol(x) == 2 | var(mi) == 0) {
+            last.sekap <- 1/((mbar - 1) * sqrt(n * mbarH)) *
+                sqrt(2 * (mbarH - 1) + (mbar - mbarH) * (1 -
+                  4 * last.pbar * last.qbar)/(mbar * last.pbar *
+                  last.qbar))
+            sekap <- c(sekap, last.sekap)
+            last.z <- (B - W)/(B + (mbar - 1) * W)/last.sekap
+            z <- c(z, last.z)
+            last.p.value <- pnorm(last.z, lower.tail = FALSE)
+            p.value <- c(p.value, last.p.value)
+        }
+    }
+    if (ncol(x) == 2) {
+        results <- list(Each.category=NULL, Overall = data.frame(kappa = kapp[1],
+            std.error = last.sekap, z = last.z,
+            p.value = last.p.value, row.names = ""), decimal = decimal)
+    }
+    else {
+        if (var(mi) == 0) {
+            each.category <- data.frame(kappa = kapp, std.error = sekap,
+                z = z, p.value = p.value, row.names = colnames(x))
+        }
+        else {
+            each.category <- data.frame(kappa = kapp, std.error = ".",
+                z = ".", p.value = ".", row.names = colnames(x))
+        }
+        kapp.bar <- sum(pbar * qbar * kapp)/sum(pbar * qbar)
+        if (ncol(x) == 2 | var(mi) == 0) {
+            m <- mi[1]
+            sekap.bar <- sqrt(2)/(sum(pbar * qbar) * sqrt(n *
+                m * (m - 1))) * sqrt((sum(pbar * qbar))^2 - sum(pbar *
+                qbar * (qbar - pbar)))
+            z.bar <- kapp.bar/sekap.bar
+            p.value.bar <- pnorm(z.bar, lower.tail = FALSE)
+            row.names.overall <- ""
+            for (i in 1:max(nchar(colnames(x)))) {
+                row.names.overall <- paste(row.names.overall,
+                  " ", sep = "")
+            }
+            Overall <- data.frame(kappa = kapp.bar, std.error = sekap.bar,
+                z = z.bar, p.value = p.value.bar, row.names = row.names.overall)
+            list(Each.category = each.category, Overall = Overall)
+        }
+        else {
+            row.names.overall <- ""
+            for (i in 1:max(nchar(colnames(x)))) {
+                row.names.overall <- paste(row.names.overall,
+                  " ", sep = "")
+            }
+            Overall <- data.frame(kappa = kapp.bar, std.error = ".",
+                z = ".", p.value = ".", row.names = row.names.overall)
+
+        }
+            results <- list(Each.category = each.category, Overall = Overall, decimal = decimal)
+    }
+            class(results) <- "kap.ByCategory"
+            results
 }
-if(ncol(category.counts)==2){
-data.frame(kappa=kapp[1], std.error=last.sekap, z=last.z, p.value=last.p.value, row.names="")
+
+## Print kap.ByCategory
+print.kap.ByCategory <-
+function(x, ...)
+{
+if(!is.null(x$Each.category)){
+cat("Each category:", "\n")
+dataA <- x$Each.category
+if(class(dataA$std.error)!="numeric"){
+print(data.frame(kappa=round(dataA$kappa,x$decimal),
+                 std.error=".",
+                 z = ".",
+                 p.value = ".",
+                 row.names=row.names(dataA)))
+
 }else{
-  if( var(mi)==0){
-each.category <- data.frame(kappa = kapp, std.error = sekap, 
-        z = z, p.value = p.value, row.names=colnames(category.counts))
-}else{
-each.category <- data.frame(kappa = kapp, std.error = ".", z=".", p.value = ".", row.names=colnames(category.counts)) 
+print(data.frame(kappa=round(dataA$kappa,x$decimal),
+                 std.error=round(dataA$std.error, x$decimal),
+                 z = round(dataA$z, x$decimal-1),
+                 p.value = ifelse(dataA$p.value < 0.001,"< 0.001",
+                                  round(dataA$p.value, x$decimal)),
+                 row.names=row.names(dataA)))
 }
-kapp.bar <- sum(pbar*qbar*kapp)/sum(pbar*qbar)
-  if(ncol(category.counts)==2| var(mi)==0){
-m <- mi[1]
-sekap.bar <- sqrt(2)/(sum(pbar*qbar)*sqrt(n*m*(m-1)))*sqrt((sum(pbar*qbar))^2-sum(pbar*qbar*(qbar-pbar)))
-z.bar <- kapp.bar/sekap.bar
-p.value.bar <- pnorm(z.bar, lower.tail = FALSE)
-row.names.overall <- ""
-for(i in 1:max(nchar(colnames(category.counts)))){row.names.overall <- paste(row.names.overall, " ", sep="")}
-Overall <-data.frame(kappa = kapp.bar, std.error = sekap.bar, z=z.bar, p.value = p.value.bar, row.names=row.names.overall) 
-list(Each.category=each.category, Overall=Overall)
+cat("\n")
+cat("Overall:", "\n")
+dataB <- x$Overall
+if(class(dataA$std.error)!="numeric"){
+print(data.frame(kappa=round(dataB$kappa, x$decimal),
+                 std.error=".",
+                 z = ".",
+                 p.value = ".",
+                 row.names=paste(rep(" ",max(nchar(row.names(dataB)))),collapse="")))
 }else{
-row.names.overall <- ""
-for(i in 1:max(nchar(colnames(category.counts)))){row.names.overall <- paste(row.names.overall, " ", sep="")}
-Overall <-data.frame(kappa = kapp.bar, std.error = ".", z=".", p.value = ".", row.names=row.names.overall) 
-list(Each.category=each.category, Overall=Overall)
+print(data.frame(kappa=round(dataB$kappa, x$decimal),
+                 std.error=round(dataB$std.error, x$decima),
+                 z = round(dataB$z, x$decimal-1),
+                 p.value = ifelse(dataB$p.value < 0.001,"< 0.001",
+                                  round(dataB$p.value, x$decimal)),
+                 row.names=paste(rep(" ",max(nchar(row.names(dataB)))),collapse="")))
 }
+}else{
+dataC <- x$Overall
+print(data.frame(kappa=round(dataC$kappa, x$decimal),
+                 std.error=round(dataC$std.error, x$decima),
+                 z = round(dataC$z, x$decimal-1),
+                 p.value = ifelse(dataC$p.value < 0.001,"< 0.001",
+                                  round(dataC$p.value, x$decimal)), row.names="   "))
 }
 }
  
