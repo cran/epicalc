@@ -243,7 +243,7 @@ header <- paste(attr(x, "datalabel"), "\n",.No.of.observations,nrow(x), "\n")
                 for (search.position in 1:length(search())) {
                   if (exists(as.character(substitute(x)), where = search.position)) {
                     if (any(names(get(search()[search.position])) == 
-                      as.character(substitute(x))) | any(ls(all = TRUE, 
+                      as.character(substitute(x))) | any(ls(all.names = TRUE, 
                       pos = 1) == as.character(substitute(x)))) 
                       candidate.position <- c(candidate.position, 
                         search.position)
@@ -2586,10 +2586,6 @@ function (x = .data, by = NULL, graph = TRUE, box = FALSE, pch = 18,
             string5 <- paste(string3, "\n", titleString()$by, 
                 string4)
         }
-        if (any(class(x) == "date")) {
-            x <- as.Date(paste(date.mdy(x)$year, "-", date.mdy(x)$month, 
-                "-", date.mdy(x)$day, sep = ""))
-        }
         if (any(class(x) == "Date")) {
             range.date <- difftime(summary(x)[6], summary(x)[1])
             numdate <- as.numeric(range.date)
@@ -2837,11 +2833,6 @@ function (x = .data, by = NULL, graph = TRUE, box = FALSE, pch = 18,
                 else {
                   a <- rep("", 6)
                   dim(a) <- c(1, 6)
-                  if (any(class(x1) == "date")) {
-                    x1 <- as.Date(paste(date.mdy(x1)$year, "-", 
-                      date.mdy(x1)$month, "-", date.mdy(x1)$day, 
-                      sep = ""))
-                  }
                   if (any(class(x1) == "Date")) {
                     a[1, ] <- c(length(x1), format(c(summary(x1)[4], 
                       summary(x1)[3], NA, summary(x1)[1], summary(x1)[6]), 
@@ -2881,10 +2872,6 @@ function (x = .data, by = NULL, graph = TRUE, box = FALSE, pch = 18,
             else {
                 a <- rep("", 6)
                 dim(a) <- c(1, 6)
-                if (any(class(x) == "date")) {
-                  x <- as.Date(paste(date.mdy(x)$year, "-", date.mdy(x)$month, 
-                    "-", date.mdy(x)$day, sep = ""))
-                }
                 if (any(class(x) == "Date")) {
                   a[1, ] <- c(length(na.omit(x)), format(c(summary(x)[4], 
                     summary(x)[3], NA, summary(x)[1], summary(x)[6]), 
@@ -2925,11 +2912,6 @@ function (x = .data, by = NULL, graph = TRUE, box = FALSE, pch = 18,
                 a[i, 3:7] <- ""
             }
             else {
-                if (any(class(x[[i]]) == "date")) {
-                  x[[i]] <- as.Date(paste(date.mdy(x[[i]])$year, 
-                    "-", date.mdy(x[[i]])$month, "-", date.mdy(x[[i]])$day, 
-                    sep = ""))
-                }
                 if (any(class(x[[i]]) == "Date")) {
                   a[i, c(3, 4, 6, 7)] <- format(c(summary(x[[i]])[4], 
                     summary(x[[i]])[3], summary(x[[i]])[1], summary(x[[i]])[6]), 
@@ -4527,7 +4509,7 @@ if (length(y)>0){
 for(i in 1:length(y)){
 	if(length(get(y[i]))==nrow(data1)){
 	nam <- y[i]
-	assign (nam, (get(y[i]))[order(...)], env = .GlobalEnv)
+	assign (nam, (get(y[i]))[order(...)], envir = .GlobalEnv)
 	}
 }
 }
@@ -4851,7 +4833,7 @@ stop(paste("The argument 'dot.col' must either be \"auto\"","\n"," or number of 
 if (bin=="auto"){
 if(!is.null(attr(max(x, na.rm=TRUE)-min(x, na.rm=TRUE), "units")) & !any(class(x)=="difftime")){
   unit1 <- "weeks"
-  bin <- as.numeric(difftime(max(x, na.rm=TRUE), min(x,na.rm=TRUE), unit=unit1))+1
+  bin <- as.numeric(difftime(max(x, na.rm=TRUE), min(x,na.rm=TRUE), units=unit1))+1
 while(bin!=trunc(bin)){
   if(unit1=="weeks"){ unit1 <- "days"
 }else
@@ -4860,21 +4842,18 @@ while(bin!=trunc(bin)){
   if(unit1=="hours"){ unit1 <- "mins"
 }else
   if(unit1=="mins") unit1 <- "secs"
-  bin <- as.numeric(difftime(max(x, na.rm=TRUE), min(x,na.rm=TRUE), unit=unit1))+1
+  bin <- as.numeric(difftime(max(x, na.rm=TRUE), min(x,na.rm=TRUE), units=unit1))+1
   }
   }else{
 if(is.integer(x)){
   bin <- as.integer(max(x, na.rm=TRUE)- min(x, na.rm=TRUE) +1)
 }else{
 if(any(class(x)=="Date")){
-  bin <- as.numeric(difftime(max(x, na.rm=TRUE), min(x,na.rm=TRUE), unit=unit1))+1
+  bin <- as.numeric(difftime(max(x, na.rm=TRUE), min(x,na.rm=TRUE), units=unit1))+1
  }else{
  bin <- 40
 }}}}
 character.x <- deparse(substitute(x))
-		if(any(class(x)=="date")){
-      x <- as.Date(paste(date.mdy(x)$year,"-", date.mdy(x)$month,"-", date.mdy(x)$day, sep=""))
-    }
 if (is.null(by)){
 	value <- subset(x, !is.na(x))
 }else{
@@ -5123,7 +5102,7 @@ function (vars, old.value, new.value, dataFrame = .data, ...)
     names(nl) <- names(data1)
     var.order <- eval(substitute(vars), nl, parent.frame())
     if(all(var.order < 0)) var.order <- (1:ncol(dataFrame))[var.order]
-    if (exists(names(data1)[var.order], where = 1, inherit = FALSE)) 
+    if (exists(names(data1)[var.order], where = 1, inherits = FALSE)) 
         warning("Name(s) of vars duplicates with an object outside the dataFrame.")
     tx <- cbind(old.value, new.value)
     if (is.numeric(old.value) | is.integer(old.value) | any(class(data1[, 
@@ -5208,7 +5187,7 @@ function (vars, new.value=0, dataFrame = .data, ...){
     nl <- as.list(1:ncol(data1))
     names(nl) <- names(data1)
     var.order <- eval(substitute(vars), nl, parent.frame())
-    if (exists(names(data1)[var.order], where = 1, inherit = FALSE))
+    if (exists(names(data1)[var.order], where = 1, inherits = FALSE))
         warning("Name(s) of vars duplicates with an object outside the dataFrame.")
     for (i in var.order) {
         temp.vector <- data1[, i, drop=TRUE]
@@ -6632,8 +6611,8 @@ alpha <- function (vars, dataFrame = .data, casewise = FALSE, reverse = TRUE,
     }
     
     if (reverse) {
-        score <- factanal(na.omit(selected.matrix), factor = 1, 
-            score = "regression")$score
+        score <- factanal(na.omit(selected.matrix), factors = 1, 
+            scores = "regression")$score
         sign1 <- NULL
         for (i in 1:length(selected)) {
             sign1 <- c(sign1, sign(cor(score, na.omit(selected.matrix)[, 
@@ -6892,8 +6871,8 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, na.rm = FALS
                   "\n", "  Remove one of them from 'vars' if 'reverse' is required.")
             }
             else {
-                score <- factanal(na.omit(selected.matrix), factor = 1, 
-                  score = "regression")$score
+                score <- factanal(na.omit(selected.matrix), factors = 1, 
+                  scores = "regression")$score
                 sign1 <- NULL
                 for (i in 1:length(selected)) {
                   sign1 <- c(sign1, sign(cor(score, na.omit(selected.matrix)[, 
