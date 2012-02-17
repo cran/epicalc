@@ -7047,8 +7047,6 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, na.rm = FALS
                   if (is.integer(dataFrame[, selected[i]]) | 
                     is.numeric(dataFrame[, selected[i]])) {
                     if (length(table(by1)) > 1) {
-                      if (all(table(dataFrame[, selected[i]]) > 
-                        2)) {
                         if (nrow(dataFrame) < 5000) {
                           if (nrow(dataFrame) < 3) {
                             selected.iqr <- c(selected.iqr, selected[i])
@@ -7069,7 +7067,6 @@ function (vars, minlevel = "auto", maxlevel = "auto", count = TRUE, na.rm = FALS
                             selected.iqr <- c(selected.iqr, selected[i])
                           }
                         }
-                      }
                     }
                   }
                 }
