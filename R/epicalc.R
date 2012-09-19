@@ -7579,3 +7579,49 @@ function (dataFrame = .data, id, visit, outcome, check.present = TRUE,
     }
     new.data
 }
+
+tally.events <- 
+function(x, by=NULL, breaks=c("day","week","month","year"), graph=TRUE, type="l",
+line.col="auto", legend = TRUE, legend.site="topright", legend.bg="white", ylim="auto", cex=1, addmargins=TRUE, ...)
+
+{
+if(class(x)!="Date")  stop("The object to be plotted must be of class 'Date'!")
+if(length(breaks)>1 | any(breaks=="day")) {
+   breaks <- "day"
+   label.x <- levels(cut(x, breaks="day"))
+}else{
+   if(breaks=="week") label.x <- round(as.integer(format(as.Date(levels(cut(x, breaks="week"))),"%j"))/7+1)
+   if(breaks=="month") label.x <- format(as.Date(levels(cut(x, breaks="month"))),"%b-%y")
+   if(breaks=="year") label.x <- format(as.Date(levels(cut(x, breaks="year"))),"%Y")
+} 
+if(is.null(by)) {
+   results <- table(cut(x, breaks=breaks))
+   names(results) <- label.x
+   if(graph){
+      if(length(ylim)==1) ylim <- c(min(results),max(results)) else ylim <- ylim
+      plot(as.numeric(results), xlab="",ylab="", type=type, xaxt="n",
+           col=ifelse(any(line.col=="auto"),1,line.col), ylim=ylim, ...)
+   axis(side=1,  labels=label.x, at=1:length(as.numeric(results)), ...)
+   }
+   return(results)
+}else{
+   results <- table(cut(x, breaks=breaks),by)
+   rownames(results) <- label.x
+   if(graph){
+      if(any(line.col=="auto")) {line.col <- 1:ncol(results)}else{line.col<-rep(line.col,ncol(results))}
+      if(length(ylim)==1) ylim <- c(min(results),max(results)) else ylim <- ylim
+      plot(as.numeric(results[,1]), xlab="", ylab="", type="l", xaxt="n", 
+           ylim = ylim, 
+           col=line.col[1], ...)
+      for(i in 2:ncol(results)){
+         lines(as.numeric(results[,i]), col=line.col[i], lty=i, ...)
+      }
+      axis(side=1, at= 1:nrow(results), labels=rownames(results), ...)
+      if(legend) legend(legend.site, lty=1:i, col=line.col[1:i], legend = colnames(results), 
+             text.col=line.col[1:i], cex=cex, bg=legend.bg)
+   }
+   if(addmargins)
+   results <- addmargins(results)
+   return(results)
+}
+}
